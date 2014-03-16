@@ -1,0 +1,105 @@
+# -*- coding: utf-8 -*- 
+'''
+Created on 2013-12-27
+
+@author: GroundMelon
+'''
+import wx
+import StringIO
+from imageprocess.test import StaticTest
+from ImageShow import ImageShow
+
+def init_trace_bitmap(window):            
+    bmp = wx.Image('null.bmp', wx.BITMAP_TYPE_BMP).ConvertToBitmap()
+    wx.CallAfter(window.on_update_trace_bitmap, bmp)
+    
+def test(window):
+    wx.InitAllImageHandlers()
+    window.st = StaticTest(window.m_bitmap_trace.GetSize())
+    update_trace_bitmap(window, window.st.get_source())
+
+def change_adjust_type(window):
+    choice = window.m_radioBox_image_adj.GetStringSelection()
+    window.m_staticText_adjust_type.SetLabel(choice)
+    window.m_slider_adjust.SetValue(window.st.image_adjust_settings[choice])
+
+def change_adjust_value(window):
+    choice = window.m_radioBox_image_adj.GetStringSelection()
+    window.st.image_adjust_settings[choice] = window.m_slider_adjust.GetValue()
+    update_trace_bitmap(window, window.st.adjust_by_settings())
+
+def update_trace_bitmap(window,imgdata):
+    #主窗口bitmap更新
+    bmp = wx.BitmapFromBuffer(imgdata['rsz'][0], imgdata['rsz'][1], imgdata['rsz'][2])
+    wx.CallAfter(window.on_update_trace_bitmap, bmp)
+    
+    try:#独立窗口更新图片
+        bmp = wx.BitmapFromBuffer(imgdata['src'][0], imgdata['src'][1], imgdata['src'][2])
+        wx.CallAfter(window.trace_imshow_window.update_image, bmp)
+    except AttributeError,e:
+        pass
+
+def create_image_show_window(window):
+    imshow_frame = ImageShow(window)
+    imshow_frame.Show()
+    imshow_frame.m_bitmap.SetBitmap(window.m_bitmap_trace.GetBitmap())    
+    return imshow_frame
+
+def toggle_drag_selection(window, toggle, in__init__ = False):
+    if toggle: # start dragging
+        window.m_bitmap_trace.Bind( wx.EVT_LEFT_DOWN, window.on_trace_bitmap_left_down )
+        window.m_bitmap_trace.Bind( wx.EVT_LEFT_UP, window.on_trace_bitmap_left_up )
+        window.m_bitmap_trace.Bind( wx.EVT_MOTION, window.on_trace_bitmap_motion )
+        
+        window.SetCursor(wx.StockCursor( wx.CURSOR_CROSS ) )
+        update_trace_bitmap(window, window.st.get_source())
+        window.drag_info = DragInfomation()
+    else:   #end dragging and window.__init__()
+        window.m_bitmap_trace.Bind( wx.EVT_LEFT_DOWN, None )
+        window.m_bitmap_trace.Bind( wx.EVT_LEFT_UP, None )
+        window.m_bitmap_trace.Bind( wx.EVT_MOTION, None )   
+        if not in__init__:
+            window.SetCursor(wx.StockCursor( wx.CURSOR_ARROW ) )
+    
+class DragInfomation(object):
+    def __init__(self):
+        pass
+    
+    def start_drag(self, start_pos):
+        self.start_pos = start_pos
+        self.cur_pos = start_pos
+    
+    def update_cur_pos(self, cur_pos):
+        self.cur_pos = cur_pos
+        
+    def get_drag_info(self): 
+        return(self.start_pos, self.cur_pos)
+
+def start_drag(window, event):
+    window.drag_info.start_drag(event.GetPositionTuple())
+    update_trace_bitmap(window, window.st.drag_object(window.drag_info.get_drag_info()))
+    
+def on_drag(window, event):
+    try:
+        window.drag_info.update_cur_pos(event.GetPositionTuple())
+        #print('on'+str(window.drag_info.get_drag_info()))
+        imgstr = window.st.drag_object(window.drag_info.get_drag_info())
+        update_trace_bitmap(window, imgstr)
+        
+    except AttributeError,e:
+        pass
+
+def end_drag(window, event):
+    window.drag_info.update_cur_pos(event.GetPositionTuple())
+    update_trace_bitmap(window, window.st.drag_object(window.drag_info.get_drag_info()))
+    #print('end:'+str(window.drag_info.get_drag_info()))
+    toggle_drag_selection(window, False)
+    window.st.set_object_template()
+    update_trace_bitmap(window, window.st.match_template())
+    
+def load_next_frame(window):
+    window.st.next()
+    import time
+    old=time.clock()
+    update_trace_bitmap(window, window.st.match_template())
+    print("matching time:[%f]"%(time.clock()-old))
