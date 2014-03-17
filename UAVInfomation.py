@@ -15,21 +15,28 @@ class UAVInfomation(object):
         self.roll = [0]
         self.yaw = [0]
         self.vol = [0]
+        self.la = [0]
+        self.lo = [0]
         self.attidisp = AttitudeDisplay()
     
-    def update(self, height, pitch, roll, yaw, vol):
+    def update(self, height, pitch, roll, yaw, vol, la, lo):
         self.height.append(height)
         self.pitch.append(pitch)
         self.roll.append(roll)
         self.yaw.append(yaw)
         self.vol.append(vol)
+        self.la.append(la)
+        self.lo.append(lo)
         
     def get_by_index(self, index):
         return {'height': self.height[index],
                 'pitch': self.pitch[index],
                 'roll': self.roll[index],
                 'yaw': self.yaw[index],
-                'vol': self.vol[index],}
+                'vol': self.vol[index],
+                'la': self.la[index],
+                'lo': self.lo[index],
+                }
     def get(self):
         return self.get_by_index(-1)
     

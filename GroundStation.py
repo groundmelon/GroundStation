@@ -17,13 +17,24 @@ from UAVInfomation import UAVInfomation
 from communication.XBeeComm import XBee
 
 
-import util, wx, time
+import util
+import os
+import wx
+import wx.html2
+import time
 from Definition import *
 from imageprocess.ObjectTracking import get_adjusted_image
 
 class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, MenuBlock, CommBlock):
     def __init__(self):
         super(GroundStation, self).__init__(parent = None)              
+        
+        #---- add Google Earth Components ----  
+        sizer_ge = self.m_panel_route.GetSizer()
+        self.browser_ge = wx.html2.WebView.New(self.m_panel_route, size=(330,330))
+        sizer_ge.Add(self.browser_ge, 1, wx.ALIGN_CENTER, 0)
+        #self.browser_ge.LoadURL(r'http://www.baidu.com')
+        self.browser_ge.LoadURL(r'file:///%s/resources/ge.html'%os.getcwd())
         #---- add component attributes ----
         for comp in [self.m_button_toggle_track, 
                      self.m_button_toggle_track_video,
@@ -178,10 +189,11 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, 
         self.update_rcv_area()
         data = self.get_command()
         if data:
-            self.UAVinfo.update(data[0], data[1], data[2], data[3], data[4])
+            self.UAVinfo.update(data[0], data[1], data[2], data[3], data[4], data[5], data[6])
             attiimg = self.UAVinfo.get_attitude_img()
             self.dc_attitude.DrawBitmap(util.cvimg_to_wxbmp(attiimg), 0, 0)
             self.update_GUI_UAVinfo(self.UAVinfo.get())
+            self.update_GE(self.UAVinfo.get())
     
 #     def on_update_track_bitmap(self,bmp):
 #         self.dc_track.DrawBitmap(bmp, 0, 0)
@@ -276,6 +288,25 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, 
         self.m_staticText_pitch.SetLabel(str(info['pitch'])+'d')
         self.m_staticText_roll.SetLabel(str(info['roll'])+'d')
         self.m_staticText_yaw.SetLabel(str(info['yaw'])+'d')
+    
+    def update_GE(self, info):
+        la = info['la']
+        lo = info['lo']
+        jsstr = '''
+            // Get the current view.
+            var lookAt = ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
+            var camera = ge.getView().copyAsCamera(ge.ALTITUDE_RELATIVE_TO_GROUND);
+    
+            // Set new latitude and longitude values.
+            lookAt.setLatitude(%f);
+            lookAt.setLongitude(%f);
+            lookAt.setRange(%f);
+            
+            // Update the view in Google Earth.
+            ge.getView().setAbstractView(lookAt);
+            //ge.getView().setAbstractView(camera);
+        '''%(la,lo, info['height'])
+        self.browser_ge.RunScript(jsstr)
     
     def enable_video_components(self, switch):
         for each in [self.m_button_video_window_show, self.m_bitmap_video]:

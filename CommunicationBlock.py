@@ -29,14 +29,19 @@ class CommBlock():
     def get_command(self):
         data = self.comm.get_rcvbuf()
         #print(''.join(data))
-        '''example (H099.9 P+45.0 R+30.0 Y+40.0 V11.2) '''
-        if len(data)>= 35 and '(' == data[-35] and ')' == data[-1]:
-            s = ''.join(data[-35:])
-            return (float(s[-33:-28]),
-                    float(s[-26:-21]),
-                    float(s[-19:-14]),
-                    float(s[-12:-7]),
-                    float(s[-5:-1]),
+        '''example (H099.9 P+45.0 R+30.0 Y+40.0 V11.2 A+045.732433 O+126.628802) 
+                   1098765432109876543210987654321098765432109876543210987654321
+                   6         5         4         3         2         1         0
+        '''
+        if len(data)>= 61 and '(' == data[-61] and ')' == data[-1]:
+            s = ''.join(data[-61:])
+            return (float(s[-59:-54]),
+                    float(s[-52:-47]),
+                    float(s[-45:-40]),
+                    float(s[-38:-33]),
+                    float(s[-31:-27]),
+                    float(s[-25:-14]),
+                    float(s[-12:-1]),
                     )
         else:
             return None

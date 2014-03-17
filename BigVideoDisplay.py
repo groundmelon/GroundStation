@@ -14,8 +14,9 @@ WIDTH_SCALE_BASE = 4.0
 HEIGHT_SCALE_BASE = 3.0
 PADDING = 10
 TEXTSIZE = 12
-LABEL_TEXT_COLOR = wx.ColorRGB(0xFF0000)
-WARNING_TEXT_COLOR = wx.ColorRGB(0x0000FF)
+
+LABEL_TEXT_COLOR = wx.BLUE
+WARNING_TEXT_COLOR = wx.RED
 
 class VideoDisplayFrame(IndependentImageDisplayBase):
     def __init__(self, parent):

@@ -10,7 +10,7 @@ import os
 
 class MenuBlock():
     def about(self):
-        wx.MessageBox(u'GroundStation V1.0\nGroundMelon@gmail.com', u"关于",wx.OK | wx.ICON_INFORMATION)
+        wx.MessageBox(u'GroundStation V1.0\nGroundMelon@gmail.com\nPowered by wxPython %s'%wx.VERSION_STRING, u"关于",wx.OK | wx.ICON_INFORMATION)
         
     def save_comm_option(self,options):
         dialog = wx.FileDialog(None, u"保存设置到...", os.getcwd(),

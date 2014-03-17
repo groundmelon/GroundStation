@@ -1,0 +1,28 @@
+<html>
+<head>
+  <title>GE</title>
+  <script type="text/javascript" src="https://www.google.com/jsapi"> </script>
+  <script type="text/javascript">
+    var ge;
+    google.load("earth", "1", {"other_params":"sensor=true_or_false"});
+
+    function init() {
+      google.earth.createInstance('map3d', initCB, failureCB);
+    }
+
+    function initCB(instance) {
+      ge = instance;
+      ge.getWindow().setVisibility(true);
+    }
+
+    function failureCB(errorCode) {
+    }
+
+    google.setOnLoadCallback(init);
+  </script>
+
+</head>
+<body scroll=no style="height: 330; width: 330; padding:0px; margin:0px">
+  <div id="map3d" style="height: 330; width: 330; padding:0px; margin:0px"></div>
+</body>
+</html>
