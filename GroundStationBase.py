@@ -9,6 +9,7 @@
 
 import wx
 import wx.xrc
+import wx.grid
 
 ###########################################################################
 ## Class FrameGroundStationBase
@@ -146,6 +147,66 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_comm.Layout()
 		gbSizer6.Fit( self.m_panel_comm )
 		self.m_notebook1.AddPage( self.m_panel_comm, u"通信数据查看", False )
+		self.m_panel_para_adj = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		gbSizer11 = wx.GridBagSizer( 0, 0 )
+		gbSizer11.SetFlexibleDirection( wx.BOTH )
+		gbSizer11.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+		
+		self.m_grid_para_adj = wx.grid.Grid( self.m_panel_para_adj, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
+		
+		# Grid
+		self.m_grid_para_adj.CreateGrid( 9, 1 )
+		self.m_grid_para_adj.EnableEditing( True )
+		self.m_grid_para_adj.EnableGridLines( True )
+		self.m_grid_para_adj.EnableDragGridSize( False )
+		self.m_grid_para_adj.SetMargins( 0, 0 )
+		
+		# Columns
+		self.m_grid_para_adj.EnableDragColMove( False )
+		self.m_grid_para_adj.EnableDragColSize( True )
+		self.m_grid_para_adj.SetColLabelSize( 30 )
+		self.m_grid_para_adj.SetColLabelValue( 0, u"Value" )
+		self.m_grid_para_adj.SetColLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+		
+		# Rows
+		self.m_grid_para_adj.EnableDragRowSize( True )
+		self.m_grid_para_adj.SetRowLabelSize( 60 )
+		self.m_grid_para_adj.SetRowLabelValue( 0, u"XP" )
+		self.m_grid_para_adj.SetRowLabelValue( 1, u"XI" )
+		self.m_grid_para_adj.SetRowLabelValue( 2, u"XD" )
+		self.m_grid_para_adj.SetRowLabelValue( 3, u"YP" )
+		self.m_grid_para_adj.SetRowLabelValue( 4, u"YI" )
+		self.m_grid_para_adj.SetRowLabelValue( 5, u"YD" )
+		self.m_grid_para_adj.SetRowLabelValue( 6, u"ZP" )
+		self.m_grid_para_adj.SetRowLabelValue( 7, u"ZI" )
+		self.m_grid_para_adj.SetRowLabelValue( 8, u"ZD" )
+		self.m_grid_para_adj.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+		
+		# Label Appearance
+		
+		# Cell Defaults
+		self.m_grid_para_adj.SetDefaultCellAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+		gbSizer11.Add( self.m_grid_para_adj, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 2 ), wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		self.m_button_send_para = wx.Button( self.m_panel_para_adj, wx.ID_ANY, u"发送参数", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gbSizer11.Add( self.m_button_send_para, wx.GBPosition( 1, 0 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
+		
+		self.m_button_rcv_para = wx.Button( self.m_panel_para_adj, wx.ID_ANY, u"接收参数", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_button_rcv_para.Enable( False )
+		
+		gbSizer11.Add( self.m_button_rcv_para, wx.GBPosition( 1, 1 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
+		
+		self.m_button_save_para = wx.Button( self.m_panel_para_adj, wx.ID_ANY, u"保存参数", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gbSizer11.Add( self.m_button_save_para, wx.GBPosition( 2, 0 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
+		
+		self.m_button_load_para = wx.Button( self.m_panel_para_adj, wx.ID_ANY, u"读取参数", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gbSizer11.Add( self.m_button_load_para, wx.GBPosition( 2, 1 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
+		
+		
+		self.m_panel_para_adj.SetSizer( gbSizer11 )
+		self.m_panel_para_adj.Layout()
+		gbSizer11.Fit( self.m_panel_para_adj )
+		self.m_notebook1.AddPage( self.m_panel_para_adj, u"调参", True )
 		self.m_panel_track = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), wx.TAB_TRAVERSAL )
 		self.m_panel_track.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
 		self.m_panel_track.Enable( False )
@@ -182,10 +243,22 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_toggle_track = wx.Button( self.m_panel_track, wx.ID_ANY, u"开始追踪", wx.DefaultPosition, wx.Size( 80,-1 ), 0 )
 		gbSizer4.Add( self.m_button_toggle_track, wx.GBPosition( 1, 2 ), wx.GBSpan( 1, 1 ), wx.ALL, 1 )
 		
-		m_choice_track_modeChoices = [ u"template", u"color", u"colormsk" ]
+		m_choice_track_modeChoices = [ u"template", u"color", u"colormsk", u"meanshift", u"backprj", u"multi-meanshift", u"multi-backprj", wx.EmptyString ]
 		self.m_choice_track_mode = wx.Choice( self.m_panel_track, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), m_choice_track_modeChoices, 0 )
-		self.m_choice_track_mode.SetSelection( 0 )
+		self.m_choice_track_mode.SetSelection( 5 )
+		self.m_choice_track_mode.SetMaxSize( wx.Size( 80,-1 ) )
+		
 		gbSizer4.Add( self.m_choice_track_mode, wx.GBPosition( 2, 0 ), wx.GBSpan( 1, 1 ), wx.ALL, 1 )
+		
+		m_choice_track_argChoices = [ u"multi" ]
+		self.m_choice_track_arg = wx.Choice( self.m_panel_track, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), m_choice_track_argChoices, 0 )
+		self.m_choice_track_arg.SetSelection( 0 )
+		gbSizer4.Add( self.m_choice_track_arg, wx.GBPosition( 2, 1 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER, 5 )
+		
+		self.m_textCtrl_track_arg = wx.TextCtrl( self.m_panel_track, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_PROCESS_ENTER )
+		self.m_textCtrl_track_arg.SetMaxSize( wx.Size( 80,-1 ) )
+		
+		gbSizer4.Add( self.m_textCtrl_track_arg, wx.GBPosition( 2, 2 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER, 5 )
 		
 		
 		gbSizer3.Add( gbSizer4, wx.GBPosition( 1, 1 ), wx.GBSpan( 1, 3 ), wx.EXPAND, 0 )
@@ -194,7 +267,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_track.SetSizer( gbSizer3 )
 		self.m_panel_track.Layout()
 		gbSizer3.Fit( self.m_panel_track )
-		self.m_notebook1.AddPage( self.m_panel_track, u"目标跟踪", True )
+		self.m_notebook1.AddPage( self.m_panel_track, u"目标跟踪", False )
 		self.m_panel_route = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.m_panel_route.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
 		
@@ -282,11 +355,15 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_textCtrl_comm_send.Bind( wx.EVT_TEXT_ENTER, self.on_send_area_enter )
 		self.m_button_comm_send.Bind( wx.EVT_BUTTON, self.on_send_comm_click )
 		self.m_button_comm_send.Bind( wx.EVT_CHAR, self.on_send_comm_char )
+		self.m_button_send_para.Bind( wx.EVT_BUTTON, self.on_send_para )
+		self.m_button_save_para.Bind( wx.EVT_BUTTON, self.on_save_para )
+		self.m_button_load_para.Bind( wx.EVT_BUTTON, self.on_load_para )
 		self.m_radioBox_image_adj.Bind( wx.EVT_RADIOBOX, self.on_radiobox_adjust )
 		self.m_slider_adjust.Bind( wx.EVT_SCROLL_CHANGED, self.on_slider_adjust_changed )
 		self.m_button_toggle_track_video.Bind( wx.EVT_BUTTON, self.on_toggle_track_video )
 		self.m_button_select_object.Bind( wx.EVT_BUTTON, self.on_select_object )
 		self.m_button_toggle_track.Bind( wx.EVT_BUTTON, self.on_toggle_track )
+		self.m_textCtrl_track_arg.Bind( wx.EVT_TEXT_ENTER, self.on_track_arg_enter )
 		self.m_button_video_window_show.Bind( wx.EVT_BUTTON, self.on_video_window_show )
 		self.Bind( wx.EVT_MENU, self.on_save_comm_option, id = self.m_menuItem_save_comm_option.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_load_comm_option, id = self.m_menuItem_load_comm_option.GetId() )
@@ -329,6 +406,15 @@ class FrameGroundStationBase ( wx.Frame ):
 	def on_send_comm_char( self, event ):
 		event.Skip()
 	
+	def on_send_para( self, event ):
+		event.Skip()
+	
+	def on_save_para( self, event ):
+		event.Skip()
+	
+	def on_load_para( self, event ):
+		event.Skip()
+	
 	def on_radiobox_adjust( self, event ):
 		event.Skip()
 	
@@ -342,6 +428,9 @@ class FrameGroundStationBase ( wx.Frame ):
 		event.Skip()
 	
 	def on_toggle_track( self, event ):
+		event.Skip()
+	
+	def on_track_arg_enter( self, event ):
 		event.Skip()
 	
 	def on_video_window_show( self, event ):

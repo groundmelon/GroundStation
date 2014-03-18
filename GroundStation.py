@@ -9,6 +9,7 @@ from TrackBlock import TrackBlock
 from ButtonBlock import ButtonBlock
 from MenuBlock import MenuBlock
 from WorkBlock import WorkBlock
+from ParameterAdjustBlock import ParameterAdjustBlock
 from CommunicationBlock import CommBlock, InputHistory
 from attitude.attitudeMod import AttitudeDisplay
 from UAVInfomation import UAVInfomation
@@ -25,7 +26,7 @@ import time
 from Definition import *
 from imageprocess.ObjectTracking import get_adjusted_image
 
-class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, MenuBlock, CommBlock):
+class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, MenuBlock, CommBlock, ParameterAdjustBlock):
     def __init__(self):
         super(GroundStation, self).__init__(parent = None)              
         
@@ -65,6 +66,9 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, 
         #self.track_video_on = False
         #self.track_on = False
         
+        #---- init para adj block ----
+        self.init_para_adj_table()
+        
         #---- init information variables ----
         self.bitmap_track_size = tuple(self.m_bitmap_track.GetSize())
         self.bitmap_video_size = tuple(self.m_bitmap_video.GetSize())
@@ -78,7 +82,8 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, 
         self.dc_video = wx.ClientDC(self.m_bitmap_video)
         self.dc_track = wx.ClientDC(self.m_bitmap_track)
         self.dc_attitude = wx.ClientDC(self.m_bitmap_attitude)
-        # --- end test ---
+        # --- test ---
+        self.multi_arg = None
         
         self.init_worklist()
         #self.Bind(wx.EVT_IDLE, self.main_work)
@@ -156,6 +161,19 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, 
      
     def on_track_bitmap_motion(self, event):
         self.on_drag(event)
+    
+    def on_track_arg_enter(self, event):
+        self.set_track_arg(event.GetEventObject().GetValue())
+
+#------ Parameter Adjust Binding Function ------
+    def on_send_para(self, event):
+        self.send_para()
+    
+    def on_load_para(self, event):
+        self.load_para()
+    
+    def on_save_para(self, event):
+        self.save_para()
 
 #------ Communication Binding Function ------   
     def on_send_area_enter(self, event):
@@ -244,32 +262,22 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, 
                 elif track_mode == 'colormsk':
                     matchimg, center, mask = self.objmatch.do_color_match(srcimg)
                     rszimg = util.cvimg_resize(mask, self.bitmap_track_size)
+                elif track_mode == 'meanshift':
+                    matchimg, center, prj_img = self.objmatch.do_meanshift(srcimg)
+                    rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
+                elif track_mode == 'backprj':
+                    matchimg, center, prj_img = self.objmatch.do_meanshift(srcimg)
+                    rszimg = util.cvimg_resize(prj_img, self.bitmap_track_size)
+                elif track_mode == 'multi-meanshift':
+                    matchimg, center, prj_img = self.objmatch.do_multi_meanshift(srcimg, self.multi_arg)
+                    rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
+                elif track_mode == 'multi-backprj':
+                    matchimg, center, prj_img = self.objmatch.do_multi_meanshift(srcimg, self.multi_arg)
+                    rszimg = util.cvimg_resize(prj_img, self.bitmap_track_size)
                 self.dc_track.DrawBitmap(util.cvimg_to_wxbmp(rszimg), 0, 0)
                 # use track information to do something
                 #print("center:%s"%(str(center)))
-            
-        
-        
-    
-    def main_work1(self, event):
-        a = time.clock()
-        time.sleep(0)
-        
-        self.update_attitude_bitmap()
-        
-        if self.video_on:
-            img, bmp = self.update_video_bitmap()
-            self.update_video_window()
-            # track is based on video
-            if self.track_refresh_on:
-                #self.st.set_srcimg(img)
-                self.st.set_srcimg(self.st.adjust_by_settings(img)['src'][2])
-                if self.have_template:
-                    self.update_track_bitmap(self.st.match_template())
-                else:
-                    self.update_track_bitmap(self.st.get_source())
-                    #self.update_track_bitmap(bmp)
-        #print('main work:'+str(time.clock()-a))
+
 
 #------ Tool Function ------       
     def update_GUI_UAVinfo(self, info):
@@ -296,7 +304,9 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, 
             // Get the current view.
             var lookAt = ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
             var camera = ge.getView().copyAsCamera(ge.ALTITUDE_RELATIVE_TO_GROUND);
-    
+            
+            // Set the FlyTo speed.
+            ge.getOptions().setFlyToSpeed(1.0);
             // Set new latitude and longitude values.
             lookAt.setLatitude(%f);
             lookAt.setLongitude(%f);
@@ -307,6 +317,10 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, 
             //ge.getView().setAbstractView(camera);
         '''%(la,lo, info['height'])
         self.browser_ge.RunScript(jsstr)
+    
+    def set_track_arg(self, s):
+        if 'multi' == self.m_choice_track_arg.GetStringSelection():
+            self.multi_arg = int(s)
     
     def enable_video_components(self, switch):
         for each in [self.m_button_video_window_show, self.m_bitmap_video]:

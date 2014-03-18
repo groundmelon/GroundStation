@@ -7,6 +7,7 @@ Created on 2014-2-13
 import cv2
 import numpy as np
 import util
+from Gnuplot.termdefs import Arg
 
 LINE_WIDTH = 5
 DRAG_COLOR = (255,0,0)
@@ -15,6 +16,8 @@ HUE_DELTA = 30
 SAT_DELTA = 30
 VAL_DELTA = 30
 MEDIANBLUR_KERNEL_SIZE = 5
+
+MULTI_SPLIT_SCALE = 0.2
 
 # ---- 图像调整相关函数 ----
 def get_image_adjust_value():
@@ -74,7 +77,10 @@ class ObjectMatch(object):
     def __init__(self, rect, src):
         lt = rect[0]
         rb = rect[1]
+        # ---- preparation for template match ----
         self.object_template =  src[ lt.y:rb.y , lt.x:rb.x ,:]
+        
+        # ---- preparation for color match ----
         rtn = self.calc_color_match_value(self.object_template)
         hue = rtn['h']
         sat = rtn['s']
@@ -102,6 +108,19 @@ class ObjectMatch(object):
         self.selected_hsv = rtn                         
         self.center = util.Point((lt.x+rb.x)/2, (lt.y+rb.y)/2)
         self.radius = int((((rb.y-lt.y)**2 + (rb.x-lt.x)**2)**0.5)/2)
+        
+        # ---- preparation for meanshift ----
+        self.track_window = (lt.x, lt.y, rb.x-lt.x, rb.y-lt.y)
+        self.track_window_origin = self.track_window
+        roi = src[lt.y:rb.y , lt.x:rb.x ,:]
+        hsv_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(hsv_roi, np.array((0., 60., 32.)), np.array((180.,255.,255.)))
+        self.roi_hist = cv2.calcHist([hsv_roi], [0], mask, [180], [0,180])
+        cv2.normalize(self.roi_hist, self.roi_hist, 0, 255, cv2.NORM_MINMAX)
+        
+        self.term_crit = (cv2.TERM_CRITERIA_EPS|cv2.TERM_CRITERIA_COUNT, 10, 1)
+        # ---- preparation for multi-meanShift ----
+        self.d2_th = (src.shape[1]**2 + src.shape[0]**2) * (MULTI_SPLIT_SCALE**2) 
         
         #---- 测试各种方法是否有效 ----
         self.do_match(src)
@@ -156,5 +175,68 @@ class ObjectMatch(object):
         cv2.circle(rst_img, center, self.radius, OBJECT_MATCH_COLOR, LINE_WIDTH)
         msk_img = cv2.cvtColor(filted_mask, cv2.COLOR_GRAY2BGR)
         return (rst_img, util.Point(center), msk_img)
+
+    def do_meanshift(self, src):         
+        sw = util.SW('meanShift')
         
+        hsv = cv2.cvtColor(src, cv2.COLOR_BGR2HSV)
+        dst = cv2.calcBackProject([hsv], [0], self.roi_hist, [0,180], 1)
+        
+        ret, window = cv2.meanShift(dst, self.track_window, self.term_crit)
+        self.track_window = window
+        x,y,w,h = window
+        center = (int(x+w/2), int(y+h/2))
+        rst_img = src.copy()
+        cv2.rectangle(rst_img, (x,y), (x+w,y+h), OBJECT_MATCH_COLOR, LINE_WIDTH)
+        prj_img = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
+        
+        sw.stop()
+        return rst_img, center, prj_img
+    
+    def do_multi_meanshift(self, src, arg):
+        if arg:
+            effect_value_multiplier = arg
+        else:
+            effect_value_multiplier = 100
+        
+        sw = util.SW('multi-meanShift')
+        
+        center_list=[]
+        hsv = cv2.cvtColor(src, cv2.COLOR_BGR2HSV)
+        dst = cv2.calcBackProject([hsv], [0], self.roi_hist, [0,180], 1)
+        #dst = cv2.medianBlur(dst, 11)
+        #dst = cv2.medianBlur(dst, int(self.radius/2) + (self.radius/2)%2 - 1)
+        #dst = cv2.inRange(dst, 100, 255)
+        win_w = self.track_window_origin[2]
+        win_h = self.track_window_origin[3]
+        
+        search_unit = 100
+        for i in range((src.shape[1]-win_w)/search_unit):
+            for j in range((src.shape[0]-win_h)/search_unit):        
+                x,y,w,h = i*search_unit, j*search_unit, win_w, win_h
+                track_window = (x,y,w,h)
+                hist = cv2.calcHist([dst[y:y+h,x:x+w]],[0],None,[8],[0,256])
+                if (np.sum(hist[0]) < ((np.average(hist[1:-1])))*effect_value_multiplier):
+                    ret, window = cv2.meanShift(dst, track_window, self.term_crit)
+                    center = (int(window[0]+window[2]/2), int(window[1]+window[3]/2))
+                    if not center_list:
+                        center_list.append(center)
+                    else:
+                        dumplicate = False
+                        for each in center_list:
+                            d2 = (center[0]-each[0])**2+(center[1]-each[1])**2
+                            if d2 < self.d2_th:
+                                dumplicate = True
+                        if not dumplicate:
+                            center_list.append(center)
+        #print('---- valid center ----\n%s'%str(center_list))
+            
+        rst_img = src.copy()
+        for each in center_list:
+            cv2.circle(rst_img, each, 40, OBJECT_MATCH_COLOR, LINE_WIDTH)
+        
+        prj_img = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
+        
+        sw.stop()
+        return rst_img, center_list, prj_img
         

@@ -5,7 +5,10 @@ Created on 2014-1-4
 @author: GroundMelon
 '''
 
-import wx, cv2, numpy as np
+import wx
+import cv2
+import numpy as np
+import time
 from Gnuplot.termdefs import Arg
 from Cython.Plex.Regexps import Str
 
@@ -61,6 +64,16 @@ def cvimg_rescale(cvimg, scale):
     elif scale == 1:
         return cvimg
 
+
+class SW(object):
+    ''' stop watch '''
+    def __init__(self, s='Noname'):
+        self.start_time = time.clock()
+        self.s = s
+    def stop(self, *arg):
+        now_time = time.clock()
+        print('[%s] %.3fms'%(self.s,(now_time-self.start_time)*1000))
+        
 NULLIMG = r'resources\null.bmp'
 def get_null_bitmap():
     return wx.BitmapFromImage(wx.Image(NULLIMG))

@@ -19,6 +19,7 @@ encoding/GroundStation.py=utf-8
 encoding/GroundStationBase.py=utf-8
 encoding/IndependentImageDisplayBase.py=utf-8
 encoding/MenuBlock.py=utf-8
+encoding/ParameterAdjustBlock.py=utf-8
 encoding/PickleFileIO.py=utf-8
 encoding/SerialSettingDialog.py=utf-8
 encoding/TrackBlock.py=utf-8
