@@ -174,6 +174,9 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, 
     
     def on_save_para(self, event):
         self.save_para()
+    
+    def on_set_down_para(self, event):
+        self.set_down_para()
 
 #------ Communication Binding Function ------   
     def on_send_area_enter(self, event):

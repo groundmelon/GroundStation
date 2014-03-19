@@ -191,10 +191,8 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_send_para = wx.Button( self.m_panel_para_adj, wx.ID_ANY, u"发送参数", wx.DefaultPosition, wx.DefaultSize, 0 )
 		gbSizer11.Add( self.m_button_send_para, wx.GBPosition( 1, 0 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
 		
-		self.m_button_rcv_para = wx.Button( self.m_panel_para_adj, wx.ID_ANY, u"接收参数", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_button_rcv_para.Enable( False )
-		
-		gbSizer11.Add( self.m_button_rcv_para, wx.GBPosition( 1, 1 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
+		self.m_button_set_down_para = wx.Button( self.m_panel_para_adj, wx.ID_ANY, u"固定参数", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gbSizer11.Add( self.m_button_set_down_para, wx.GBPosition( 1, 1 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
 		
 		self.m_button_save_para = wx.Button( self.m_panel_para_adj, wx.ID_ANY, u"保存参数", wx.DefaultPosition, wx.DefaultSize, 0 )
 		gbSizer11.Add( self.m_button_save_para, wx.GBPosition( 2, 0 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
@@ -356,6 +354,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_comm_send.Bind( wx.EVT_BUTTON, self.on_send_comm_click )
 		self.m_button_comm_send.Bind( wx.EVT_CHAR, self.on_send_comm_char )
 		self.m_button_send_para.Bind( wx.EVT_BUTTON, self.on_send_para )
+		self.m_button_set_down_para.Bind( wx.EVT_BUTTON, self.on_set_down_para )
 		self.m_button_save_para.Bind( wx.EVT_BUTTON, self.on_save_para )
 		self.m_button_load_para.Bind( wx.EVT_BUTTON, self.on_load_para )
 		self.m_radioBox_image_adj.Bind( wx.EVT_RADIOBOX, self.on_radiobox_adjust )
@@ -407,6 +406,9 @@ class FrameGroundStationBase ( wx.Frame ):
 		event.Skip()
 	
 	def on_send_para( self, event ):
+		event.Skip()
+	
+	def on_set_down_para( self, event ):
 		event.Skip()
 	
 	def on_save_para( self, event ):

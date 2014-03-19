@@ -65,6 +65,9 @@ class CommBlock():
         for each in self.m_panel_comm.GetChildren():
             each.Enable(switch)
         
+        self.m_panel_para_adj.Enable(switch)
+        for each in self.m_panel_para_adj.GetChildren():
+            each.Enable(switch)
     
 class InputHistory(object):
     def __init__(self,window):

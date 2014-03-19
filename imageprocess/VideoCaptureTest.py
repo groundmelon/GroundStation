@@ -8,10 +8,12 @@ from VideoCapture import Device
 import cv2
 import numpy as np
 
-cam = Device()
-#cam.displayCaptureFilterProperties()
+cam = Device(devnum=1)
+cam.displayCaptureFilterProperties()
 cam.displayCapturePinProperties()
+print('a')
 im_pil = cam.getImage().convert('RGB')
+print('b')
 cvimg = np.array(im_pil)
 cvimg = cvimg[:,:,::-1].copy()
 cv2.imshow('',cvimg)
@@ -23,6 +25,6 @@ while True:
     cvimg = np.array(im_pil)
     cvimg = cvimg[:,:,::-1]#.copy()
     cv2.imshow('',cvimg)
-    #cv2.waitKey(100)
+    cv2.waitKey(100)
     print(str(time.clock()-a))
 del cam
