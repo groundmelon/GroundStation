@@ -204,7 +204,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_para_adj.SetSizer( gbSizer11 )
 		self.m_panel_para_adj.Layout()
 		gbSizer11.Fit( self.m_panel_para_adj )
-		self.m_notebook1.AddPage( self.m_panel_para_adj, u"调参", True )
+		self.m_notebook1.AddPage( self.m_panel_para_adj, u"调参", False )
 		self.m_panel_track = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), wx.TAB_TRAVERSAL )
 		self.m_panel_track.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
 		self.m_panel_track.Enable( False )
@@ -214,6 +214,17 @@ class FrameGroundStationBase ( wx.Frame ):
 		gbSizer3.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
 		
 		self.m_bitmap_track = wx.StaticBitmap( self.m_panel_track, wx.ID_ANY, wx.Bitmap( u"resources/null.bmp", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.Size( 320,240 ), 0 )
+		self.m_bitmap_track.SetToolTipString( u"右键单击可选择显示模式" )
+		
+		self.m_menu_bitmap_track = wx.Menu()
+		self.m_menuItem_track_display_rst = wx.MenuItem( self.m_menu_bitmap_track, wx.ID_ANY, u"显示结果", wx.EmptyString, wx.ITEM_RADIO )
+		self.m_menu_bitmap_track.AppendItem( self.m_menuItem_track_display_rst )
+		
+		self.m_menuItem_track_display_process = wx.MenuItem( self.m_menu_bitmap_track, wx.ID_ANY, u"显示过程", wx.EmptyString, wx.ITEM_RADIO )
+		self.m_menu_bitmap_track.AppendItem( self.m_menuItem_track_display_process )
+		
+		self.m_bitmap_track.Bind( wx.EVT_RIGHT_DOWN, self.m_bitmap_trackOnContextMenu ) 
+		
 		gbSizer3.Add( self.m_bitmap_track, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 4 ), wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_TOP|wx.ALL, 5 )
 		
 		m_radioBox_image_adjChoices = [ u"Brightness", u"Contrast", u"Gamma" ]
@@ -241,9 +252,9 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_toggle_track = wx.Button( self.m_panel_track, wx.ID_ANY, u"开始追踪", wx.DefaultPosition, wx.Size( 80,-1 ), 0 )
 		gbSizer4.Add( self.m_button_toggle_track, wx.GBPosition( 1, 2 ), wx.GBSpan( 1, 1 ), wx.ALL, 1 )
 		
-		m_choice_track_modeChoices = [ u"template", u"color", u"colormsk", u"meanshift", u"backprj", u"multi-meanshift", u"multi-backprj", wx.EmptyString ]
+		m_choice_track_modeChoices = [ u"template", u"color", u"meanshift", u"multi-meanshift", wx.EmptyString ]
 		self.m_choice_track_mode = wx.Choice( self.m_panel_track, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), m_choice_track_modeChoices, 0 )
-		self.m_choice_track_mode.SetSelection( 5 )
+		self.m_choice_track_mode.SetSelection( 0 )
 		self.m_choice_track_mode.SetMaxSize( wx.Size( 80,-1 ) )
 		
 		gbSizer4.Add( self.m_choice_track_mode, wx.GBPosition( 2, 0 ), wx.GBSpan( 1, 1 ), wx.ALL, 1 )
@@ -265,7 +276,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_track.SetSizer( gbSizer3 )
 		self.m_panel_track.Layout()
 		gbSizer3.Fit( self.m_panel_track )
-		self.m_notebook1.AddPage( self.m_panel_track, u"目标跟踪", False )
+		self.m_notebook1.AddPage( self.m_panel_track, u"目标跟踪", True )
 		self.m_panel_route = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.m_panel_route.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
 		
@@ -453,6 +464,9 @@ class FrameGroundStationBase ( wx.Frame ):
 	def on_about( self, event ):
 		event.Skip()
 	
+	def m_bitmap_trackOnContextMenu( self, event ):
+		self.m_bitmap_track.PopupMenu( self.m_menu_bitmap_track, event.GetPosition() )
+		
 
 ###########################################################################
 ## Class frame_serial_setting

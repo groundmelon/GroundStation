@@ -8,7 +8,7 @@ from VideoCapture import Device
 import cv2
 import numpy as np
 
-cam = Device(devnum=1)
+cam = Device(devnum=0)
 cam.displayCaptureFilterProperties()
 cam.displayCapturePinProperties()
 print('a')

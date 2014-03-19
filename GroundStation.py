@@ -256,27 +256,32 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, 
                 self.dc_track.DrawBitmap(util.cvimg_to_wxbmp(rszimg), 0, 0)           
             elif self.display_track_state == DISPLAY_TRACK_STATE_RESULT:
                 track_mode = self.m_choice_track_mode.GetStringSelection()
+                display_process = self.m_menuItem_track_display_process.IsChecked()
                 if track_mode == 'template':
                     matchimg, center = self.objmatch.do_match(srcimg)
                     rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
+                
                 elif track_mode == 'color':
                     matchimg, center, mask = self.objmatch.do_color_match(srcimg)
-                    rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
-                elif track_mode == 'colormsk':
-                    matchimg, center, mask = self.objmatch.do_color_match(srcimg)
-                    rszimg = util.cvimg_resize(mask, self.bitmap_track_size)
+                    if display_process:
+                        rszimg = util.cvimg_resize(mask, self.bitmap_track_size)
+                    else:
+                        rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
+                
                 elif track_mode == 'meanshift':
                     matchimg, center, prj_img = self.objmatch.do_meanshift(srcimg)
-                    rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
-                elif track_mode == 'backprj':
-                    matchimg, center, prj_img = self.objmatch.do_meanshift(srcimg)
-                    rszimg = util.cvimg_resize(prj_img, self.bitmap_track_size)
+                    if display_process:
+                        rszimg = util.cvimg_resize(prj_img, self.bitmap_track_size)
+                    else:
+                        rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
+                
                 elif track_mode == 'multi-meanshift':
                     matchimg, center, prj_img = self.objmatch.do_multi_meanshift(srcimg, self.multi_arg)
-                    rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
-                elif track_mode == 'multi-backprj':
-                    matchimg, center, prj_img = self.objmatch.do_multi_meanshift(srcimg, self.multi_arg)
-                    rszimg = util.cvimg_resize(prj_img, self.bitmap_track_size)
+                    if display_process:
+                        rszimg = util.cvimg_resize(prj_img, self.bitmap_track_size)
+                    else:
+                        rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
+                    
                 self.dc_track.DrawBitmap(util.cvimg_to_wxbmp(rszimg), 0, 0)
                 # use track information to do something
                 #print("center:%s"%(str(center)))
