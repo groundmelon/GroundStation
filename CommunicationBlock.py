@@ -14,14 +14,15 @@ class CommBlock():
         self.history.add(gui_data)
         
         if self.m_choice_send_style.GetStringSelection() == 'HEX':          
-            self.send_data_by_frame(''.join([chr(int(x,16)) for x in gui_data.split()]))
+            rtn = self.send_data_by_frame(''.join([chr(int(x,16)) for x in gui_data.split()]))
         elif self.m_choice_send_style.GetStringSelection() == 'ASCII':
-            self.send_data_by_frame(gui_data)
+            rtn = self.send_data_by_frame(gui_data)
         else:
             assert False, u'Send type is not ASCII nor HEX!'
             return
         if self.m_checkBox_sent_clear.IsChecked():
             self.m_textCtrl_comm_send.SetValue('')
+        self.sbar.update(u'本次发送%d字节'%rtn)
     
     def send_data_by_frame(self, data):
         rtn = self.comm.send_string(data)

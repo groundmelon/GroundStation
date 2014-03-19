@@ -13,6 +13,7 @@ from ParameterAdjustBlock import ParameterAdjustBlock
 from CommunicationBlock import CommBlock, InputHistory
 from attitude.attitudeMod import AttitudeDisplay
 from UAVInfomation import UAVInfomation
+from StatusBarSystem import StatusBarSystem
 
 
 from communication.XBeeComm import XBee
@@ -26,9 +27,15 @@ import time
 from Definition import *
 from imageprocess.ObjectTracking import get_adjusted_image
 
-class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, MenuBlock, CommBlock, ParameterAdjustBlock):
+
+class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, 
+                    ButtonBlock, MenuBlock, CommBlock, ParameterAdjustBlock,
+                    ):
     def __init__(self):
         super(GroundStation, self).__init__(parent = None)              
+        
+        #---- init status bar system ----
+        self.sbar = StatusBarSystem(self.m_statusBar)
         
         #---- add Google Earth Components ----  
         sizer_ge = self.m_panel_route.GetSizer()
@@ -84,6 +91,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, 
         self.dc_attitude = wx.ClientDC(self.m_bitmap_attitude)
         # --- test ---
         self.multi_arg = None
+        self.edge_arg = None
         
         self.init_worklist()
         #self.Bind(wx.EVT_IDLE, self.main_work)
@@ -100,6 +108,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, 
     
     def on_save_comm_option(self, event): 
         self.save_comm_option(self.comm_options)
+    
     
     def on_load_comm_option(self, event):
         self.load_comm_option()
@@ -164,6 +173,12 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, 
     
     def on_track_arg_enter(self, event):
         self.set_track_arg(event.GetEventObject().GetValue())
+    
+    def on_enter_bitmap_track(self, event):
+        self.sbar.update(u'提示：单击右键可选择显示模式')
+    
+    def on_leave_bitmap_track(self, event):
+        self.sbar.backward()
 
 #------ Parameter Adjust Binding Function ------
     def on_send_para(self, event):
@@ -258,8 +273,18 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, 
                 track_mode = self.m_choice_track_mode.GetStringSelection()
                 display_process = self.m_menuItem_track_display_process.IsChecked()
                 if track_mode == 'template':
-                    matchimg, center = self.objmatch.do_match(srcimg)
-                    rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
+                    matchimg, center, res = self.objmatch.do_tpl_match(srcimg)
+                    if display_process:
+                        rszimg = util.cvimg_resize(res, self.bitmap_track_size)
+                    else:
+                        rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
+                
+                elif track_mode == 'edge-tpl':
+                    matchimg, center, edgeimg = self.objmatch.do_edge_match(srcimg,self.edge_arg)
+                    if display_process:
+                        rszimg = util.cvimg_resize(edgeimg, self.bitmap_track_size)
+                    else:
+                        rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
                 
                 elif track_mode == 'color':
                     matchimg, center, mask = self.objmatch.do_color_match(srcimg)
@@ -327,8 +352,11 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, ButtonBlock, 
         self.browser_ge.RunScript(jsstr)
     
     def set_track_arg(self, s):
-        if 'multi' == self.m_choice_track_arg.GetStringSelection():
+        sel = self.m_choice_track_arg.GetStringSelection()
+        if 'multi' == sel:
             self.multi_arg = int(s)
+        elif 'edge' == sel:
+            self.edge_arg = float(s)
     
     def enable_video_components(self, switch):
         for each in [self.m_button_video_window_show, self.m_bitmap_video]:

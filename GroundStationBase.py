@@ -214,8 +214,6 @@ class FrameGroundStationBase ( wx.Frame ):
 		gbSizer3.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
 		
 		self.m_bitmap_track = wx.StaticBitmap( self.m_panel_track, wx.ID_ANY, wx.Bitmap( u"resources/null.bmp", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.Size( 320,240 ), 0 )
-		self.m_bitmap_track.SetToolTipString( u"右键单击可选择显示模式" )
-		
 		self.m_menu_bitmap_track = wx.Menu()
 		self.m_menuItem_track_display_rst = wx.MenuItem( self.m_menu_bitmap_track, wx.ID_ANY, u"显示结果", wx.EmptyString, wx.ITEM_RADIO )
 		self.m_menu_bitmap_track.AppendItem( self.m_menuItem_track_display_rst )
@@ -252,14 +250,14 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_toggle_track = wx.Button( self.m_panel_track, wx.ID_ANY, u"开始追踪", wx.DefaultPosition, wx.Size( 80,-1 ), 0 )
 		gbSizer4.Add( self.m_button_toggle_track, wx.GBPosition( 1, 2 ), wx.GBSpan( 1, 1 ), wx.ALL, 1 )
 		
-		m_choice_track_modeChoices = [ u"template", u"color", u"meanshift", u"multi-meanshift", wx.EmptyString ]
+		m_choice_track_modeChoices = [ u"template", u"edge-tpl", u"meanshift", u"multi-meanshift", u"color", wx.EmptyString, wx.EmptyString ]
 		self.m_choice_track_mode = wx.Choice( self.m_panel_track, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), m_choice_track_modeChoices, 0 )
 		self.m_choice_track_mode.SetSelection( 0 )
 		self.m_choice_track_mode.SetMaxSize( wx.Size( 80,-1 ) )
 		
 		gbSizer4.Add( self.m_choice_track_mode, wx.GBPosition( 2, 0 ), wx.GBSpan( 1, 1 ), wx.ALL, 1 )
 		
-		m_choice_track_argChoices = [ u"multi" ]
+		m_choice_track_argChoices = [ u"multi", u"edge" ]
 		self.m_choice_track_arg = wx.Choice( self.m_panel_track, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), m_choice_track_argChoices, 0 )
 		self.m_choice_track_arg.SetSelection( 0 )
 		gbSizer4.Add( self.m_choice_track_arg, wx.GBPosition( 2, 1 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER, 5 )
@@ -368,6 +366,8 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_set_down_para.Bind( wx.EVT_BUTTON, self.on_set_down_para )
 		self.m_button_save_para.Bind( wx.EVT_BUTTON, self.on_save_para )
 		self.m_button_load_para.Bind( wx.EVT_BUTTON, self.on_load_para )
+		self.m_bitmap_track.Bind( wx.EVT_ENTER_WINDOW, self.on_enter_bitmap_track )
+		self.m_bitmap_track.Bind( wx.EVT_LEAVE_WINDOW, self.on_leave_bitmap_track )
 		self.m_radioBox_image_adj.Bind( wx.EVT_RADIOBOX, self.on_radiobox_adjust )
 		self.m_slider_adjust.Bind( wx.EVT_SCROLL_CHANGED, self.on_slider_adjust_changed )
 		self.m_button_toggle_track_video.Bind( wx.EVT_BUTTON, self.on_toggle_track_video )
@@ -426,6 +426,12 @@ class FrameGroundStationBase ( wx.Frame ):
 		event.Skip()
 	
 	def on_load_para( self, event ):
+		event.Skip()
+	
+	def on_enter_bitmap_track( self, event ):
+		event.Skip()
+	
+	def on_leave_bitmap_track( self, event ):
 		event.Skip()
 	
 	def on_radiobox_adjust( self, event ):

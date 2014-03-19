@@ -20,11 +20,11 @@ class MenuBlock():
             try:
                 pfio = PickleFileIO.PickleFileIO(filepath)
                 pfio.save(options)
-                self.m_statusBar.SetStatusText(u'通信设置"%s"已经保存。'%filepath)
+                self.sbar.update(u'通信设置"%s"已经保存。'%filepath)
                 wx.MessageBox(u'通信设置"%s"已经保存。'%filepath, u"保存成功",wx.OK | wx.ICON_INFORMATION)
             except Exception,e:
                 wx.MessageBox(u'通信设置"%s"保存失败。\n%s'%(filepath,str(e)), u"保存失败",wx.OK | wx.ICON_ERROR)
-                self.m_statusBar.SetStatusText(u'通信设置"%s"保存发生错误'%filepath)    
+                self.sbar.update(u'通信设置"%s"保存发生错误'%filepath)    
         dialog.Destroy()
     
     def load_comm_option(self):
@@ -35,11 +35,11 @@ class MenuBlock():
             try:
                 pfio = PickleFileIO.PickleFileIO(filepath)
                 self.comm_options = pfio.load()
-                self.m_statusBar.SetStatusText(u'通信设置"%s"已经应用。'%filepath)
+                self.sbar.update(u'通信设置"%s"已经应用。'%filepath)
                 wx.MessageBox(u'通信设置"%s"已经应用。'%filepath, u"设置成功",wx.OK | wx.ICON_INFORMATION)
             except (EOFError,IOError),e:
                 wx.MessageBox(u'通信设置"%s"应用失败。\n%s'%(filepath,str(e)), u"设置失败",wx.OK | wx.ICON_ERROR)
-                self.m_statusBar.SetStatusText(u'通信设置"%s"应用发生错误'%filepath)    
+                self.sbar.update(u'通信设置"%s"应用发生错误'%filepath)    
         dialog.Destroy()
         
     def load_default_comm_options(self):
@@ -48,7 +48,7 @@ class MenuBlock():
         try:
             pfio = PickleFileIO.PickleFileIO(filepath)
             self.comm_options = pfio.load()
-            self.m_statusBar.SetStatusText(u'默认通信设置"%s"已经应用。'%filepath)
+            self.sbar.update(u'默认通信设置"%s"已经应用。'%filepath)
         except (EOFError,IOError),e:
             self.m_statusBar.SetStatusText(u'未发现默认设置')
     

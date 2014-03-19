@@ -4,10 +4,9 @@ Created on 2014-2-13
 
 @author: GroundMelon
 '''
-import cv2
 import numpy as np
+import cv2
 import util
-from Gnuplot.termdefs import Arg
 
 LINE_WIDTH = 5
 DRAG_COLOR = (255,0,0)
@@ -18,6 +17,9 @@ VAL_DELTA = 30
 MEDIANBLUR_KERNEL_SIZE = 5
 
 MULTI_SPLIT_SCALE = 0.2
+
+CANNY_MIN = 100
+CANNY_MAX = 200
 
 # ---- 图像调整相关函数 ----
 def get_image_adjust_value():
@@ -37,7 +39,7 @@ def get_dragging_image(src, drag_data, bitmap_size):
     ''' 
     @param src: 源图像
     @param drag_data:拖拽数据 
-    @bitmap_size:显示区域的尺寸
+    @param bitmap_size:显示区域的尺寸
     @return: 画框的图像
     '''
     img = src.copy()
@@ -58,7 +60,7 @@ def get_selection_rect(src_size, drag_data, bitmap_size):
             获取框选区域在源图像上的左上角和右下角
     @param src_size: 源图像的尺寸
     @param drag_data:拖拽数据 
-    @bitmap_size:显示区域的尺寸
+    @param bitmap_size:显示区域的尺寸
     @return: 画框的图像
     '''
     width = src_size[1]
@@ -77,11 +79,15 @@ class ObjectMatch(object):
     def __init__(self, rect, src):
         lt = rect[0]
         rb = rect[1]
+        roi = src[ lt.y:rb.y , lt.x:rb.x ,:].copy()
         # ---- preparation for template match ----
-        self.object_template =  src[ lt.y:rb.y , lt.x:rb.x ,:]
+        self.object_template =  roi
+        
+        # ---- preparation for edge template match ----
+        self.edge_tpl = cv2.Canny(roi, CANNY_MIN, CANNY_MAX)
         
         # ---- preparation for color match ----
-        rtn = self.calc_color_match_value(self.object_template)
+        rtn = self.calc_color_match_value(roi)
         hue = rtn['h']
         sat = rtn['s']
         val = rtn['v']
@@ -112,19 +118,20 @@ class ObjectMatch(object):
         # ---- preparation for meanshift ----
         self.track_window = (lt.x, lt.y, rb.x-lt.x, rb.y-lt.y)
         self.track_window_origin = self.track_window
-        roi = src[lt.y:rb.y , lt.x:rb.x ,:]
         hsv_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(hsv_roi, np.array((0., 60., 32.)), np.array((180.,255.,255.)))
         self.roi_hist = cv2.calcHist([hsv_roi], [0], mask, [180], [0,180])
         cv2.normalize(self.roi_hist, self.roi_hist, 0, 255, cv2.NORM_MINMAX)
         
         self.term_crit = (cv2.TERM_CRITERIA_EPS|cv2.TERM_CRITERIA_COUNT, 10, 1)
+        
         # ---- preparation for multi-meanShift ----
         self.d2_th = (src.shape[1]**2 + src.shape[0]**2) * (MULTI_SPLIT_SCALE**2) 
         
         #---- 测试各种方法是否有效 ----
-        self.do_match(src)
-        self.do_color_match(src)
+        self.do_tpl_match(src)
+        #self.do_color_match(src)
+        self.edge_match_maxval = self.do_edge_match(src, test=True)
         
     def calc_color_match_value(self, selected_img):    
         bgr = selected_img.copy()
@@ -138,7 +145,9 @@ class ObjectMatch(object):
         print('selected color is %s'%str(selected))
         return selected 
     
-    def do_match(self, src):
+    def do_tpl_match(self, src):
+        sw = util.SW('tpl-match')
+        
         methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
             'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
         method = eval(methods[0])
@@ -153,13 +162,64 @@ class ObjectMatch(object):
         br = (tl[0] + self.object_template.shape[1], 
               tl[1] + self.object_template.shape[0]
               )
+        center = ((tl[0]+br[0])/2, (tl[1]+br[1])/2)
         
         rst_img = src.copy()
         cv2.rectangle(rst_img,tl, br, OBJECT_MATCH_COLOR, LINE_WIDTH)
-#        return (rst_img, util.Point(tl), util.Point(br))
-        return (rst_img, util.Point((tl[0]+br[0])/2, (tl[1]+br[1])/2))
+        rst_res = np.zeros(src.shape[0:2], dtype=np.uint8)
+        rst_res = cv2.cvtColor(rst_res, cv2.COLOR_GRAY2BGR)
+        cv2.putText(rst_res,'%f'%max_val, (0,rst_res.shape[0]), cv2.FONT_HERSHEY_SIMPLEX, 1, OBJECT_MATCH_COLOR)
+        print max_val
+        cv2.circle(rst_res, center, 3, OBJECT_MATCH_COLOR, LINE_WIDTH)
+        
+        sw.stop()
+        return (rst_img, util.Point(center), rst_res)
+    
+    def do_edge_match(self, src, arg=None, test=False):
+        sw = util.SW('edge-tpl-match')
+        
+        if arg:
+            match_scale = arg
+        else:
+            match_scale = 0.8
+        src_edge = cv2.Canny(src, 100,200)
+        
+        methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
+            'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
+        method = eval(methods[0])
+        res = cv2.matchTemplate(src_edge, self.edge_tpl, method)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
+        
+        if not test:
+            if max_val < (self.edge_match_maxval * match_scale):
+                null_img = np.zeros_like(src)
+                return (null_img, util.Point((0,0)), null_img)
+        
+        if method in [cv2.TM_SQDIFF, cv2.TM_SQDIFF_NORMED]:
+            tl = min_loc
+        else:
+            tl = max_loc
+            
+        br = (tl[0] + self.object_template.shape[1], 
+              tl[1] + self.object_template.shape[0]
+              )
+        center = ((tl[0]+br[0])/2, (tl[1]+br[1])/2)
+        
+        rst_img = src.copy()
+        cv2.rectangle(rst_img,tl, br, OBJECT_MATCH_COLOR, LINE_WIDTH)
+        rst_edge = cv2.cvtColor(src_edge, cv2.COLOR_GRAY2BGR)
+        cv2.rectangle(rst_edge,tl, br, OBJECT_MATCH_COLOR, LINE_WIDTH)
+        cv2.putText(rst_edge,'%.2f'%max_val, (0,rst_edge.shape[0]), cv2.FONT_HERSHEY_SIMPLEX, 2, OBJECT_MATCH_COLOR, LINE_WIDTH)
+        
+        sw.stop()
+        if test:
+            return max_val
+        else:
+            return (rst_img, util.Point(center), rst_edge)
     
     def do_color_match(self, src):
+        sw = util.SW('color-match')
+        
         hsv = cv2.cvtColor(src, cv2.COLOR_BGR2HSV)
         mask1 = cv2.inRange(hsv, self.threshold[0], self.threshold[1])
         mask2 = cv2.inRange(hsv, self.threshold[2], self.threshold[3])
@@ -174,6 +234,8 @@ class ObjectMatch(object):
         center = (int(m10/m00), int(m01/m00))
         cv2.circle(rst_img, center, self.radius, OBJECT_MATCH_COLOR, LINE_WIDTH)
         msk_img = cv2.cvtColor(filted_mask, cv2.COLOR_GRAY2BGR)
+        
+        sw.stop()
         return (rst_img, util.Point(center), msk_img)
 
     def do_meanshift(self, src):         
@@ -189,9 +251,10 @@ class ObjectMatch(object):
         rst_img = src.copy()
         cv2.rectangle(rst_img, (x,y), (x+w,y+h), OBJECT_MATCH_COLOR, LINE_WIDTH)
         prj_img = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
+        cv2.rectangle(prj_img, (x,y), (x+w,y+h), OBJECT_MATCH_COLOR, LINE_WIDTH)
         
         sw.stop()
-        return rst_img, center, prj_img
+        return rst_img, util.Point(center), prj_img
     
     def do_multi_meanshift(self, src, arg):
         if arg:

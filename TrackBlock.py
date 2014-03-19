@@ -66,12 +66,14 @@ class TrackBlock():
             self.m_bitmap_track.Bind( wx.EVT_LEFT_UP, self.on_track_bitmap_left_up )           
             self.SetCursor(wx.StockCursor( wx.CURSOR_CROSS ) )
             self.drag_info = DragInfomation()
+            self.sbar.update(u'请使用鼠标左键拖拽选择目标')
         else:   #end dragging
             self.m_bitmap_track.Bind( wx.EVT_LEFT_DOWN, None)
             self.m_bitmap_track.Bind( wx.EVT_LEFT_UP, None)
             self.m_bitmap_track.Bind( wx.EVT_MOTION, None)       
             self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
             self.display_track_state = DISPLAY_TRACK_STATE_RESULT
+            self.sbar.update(u'目标已经选择')
             
     
     def start_drag(self, event):# left key is pressed
@@ -79,6 +81,7 @@ class TrackBlock():
         self.m_bitmap_track.Bind( wx.EVT_MOTION, self.on_track_bitmap_motion )
         self.display_track_state = DISPLAY_TRACK_STATE_SELECTION
         self.frozen_frame = self.webcam.get_frame()
+        self.sbar.update(u'按住左键拖拽')
         
     def on_drag(self, event):
         self.drag_info.update_cur_pos(event.GetPositionTuple())
@@ -95,6 +98,7 @@ class TrackBlock():
             self.toggle_drag_selection(False)
         except AssertionError,e:
             wx.MessageBox(str(e), u"出现错误",wx.OK | wx.ICON_ERROR)
+            self.sbar.update(unicode(e))
             self.frozen_frame = None
             self.drag_info = None
             self.toggle_drag_selection(False)

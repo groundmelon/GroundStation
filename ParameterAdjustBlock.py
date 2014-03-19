@@ -32,6 +32,7 @@ class ParameterAdjustBlock():
         with open(PARA_FILE_PATH,'w') as f:
             for data in self.get_para_from_table():
                 f.write('%s\n'%str(data))
+        self.sbar.update(u'参数已成功保存')
     
     def load_para(self):
         para = []
@@ -39,6 +40,7 @@ class ParameterAdjustBlock():
             for line in f.readlines():
                 para.append(float(line))
         self.write_para_to_table(para)
+        self.sbar.update(u'参数已成功读取')
     
     def send_para(self):
         para = self.get_para_from_table()
@@ -47,6 +49,7 @@ class ParameterAdjustBlock():
         body = ''.join([struct.pack('f',val) for val in para])
         data = ''.join([head, body, end])
         self.send_data_by_frame(data)
+        self.sbar.update(u'参数已经发送')
     
     def set_down_para(self):
         head = struct.pack('2B', 0xAA, 0x66)
@@ -54,4 +57,5 @@ class ParameterAdjustBlock():
         body = '\x00'*4*9
         data = ''.join([head, body, end])
         self.send_data_by_frame(data)
+        self.sbar.update(u'参数已经固定')
         
