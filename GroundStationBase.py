@@ -32,7 +32,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		gbSizer1.SetFlexibleDirection( wx.BOTH )
 		gbSizer1.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
 		
-		gSizer2 = wx.GridSizer( 2, 2, 0, 0 )
+		gSizer2 = wx.GridSizer( 3, 2, 0, 0 )
 		
 		self.m_button_xbee_option = wx.Button( self.m_panel2, wx.ID_ANY, u"XBee通信设置", wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
 		gSizer2.Add( self.m_button_xbee_option, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
@@ -46,6 +46,9 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_toggle_video = wx.Button( self.m_panel2, wx.ID_ANY, u"开始图像传输", wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
 		gSizer2.Add( self.m_button_toggle_video, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
+		self.m_button_update_uavinfo = wx.Button( self.m_panel2, wx.ID_ANY, u"更新UAV状态", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gSizer2.Add( self.m_button_update_uavinfo, 0, wx.ALL, 5 )
+		
 		
 		gbSizer1.Add( gSizer2, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 2 ), wx.ALIGN_LEFT|wx.ALIGN_TOP, 5 )
 		
@@ -58,40 +61,50 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_staticText11.Wrap( -1 )
 		gSizer4.Add( self.m_staticText11, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
 		
-		self.m_staticText_height = wx.StaticText( self.m_panel2, wx.ID_ANY, u"000.0m", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText_height = wx.StaticText( self.m_panel2, wx.ID_ANY, u"000.00m", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText_height.Wrap( -1 )
-		gSizer4.Add( self.m_staticText_height, 0, wx.ALIGN_LEFT|wx.ALL, 5 )
+		self.m_staticText_height.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, "Consolas" ) )
+		
+		gSizer4.Add( self.m_staticText_height, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL, 5 )
 		
 		self.m_staticText12 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"电压", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText12.Wrap( -1 )
 		gSizer4.Add( self.m_staticText12, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
 		
-		self.m_staticText_vol = wx.StaticText( self.m_panel2, wx.ID_ANY, u"00.0v", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText_vol = wx.StaticText( self.m_panel2, wx.ID_ANY, u"00.000v", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText_vol.Wrap( -1 )
-		gSizer4.Add( self.m_staticText_vol, 0, wx.ALIGN_LEFT|wx.ALL, 5 )
+		self.m_staticText_vol.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, "Consolas" ) )
+		
+		gSizer4.Add( self.m_staticText_vol, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL, 5 )
 		
 		self.m_staticText15 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"俯仰", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText15.Wrap( -1 )
 		gSizer4.Add( self.m_staticText15, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
 		
-		self.m_staticText_pitch = wx.StaticText( self.m_panel2, wx.ID_ANY, u"0d", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText_pitch = wx.StaticText( self.m_panel2, wx.ID_ANY, u"0.0000d", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText_pitch.Wrap( -1 )
+		self.m_staticText_pitch.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, "Consolas" ) )
+		
 		gSizer4.Add( self.m_staticText_pitch, 0, wx.ALIGN_LEFT|wx.ALL, 5 )
 		
 		self.m_staticText17 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"横滚", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText17.Wrap( -1 )
 		gSizer4.Add( self.m_staticText17, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
 		
-		self.m_staticText_roll = wx.StaticText( self.m_panel2, wx.ID_ANY, u"0d", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText_roll = wx.StaticText( self.m_panel2, wx.ID_ANY, u"0.0000d", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText_roll.Wrap( -1 )
+		self.m_staticText_roll.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, "Consolas" ) )
+		
 		gSizer4.Add( self.m_staticText_roll, 0, wx.ALIGN_LEFT|wx.ALL, 5 )
 		
 		self.m_staticText19 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"偏航", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText19.Wrap( -1 )
 		gSizer4.Add( self.m_staticText19, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
 		
-		self.m_staticText_yaw = wx.StaticText( self.m_panel2, wx.ID_ANY, u"0d", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText_yaw = wx.StaticText( self.m_panel2, wx.ID_ANY, u"0.0000d", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_staticText_yaw.Wrap( -1 )
+		self.m_staticText_yaw.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, "Consolas" ) )
+		
 		gSizer4.Add( self.m_staticText_yaw, 0, wx.ALIGN_LEFT|wx.ALL, 5 )
 		
 		
@@ -111,13 +124,14 @@ class FrameGroundStationBase ( wx.Frame ):
 		
 		self.m_textCtrl_comm_receive = wx.TextCtrl( self.m_panel_comm, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_WORDWRAP )
 		self.m_textCtrl_comm_receive.SetMaxLength( 0 ) 
+		self.m_textCtrl_comm_receive.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, "Consolas" ) )
 		self.m_textCtrl_comm_receive.SetMinSize( wx.Size( -1,160 ) )
 		
 		gbSizer6.Add( self.m_textCtrl_comm_receive, wx.GBPosition( 1, 0 ), wx.GBSpan( 1, 4 ), wx.ALL|wx.EXPAND, 5 )
 		
 		m_choice_recv_styleChoices = [ u"ASCII", u"HEX" ]
 		self.m_choice_recv_style = wx.Choice( self.m_panel_comm, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_choice_recv_styleChoices, 0 )
-		self.m_choice_recv_style.SetSelection( 0 )
+		self.m_choice_recv_style.SetSelection( 1 )
 		gbSizer6.Add( self.m_choice_recv_style, wx.GBPosition( 2, 2 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		self.m_button_recv_clear = wx.Button( self.m_panel_comm, wx.ID_ANY, u"清除接收缓冲区", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -129,11 +143,13 @@ class FrameGroundStationBase ( wx.Frame ):
 		
 		self.m_textCtrl_comm_send = wx.TextCtrl( self.m_panel_comm, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( -1,-1 ), wx.TE_PROCESS_ENTER )
 		self.m_textCtrl_comm_send.SetMaxLength( 0 ) 
+		self.m_textCtrl_comm_send.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, "Consolas" ) )
+		
 		gbSizer6.Add( self.m_textCtrl_comm_send, wx.GBPosition( 4, 0 ), wx.GBSpan( 1, 4 ), wx.ALL|wx.EXPAND, 5 )
 		
 		m_choice_send_styleChoices = [ u"ASCII", u"HEX" ]
 		self.m_choice_send_style = wx.Choice( self.m_panel_comm, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_choice_send_styleChoices, 0 )
-		self.m_choice_send_style.SetSelection( 0 )
+		self.m_choice_send_style.SetSelection( 1 )
 		gbSizer6.Add( self.m_choice_send_style, wx.GBPosition( 5, 2 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		self.m_button_comm_send = wx.Button( self.m_panel_comm, wx.ID_ANY, u"发送指令", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -200,11 +216,16 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_load_para = wx.Button( self.m_panel_para_adj, wx.ID_ANY, u"读取参数", wx.DefaultPosition, wx.DefaultSize, 0 )
 		gbSizer11.Add( self.m_button_load_para, wx.GBPosition( 2, 1 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
 		
+		self.m_textCtrl_showpid = wx.TextCtrl( self.m_panel_para_adj, wx.ID_ANY, u"机上PID参数", wx.DefaultPosition, wx.Size( 120,200 ), wx.TE_CENTRE|wx.TE_MULTILINE|wx.TE_NO_VSCROLL|wx.TE_READONLY )
+		self.m_textCtrl_showpid.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, "Consolas" ) )
+		
+		gbSizer11.Add( self.m_textCtrl_showpid, wx.GBPosition( 0, 2 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
+		
 		
 		self.m_panel_para_adj.SetSizer( gbSizer11 )
 		self.m_panel_para_adj.Layout()
 		gbSizer11.Fit( self.m_panel_para_adj )
-		self.m_notebook1.AddPage( self.m_panel_para_adj, u"调参", False )
+		self.m_notebook1.AddPage( self.m_panel_para_adj, u"调参", True )
 		self.m_panel_track = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), wx.TAB_TRAVERSAL )
 		self.m_panel_track.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
 		self.m_panel_track.Enable( False )
@@ -220,6 +241,17 @@ class FrameGroundStationBase ( wx.Frame ):
 		
 		self.m_menuItem_track_display_process = wx.MenuItem( self.m_menu_bitmap_track, wx.ID_ANY, u"显示过程", wx.EmptyString, wx.ITEM_RADIO )
 		self.m_menu_bitmap_track.AppendItem( self.m_menuItem_track_display_process )
+		
+		self.m_menu_bitmap_track.AppendSeparator()
+		
+		self.m_menuItem_track_hist_h = wx.MenuItem( self.m_menu_bitmap_track, wx.ID_ANY, u"色调基准（色彩）", wx.EmptyString, wx.ITEM_RADIO )
+		self.m_menu_bitmap_track.AppendItem( self.m_menuItem_track_hist_h )
+		
+		self.m_menuItem_track_hist_s = wx.MenuItem( self.m_menu_bitmap_track, wx.ID_ANY, u"饱和基准（灰度）", wx.EmptyString, wx.ITEM_RADIO )
+		self.m_menu_bitmap_track.AppendItem( self.m_menuItem_track_hist_s )
+		
+		self.m_menuItem_track_hist_l = wx.MenuItem( self.m_menu_bitmap_track, wx.ID_ANY, u"亮度基准（亮暗）", wx.EmptyString, wx.ITEM_RADIO )
+		self.m_menu_bitmap_track.AppendItem( self.m_menuItem_track_hist_l )
 		
 		self.m_bitmap_track.Bind( wx.EVT_RIGHT_DOWN, self.m_bitmap_trackOnContextMenu ) 
 		
@@ -250,7 +282,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_toggle_track = wx.Button( self.m_panel_track, wx.ID_ANY, u"开始追踪", wx.DefaultPosition, wx.Size( 80,-1 ), 0 )
 		gbSizer4.Add( self.m_button_toggle_track, wx.GBPosition( 1, 2 ), wx.GBSpan( 1, 1 ), wx.ALL, 1 )
 		
-		m_choice_track_modeChoices = [ u"template", u"edge-tpl", u"meanshift", u"multi-meanshift", u"color", wx.EmptyString, wx.EmptyString ]
+		m_choice_track_modeChoices = [ u"template", u"edge-tpl", u"meanshift", u"multi-meanshift", u"color", u"mix" ]
 		self.m_choice_track_mode = wx.Choice( self.m_panel_track, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), m_choice_track_modeChoices, 0 )
 		self.m_choice_track_mode.SetSelection( 0 )
 		self.m_choice_track_mode.SetMaxSize( wx.Size( 80,-1 ) )
@@ -274,7 +306,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_track.SetSizer( gbSizer3 )
 		self.m_panel_track.Layout()
 		gbSizer3.Fit( self.m_panel_track )
-		self.m_notebook1.AddPage( self.m_panel_track, u"目标跟踪", True )
+		self.m_notebook1.AddPage( self.m_panel_track, u"目标跟踪", False )
 		self.m_panel_route = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.m_panel_route.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
 		
@@ -356,6 +388,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_video_comm_option.Bind( wx.EVT_BUTTON, self.on_video_comm_option )
 		self.m_button_toggle_xbee.Bind( wx.EVT_BUTTON, self.on_toggle_xbee )
 		self.m_button_toggle_video.Bind( wx.EVT_BUTTON, self.on_toggle_video )
+		self.m_button_update_uavinfo.Bind( wx.EVT_BUTTON, self.on_update_uavinfo )
 		self.m_choice_recv_style.Bind( wx.EVT_CHOICE, self.on_recv_style_choice )
 		self.m_button_recv_clear.Bind( wx.EVT_BUTTON, self.on_clear_receive )
 		self.m_textCtrl_comm_send.Bind( wx.EVT_CHAR, self.on_send_area_char )
@@ -396,6 +429,9 @@ class FrameGroundStationBase ( wx.Frame ):
 		event.Skip()
 	
 	def on_toggle_video( self, event ):
+		event.Skip()
+	
+	def on_update_uavinfo( self, event ):
 		event.Skip()
 	
 	def on_recv_style_choice( self, event ):
@@ -481,7 +517,7 @@ class FrameGroundStationBase ( wx.Frame ):
 class frame_serial_setting ( wx.Dialog ):
 	
 	def __init__( self, parent ):
-		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"串口设置", pos = wx.DefaultPosition, size = wx.Size( 300,400 ), style = wx.DEFAULT_DIALOG_STYLE )
+		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"串口设置", pos = wx.DefaultPosition, size = wx.Size( 300,320 ), style = wx.DEFAULT_DIALOG_STYLE )
 		
 		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 		
@@ -494,7 +530,7 @@ class frame_serial_setting ( wx.Dialog ):
 		self.m_staticText1.Wrap( -1 )
 		gSizer3.Add( self.m_staticText1, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5 )
 		
-		self.m_button_seeComInfo = wx.Button( self.m_panel1, wx.ID_ANY, u"查看", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_button_seeComInfo = wx.Button( self.m_panel1, wx.ID_ANY, u"查看", wx.DefaultPosition, wx.Size( 100,-1 ), 0 )
 		gSizer3.Add( self.m_button_seeComInfo, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5 )
 		
 		self.m_staticText2 = wx.StaticText( self.m_panel1, wx.ID_ANY, u"选择COM口", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -502,16 +538,16 @@ class frame_serial_setting ( wx.Dialog ):
 		gSizer3.Add( self.m_staticText2, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		m_choice_comChoices = []
-		self.m_choice_com = wx.Choice( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_choice_comChoices, 0 )
+		self.m_choice_com = wx.Choice( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.Size( 100,-1 ), m_choice_comChoices, 0 )
 		self.m_choice_com.SetSelection( 0 )
 		gSizer3.Add( self.m_choice_com, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
-		self.m_staticText3 = wx.StaticText( self.m_panel1, wx.ID_ANY, u"波特率", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText3 = wx.StaticText( self.m_panel1, wx.ID_ANY, u"波特率", wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
 		self.m_staticText3.Wrap( -1 )
 		gSizer3.Add( self.m_staticText3, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		m_choice_baudrateChoices = []
-		self.m_choice_baudrate = wx.Choice( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_choice_baudrateChoices, 0 )
+		self.m_choice_baudrate = wx.Choice( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.Size( 100,-1 ), m_choice_baudrateChoices, 0 )
 		self.m_choice_baudrate.SetSelection( 0 )
 		gSizer3.Add( self.m_choice_baudrate, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
@@ -520,7 +556,7 @@ class frame_serial_setting ( wx.Dialog ):
 		gSizer3.Add( self.m_staticText4, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		m_choice_parityChoices = []
-		self.m_choice_parity = wx.Choice( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_choice_parityChoices, 0 )
+		self.m_choice_parity = wx.Choice( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.Size( 100,-1 ), m_choice_parityChoices, 0 )
 		self.m_choice_parity.SetSelection( 0 )
 		gSizer3.Add( self.m_choice_parity, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
@@ -529,7 +565,7 @@ class frame_serial_setting ( wx.Dialog ):
 		gSizer3.Add( self.m_staticText5, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		m_choice_bytesizeChoices = []
-		self.m_choice_bytesize = wx.Choice( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_choice_bytesizeChoices, 0 )
+		self.m_choice_bytesize = wx.Choice( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.Size( 100,-1 ), m_choice_bytesizeChoices, 0 )
 		self.m_choice_bytesize.SetSelection( 0 )
 		gSizer3.Add( self.m_choice_bytesize, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
@@ -538,7 +574,7 @@ class frame_serial_setting ( wx.Dialog ):
 		gSizer3.Add( self.m_staticText6, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		m_choice_stopbitChoices = []
-		self.m_choice_stopbit = wx.Choice( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, m_choice_stopbitChoices, 0 )
+		self.m_choice_stopbit = wx.Choice( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.Size( 100,-1 ), m_choice_stopbitChoices, 0 )
 		self.m_choice_stopbit.SetSelection( 0 )
 		gSizer3.Add( self.m_choice_stopbit, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		

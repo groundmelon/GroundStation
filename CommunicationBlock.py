@@ -7,6 +7,8 @@ Created on 2014-2-18
 from binascii import b2a_hex
 import wx
 import util
+import communication.MessageProcess as MsgPrcs
+import PickleFileIO
 
 class CommBlock():
     def send_data_by_GUI(self):
@@ -25,27 +27,18 @@ class CommBlock():
         self.sbar.update(u'本次发送%d字节'%rtn)
     
     def send_data_by_frame(self, data):
-        rtn = self.comm.send_string(data)
+        return self.comm.send_string(data)
         
-    def get_command(self):
-        data = self.comm.get_rcvbuf()
-        #print(''.join(data))
-        '''example (H099.9 P+45.0 R+30.0 Y+40.0 V11.2 A+045.732433 O+126.628802) 
-                   1098765432109876543210987654321098765432109876543210987654321
-                   6         5         4         3         2         1         0
+    def get_backdata(self):
+        buf = self.comm.get_rcvbuf()
         '''
-        if len(data)>= 61 and '(' == data[-61] and ')' == data[-1]:
-            s = ''.join(data[-61:])
-            return (float(s[-59:-54]),
-                    float(s[-52:-47]),
-                    float(s[-45:-40]),
-                    float(s[-38:-33]),
-                    float(s[-31:-27]),
-                    float(s[-25:-14]),
-                    float(s[-12:-1]),
-                    )
+                        更新位姿高度电压： FF 04 00 00 80 3F 00 00 00 40 00 00 40 40 00 40 1C 46 00 00 A0 40 AA
+                        更新经纬坐标：        FF 0F 10 EE 36 42 BC 41 FD 42 00 00 00 00 00 00 00 00 00 00 00 00 AA
+        '''
+        if len(buf)>=23:
+            return MsgPrcs.unpack(''.join(buf[-23:]))
         else:
-            return None
+            return (None, None)
     
     
     
@@ -59,7 +52,22 @@ class CommBlock():
             assert False, u'Send type is not ASCII nor HEX!'
             return
         self.m_textCtrl_comm_receive.SetValue('')
-        self.m_textCtrl_comm_receive.AppendText(s)
+        self.m_textCtrl_comm_receive.AppendText(s.__repr__()[1:-1])
+    
+    def process_backdata(self, msgtype, data):
+        for (k,v) in MsgPrcs.PKGTYPE_PID.iteritems():
+            if v == msgtype:
+                self.update_rcv_pid(k, data[:3])
+                return True
+        if msgtype == MsgPrcs.PKGTYPE_INFO:
+            self.UAVinfo.update(data[0], data[1], data[2], data[3], data[4], None, None)
+            attiimg = self.UAVinfo.get_attitude_img()
+            self.dc_attitude.DrawBitmap(util.cvimg_to_wxbmp(attiimg), 0, 0)
+            self.update_GUI_UAVinfo(self.UAVinfo.get())
+            
+        elif msgtype == MsgPrcs.PKGTYPE_LOC:
+            self.UAVinfo.update(None, None, None, None, None, data[0], data[1])
+            self.update_GE(self.UAVinfo.get())
     
     def enable_comm_components(self, switch):
         self.m_panel_comm.Enable(switch)
@@ -69,6 +77,18 @@ class CommBlock():
         self.m_panel_para_adj.Enable(switch)
         for each in self.m_panel_para_adj.GetChildren():
             each.Enable(switch)
+        
+        self.m_button_update_uavinfo.Enable(switch)
+    
+    def load_default_comm_options(self):
+        # load default settings
+        filepath = r'communication\xbee.gss'
+        try:
+            pfio = PickleFileIO.PickleFileIO(filepath)
+            self.comm_options = pfio.load()
+            self.sbar.update(u'默认通信设置"%s"已经应用。'%filepath)
+        except (EOFError,IOError),e:
+            self.m_statusBar.SetStatusText(u'未发现默认设置')
     
 class InputHistory(object):
     def __init__(self,window):

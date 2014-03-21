@@ -4,7 +4,7 @@ p2
 VN
 sS'baudrate'
 p3
-I9600
+I115200
 sS'stopbit'
 p4
 F1

@@ -17,13 +17,14 @@ from StatusBarSystem import StatusBarSystem
 
 
 from communication.XBeeComm import XBee
-
+import communication.MessageProcess as MsgPrcs
 
 import util
 import os
 import wx
 import wx.html2
 import time
+
 from Definition import *
 from imageprocess.ObjectTracking import get_adjusted_image
 
@@ -32,7 +33,8 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
                     ButtonBlock, MenuBlock, CommBlock, ParameterAdjustBlock,
                     ):
     def __init__(self):
-        super(GroundStation, self).__init__(parent = None)              
+        super(GroundStation, self).__init__(parent = None)
+        self.SetIcon(wx.Icon(r'resources/gs.ico', wx.BITMAP_TYPE_ICO))              
         
         #---- init status bar system ----
         self.sbar = StatusBarSystem(self.m_statusBar)
@@ -74,7 +76,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
         #self.track_on = False
         
         #---- init para adj block ----
-        self.init_para_adj_table()
+        self.init_para_block()
         
         #---- init information variables ----
         self.bitmap_track_size = tuple(self.m_bitmap_track.GetSize())
@@ -90,7 +92,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
         self.dc_track = wx.ClientDC(self.m_bitmap_track)
         self.dc_attitude = wx.ClientDC(self.m_bitmap_attitude)
         # --- test ---
-        self.multi_arg = None
+        self.multimean_arg = None
         self.edge_arg = None
         
         self.init_worklist()
@@ -136,6 +138,9 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
     
     def on_video_window_show(self, event):
         self.show_independent_video()
+    
+    def on_update_uavinfo(self, event):
+        self.send_data_by_frame(MsgPrcs.pack_get_info())
         
 #------ Track Binding Function ------   
 
@@ -175,7 +180,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
         self.set_track_arg(event.GetEventObject().GetValue())
     
     def on_enter_bitmap_track(self, event):
-        self.sbar.update(u'提示：单击右键可选择显示模式')
+        self.sbar.update(u'提示：单击右键可选择显示模式和分辨模式')
     
     def on_leave_bitmap_track(self, event):
         self.sbar.backward()
@@ -223,13 +228,14 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
     def on_xbee_receive_char(self,rcvchr):
         self.comm.on_receive_char(rcvchr)
         self.update_rcv_area()
-        data = self.get_command()
+        msgtype, data = self.get_backdata()
         if data:
-            self.UAVinfo.update(data[0], data[1], data[2], data[3], data[4], data[5], data[6])
-            attiimg = self.UAVinfo.get_attitude_img()
-            self.dc_attitude.DrawBitmap(util.cvimg_to_wxbmp(attiimg), 0, 0)
-            self.update_GUI_UAVinfo(self.UAVinfo.get())
-            self.update_GE(self.UAVinfo.get())
+            self.process_backdata(msgtype, data)
+#             self.UAVinfo.update(data[0], data[1], data[2], data[3], data[4], data[5], data[6])
+#             attiimg = self.UAVinfo.get_attitude_img()
+#             self.dc_attitude.DrawBitmap(util.cvimg_to_wxbmp(attiimg), 0, 0)
+#             self.update_GUI_UAVinfo(self.UAVinfo.get())
+#             self.update_GE(self.UAVinfo.get())
     
 #     def on_update_track_bitmap(self,bmp):
 #         self.dc_track.DrawBitmap(bmp, 0, 0)
@@ -301,12 +307,16 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
                         rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
                 
                 elif track_mode == 'multi-meanshift':
-                    matchimg, center, prj_img = self.objmatch.do_multi_meanshift(srcimg, self.multi_arg)
+                    matchimg, center, prj_img = self.objmatch.do_multi_meanshift(srcimg, self.multimean_arg)
                     if display_process:
                         rszimg = util.cvimg_resize(prj_img, self.bitmap_track_size)
                     else:
                         rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
-                    
+                
+                elif track_mode == 'mix':
+                    matchimg, center, _ = self.objmatch.do_mix(srcimg, self.multimean_arg, self.edge_arg)    
+                    rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
+                
                 self.dc_track.DrawBitmap(util.cvimg_to_wxbmp(rszimg), 0, 0)
                 # use track information to do something
                 #print("center:%s"%(str(center)))
@@ -314,49 +324,42 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
 
 #------ Tool Function ------       
     def update_GUI_UAVinfo(self, info):
-        self.m_staticText_height.SetLabel(str(info['height'])+'m')
+        self.m_staticText_height.SetLabel('%.4fm'%info['height'])
         if self.UAVinfo.need_warning('height', info['height']):
             self.m_staticText_height.SetForegroundColour((255,0,0))
         else:
             self.m_staticText_height.SetForegroundColour((0,0,0))
         
-        self.m_staticText_vol.SetLabel(str(info['vol'])+'v')
+        self.m_staticText_vol.SetLabel('%.4fv'%info['vol'])
         if self.UAVinfo.need_warning('vol', info['vol']):
             self.m_staticText_vol.SetForegroundColour((255,0,0))
         else:
             self.m_staticText_vol.SetForegroundColour((0,0,0))
         
-        self.m_staticText_pitch.SetLabel(str(info['pitch'])+'d')
-        self.m_staticText_roll.SetLabel(str(info['roll'])+'d')
-        self.m_staticText_yaw.SetLabel(str(info['yaw'])+'d')
+        self.m_staticText_pitch.SetLabel('%.4fd'%info['pitch'])
+        self.m_staticText_roll.SetLabel('%.4fd'%info['roll'])
+        self.m_staticText_yaw.SetLabel('%.4fd'%info['yaw'])
     
     def update_GE(self, info):
         la = info['la']
         lo = info['lo']
-        jsstr = '''
-            // Get the current view.
-            var lookAt = ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
-            var camera = ge.getView().copyAsCamera(ge.ALTITUDE_RELATIVE_TO_GROUND);
-            
-            // Set the FlyTo speed.
-            ge.getOptions().setFlyToSpeed(1.0);
-            // Set new latitude and longitude values.
-            lookAt.setLatitude(%f);
-            lookAt.setLongitude(%f);
-            lookAt.setRange(%f);
-            
-            // Update the view in Google Earth.
-            ge.getView().setAbstractView(lookAt);
-            //ge.getView().setAbstractView(camera);
-        '''%(la,lo, info['height'])
-        self.browser_ge.RunScript(jsstr)
+        js = util.JSCODES%(la,lo, info['height']*1.2,r'file:///%s/resources/uav.gif'%os.getcwd())
+        self.browser_ge.RunScript(js)
     
     def set_track_arg(self, s):
         sel = self.m_choice_track_arg.GetStringSelection()
         if 'multi' == sel:
-            self.multi_arg = int(s)
+            self.multimean_arg = float(s)
         elif 'edge' == sel:
             self.edge_arg = float(s)
+    
+    def get_hist_channel(self):
+        if self.m_menuItem_track_hist_h.IsChecked():
+            return [0]
+        elif self.m_menuItem_track_hist_s.IsChecked():
+            return [1]
+        elif self.m_menuItem_track_hist_l.IsChecked():
+            return [2]
     
     def enable_video_components(self, switch):
         for each in [self.m_button_video_window_show, self.m_bitmap_video]:

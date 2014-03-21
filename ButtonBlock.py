@@ -9,7 +9,7 @@ import wx
 import serial
 from imageprocess.test import WebcamService
 #from GroundStationBase import FrameGroundStationBase
-from SerialSettingDialog import SerialSettingBase
+from SerialSettingDialog import SerialSetting
 from BigVideoDisplay import VideoDisplayFrame
 import util
 from util import DBGException
@@ -74,7 +74,7 @@ class ButtonBlock():
             util.toggle_button(comp, u'开始', u'结束')
     
     def show_xbee_option(self):
-        dlg = SerialSetting(self)
+        dlg = SerialSetting(self, self.comm_options)
         if dlg.ShowModal() == wx.ID_OK:
             self.comm_options = dlg.get_options()
         dlg.Destroy()
@@ -91,7 +91,4 @@ class ButtonBlock():
         if self.video_window is not None:
             self.video_window.OnClose(None)
 
-class SerialSetting(SerialSettingBase):
-    def __init__(self,parent):
-        SerialSettingBase.__init__(self,parent)
 

@@ -42,15 +42,6 @@ class MenuBlock():
                 self.sbar.update(u'通信设置"%s"应用发生错误'%filepath)    
         dialog.Destroy()
         
-    def load_default_comm_options(self):
-        # load default settings
-        filepath = r'communication\xbee.gss'
-        try:
-            pfio = PickleFileIO.PickleFileIO(filepath)
-            self.comm_options = pfio.load()
-            self.sbar.update(u'默认通信设置"%s"已经应用。'%filepath)
-        except (EOFError,IOError),e:
-            self.m_statusBar.SetStatusText(u'未发现默认设置')
     
     def display_comm_option(self, options):
         msg=''

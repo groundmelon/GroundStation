@@ -10,20 +10,32 @@ from GroundStationBase import frame_serial_setting
 from communication.XBeeComm import XBee
 import serial.tools.list_ports as lstprt
 
-class SerialSettingBase(frame_serial_setting):
-    def __init__(self,parent):
+class SerialSetting(frame_serial_setting):
+    def __init__(self,parent, option_arg = None):
         frame_serial_setting.__init__(self,parent)
         self.comm = parent.comm
         serial_info = self.comm.get_supported_info()
+        
+        self.parity_table = {}
+        for s in serial_info['parity']:
+            self.parity_table[s[0]] = s
+        
+        self.stopbit_table = {}
+        for s in serial_info['stopbit']:
+            self.stopbit_table[float(s)] = s
+        
         self.init_options(serial_info)
-        option = {'com'     :   serial_info['com'][0],
-                  'baudrate':   9600,
-                  'bytesize':   8,
-                  'parity'  :   'None',
-                  'stopbit' :   1,
-                  'RtsCts':False,#hard flow control
-                  'XonXoff':False,#software flow control
-                  }
+        if option_arg is None:
+            option = {'com'     :   serial_info['com'][0],
+                      'baudrate':   9600,
+                      'bytesize':   8,
+                      'parity'  :   'None',
+                      'stopbit' :   1,
+                      'RtsCts':False,#hard flow control
+                      'XonXoff':False,#software flow control
+                      }
+        else:
+            option = option_arg
         self.set_options(option)
         
        
@@ -45,8 +57,8 @@ class SerialSettingBase(frame_serial_setting):
         self.m_choice_com.      SetStringSelection(str(option['com']))
         self.m_choice_baudrate. SetStringSelection(str(option['baudrate']))              
         self.m_choice_bytesize. SetStringSelection(str(option['bytesize']))
-        self.m_choice_stopbit.  SetStringSelection(str(option['stopbit']))
-        self.m_choice_parity.   SetStringSelection(option['parity'])
+        self.m_choice_stopbit.  SetStringSelection(self.stopbit_table[option['stopbit']])
+        self.m_choice_parity.   SetStringSelection(self.parity_table[option['parity']])
         self.m_checkBox_RtsCts. SetValue(option['RtsCts'])
         self.m_checkBox_XonXoff.SetValue(option['XonXoff'])        
         

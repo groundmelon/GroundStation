@@ -47,6 +47,7 @@ class XBee(object):
         self.ser.open()
         self.receiver = SerialReceiver(self.ser, self.window)
         self.receiver.start()
+        print 'Port info:%s'%str(self.ser)
     
     def close(self):
         self.receiver.stop()

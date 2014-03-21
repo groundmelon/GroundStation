@@ -9,8 +9,6 @@ import wx
 import cv2
 import numpy as np
 import time
-from Gnuplot.termdefs import Arg
-from Cython.Plex.Regexps import Str
 
 DEBUG = True
 
@@ -67,12 +65,18 @@ def cvimg_rescale(cvimg, scale):
 
 class SW(object):
     ''' stop watch '''
-    def __init__(self, s='Noname'):
+    def __init__(self, s='Noname', display = True):
         self.start_time = time.clock()
         self.s = s
-    def stop(self, *arg):
-        now_time = time.clock()
-        print('[%s] %.3fms'%(self.s,(now_time-self.start_time)*1000))
+        self.display = display
+    def stop(self):
+        if self.display:
+            now_time = time.clock()
+            print('[%s] %.3fms'%(self.s,(now_time-self.start_time)*1000))
+    def pause(self):
+        if self.display:
+            now_time = time.clock()
+            print('[%s P] %.3fms'%(self.s,(now_time-self.start_time)*1000))
         
 NULLIMG = r'resources\null.bmp'
 def get_null_bitmap():
@@ -100,8 +104,55 @@ class Point(object):
         
         self.tup = (self.x, self.y) # tuple represent
     def __repr__(self):
-        return '<util.Point(%d,%d)>'%(self.x, self.y)
-        
+        return '<pt(%d,%d)>'%(self.x, self.y)
+
+JSCODES = '''
+            // Get the current view.
+            var lookAt = ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
+            var camera = ge.getView().copyAsCamera(ge.ALTITUDE_RELATIVE_TO_GROUND);
+            var la = %f;
+            var lo = %f;
+            var rg = %f;
+            
+            
+            // Set the FlyTo speed.
+            ge.getOptions().setFlyToSpeed(1.0);
+            // Set new latitude and longitude values.
+            lookAt.setLatitude(la);
+            lookAt.setLongitude(lo);
+            lookAt.setRange(rg);
+            
+            // Update the view in Google Earth.
+            ge.getView().setAbstractView(lookAt);
+            //ge.getView().setAbstractView(camera);
+            
+            //remove old placemark
+            //var old = ge.getElementById('uav');
+            var old = ge.getFeatures().getLastChild();
+            if (old){
+                ge.getFeatures().removeChild(old);
+            }
+            
+            // Create the placemark.
+            var placemark = ge.createPlacemark('');
+            placemark.setName("");
+            
+            // Define a custom icon.
+            var icon = ge.createIcon('');
+            icon.setHref(%f);
+            var style = ge.createStyle(''); //create a new style
+            style.getIconStyle().setIcon(icon); //apply the icon to the style
+            placemark.setStyleSelector(style); //apply the style to the placemark
+            
+            // Set the placemark's location.  
+            var point = ge.createPoint('');
+            point.setLatitude(la);
+            point.setLongitude(lo);
+            placemark.setGeometry(point);
+            
+            // Add the placemark to Earth.
+            ge.getFeatures().appendChild(placemark);
+        '''
 
 if __name__ == '__main__':
     print(Point(1,2))

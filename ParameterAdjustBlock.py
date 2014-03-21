@@ -5,16 +5,19 @@ Created on 2014-3-18
 @author: GroundMelon
 '''
 from GroundStationBase import FrameGroundStationBase
-import struct
+import communication.MessageProcess as MsgPrcs
 
 PARA_FILE_PATH = r'para.dat'
 
 class ParameterAdjustBlock():
-    def init_para_adj_table(self):
+    def init_para_block(self):
         para = [1.0, 1.0, 1.0,
                 1.0, 1.0, 1.0,
                 1.0, 1.0, 1.0]
         self.write_para_to_table(para)
+        self.rcv_pid = {'XP':1.0, 'XI':1.0, 'XD':1.0,
+                        'YP':1.0, 'YI':1.0, 'YD':1.0,
+                        'ZP':1.0, 'ZI':1.0, 'ZD':1.0,}
     
     def write_para_to_table(self, para):
         assert len(para) == self.m_grid_para_adj.GetNumberRows(), 'indices of para error.'
@@ -44,18 +47,28 @@ class ParameterAdjustBlock():
     
     def send_para(self):
         para = self.get_para_from_table()
-        head = struct.pack('2B', 0xAA, 0x55)
-        end = struct.pack('2B', 0xDD, 0xEE)
-        body = ''.join([struct.pack('f',val) for val in para])
-        data = ''.join([head, body, end])
-        self.send_data_by_frame(data)
+        
+        self.send_data_by_frame(MsgPrcs.pack_adj_pid_para(para[:3], 'X'))
+        self.send_data_by_frame(MsgPrcs.pack_adj_pid_para(para[3:6], 'Y'))
+        self.send_data_by_frame(MsgPrcs.pack_adj_pid_para(para[6:], 'Z'))
+        
         self.sbar.update(u'参数已经发送')
     
     def set_down_para(self):
-        head = struct.pack('2B', 0xAA, 0x66)
-        end = struct.pack('2B', 0xDD, 0xEE)
-        body = '\x00'*4*9
-        data = ''.join([head, body, end])
+        data = MsgPrcs.pack_set_pid_para()
         self.send_data_by_frame(data)
         self.sbar.update(u'参数已经固定')
+    
+    def update_rcv_pid(self, axis, para):
+        self.rcv_pid['%sP'%axis] = para[0]
+        self.rcv_pid['%sI'%axis] = para[1]
+        self.rcv_pid['%sD'%axis] = para[2]
+        self.show_rcv_pid()
+        
+    def show_rcv_pid(self):
+        title = u'机上PID参数\n\n'
+        info = ''.join(['%s = %.4f\n'%(t, self.rcv_pid[t])
+                        for t in ['XP','XI','XD','YP','YI','YD','ZP','ZI','ZD']
+                        ])
+        self.m_textCtrl_showpid.SetValue(''.join([title, info]))
         

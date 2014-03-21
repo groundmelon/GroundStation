@@ -92,7 +92,7 @@ class TrackBlock():
                                            self.drag_info.get_drag_data(),
                                            self.bitmap_track_size)
         try:
-            self.objmatch = Objtrack.ObjectMatch(rect, self.frozen_frame)
+            self.objmatch = Objtrack.ObjectMatch(rect, self.frozen_frame, self.get_hist_channel())
             self.frozen_frame = None
             self.drag_info = None
             self.toggle_drag_selection(False)
