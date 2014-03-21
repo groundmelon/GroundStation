@@ -44,7 +44,9 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
         self.browser_ge = wx.html2.WebView.New(self.m_panel_route, size=(330,330))
         sizer_ge.Add(self.browser_ge, 1, wx.ALIGN_CENTER, 0)
         #self.browser_ge.LoadURL(r'http://www.baidu.com')
-        self.browser_ge.LoadURL(r'file:///%s/resources/ge.html'%os.getcwd())
+        self.browser_ge.LoadURL(r'file:///%s/resources/ge.html'%os.getcwd().replace('\\','/'))
+        print(r'file:///%s/resources/ge.html'%os.getcwd().replace('\\','/'))
+        self.GE_uninited = True
         #---- add component attributes ----
         for comp in [self.m_button_toggle_track, 
                      self.m_button_toggle_track_video,
@@ -343,7 +345,11 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
     def update_GE(self, info):
         la = info['la']
         lo = info['lo']
-        js = util.JSCODES%(la,lo, info['height']*1.2,r'file:///%s/resources/uav.gif'%os.getcwd())
+        if self.GE_uninited:
+            js = util.JSCODESINIT%(la,lo, info['height']*1.2)
+            self.GE_uninited = False
+        else:
+            js = util.JSCODES%(la,lo, info['height']*1.2)
         self.browser_ge.RunScript(js)
     
     def set_track_arg(self, s):

@@ -126,12 +126,40 @@ JSCODES = '''
             ge.getView().setAbstractView(lookAt);
             //ge.getView().setAbstractView(camera);
             
-            //remove old placemark
-            //var old = ge.getElementById('uav');
             var old = ge.getFeatures().getLastChild();
             if (old){
                 ge.getFeatures().removeChild(old);
             }
+            
+            placemark.setStyleSelector(style); //apply the style to the placemark
+            
+            // Set the placemark's location.  
+            point.setLatitude(la);
+            point.setLongitude(lo);
+            placemark.setGeometry(point);
+            
+            // Add the placemark to Earth.
+            ge.getFeatures().appendChild(placemark);
+        '''
+JSCODESINIT = '''
+            // Get the current view.
+            var lookAt = ge.getView().copyAsLookAt(ge.ALTITUDE_RELATIVE_TO_GROUND);
+            var camera = ge.getView().copyAsCamera(ge.ALTITUDE_RELATIVE_TO_GROUND);
+            var la = %f;
+            var lo = %f;
+            var rg = %f;
+            
+            
+            // Set the FlyTo speed.
+            ge.getOptions().setFlyToSpeed(1.0);
+            // Set new latitude and longitude values.
+            lookAt.setLatitude(la);
+            lookAt.setLongitude(lo);
+            lookAt.setRange(rg);
+            
+            // Update the view in Google Earth.
+            ge.getView().setAbstractView(lookAt);
+            //ge.getView().setAbstractView(camera);
             
             // Create the placemark.
             var placemark = ge.createPlacemark('');
@@ -139,7 +167,7 @@ JSCODES = '''
             
             // Define a custom icon.
             var icon = ge.createIcon('');
-            icon.setHref(%f);
+            icon.setHref("http://maps.google.com/mapfiles/kml/paddle/red-circle.png");
             var style = ge.createStyle(''); //create a new style
             style.getIconStyle().setIcon(icon); //apply the icon to the style
             placemark.setStyleSelector(style); //apply the style to the placemark
