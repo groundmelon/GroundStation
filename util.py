@@ -47,7 +47,8 @@ def toggle_button(comp, stop_label, running_label):
     comp.is_running = not comp.is_running
 
 def cvimg_to_wxbmp(cvimg):        
-    img = cv2.cvtColor(np.uint8(cvimg), cv2.cv.CV_BGR2RGB)
+    #img = cv2.cvtColor(np.uint8(cvimg), cv2.cv.CV_BGR2RGB)
+    img = cv2.cvtColor(np.uint8(cvimg), cv2.COLOR_BGR2RGB)
     bmp = wx.BitmapFromBuffer(img.shape[1], img.shape[0], img )
     return bmp
 

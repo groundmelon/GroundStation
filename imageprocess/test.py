@@ -39,9 +39,9 @@ class StaticTest(object):
     
     def cvimg_to_imgdata(self,cvimg):
         
-        imgsrc = cv2.cvtColor(np.uint8(cvimg), cv2.cv.CV_BGR2RGB)
+        imgsrc = cv2.cvtColor(np.uint8(cvimg), cv2.COLOR_BGR2RGB)
         imgrsz = cv2.cvtColor(np.uint8(cv2.resize(cvimg, self.frame_bitmap_size, interpolation = cv2.INTER_CUBIC)),
-                              cv2.cv.CV_BGR2RGB)
+                              cv2.COLOR_BGR2RGB)
         
         return {'src':(imgsrc.shape[1], imgsrc.shape[0], imgsrc),
                 'rsz':(imgrsz.shape[1], imgrsz.shape[0], imgrsz),

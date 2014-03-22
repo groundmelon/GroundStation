@@ -33,8 +33,9 @@ import numpy as np
 
 cap = cv2.VideoCapture(0)
 
+fourcc = cv2.VideoWriter_fourcc(*'MJPG')
 # Define the codec and create VideoWriter object
-out = cv2.VideoWriter('output.avi', 0, 20.0, (640,480))
+out = cv2.VideoWriter('output.avi', -1, 20.0, (640,480))
 
 while(cap.isOpened()):
     ret, frame = cap.read()

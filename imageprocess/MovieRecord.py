@@ -8,8 +8,8 @@ import cv2
 
 class Record(object):
     def __init__(self, path, fps, size):
-        #fourcc = cv2.cv.FOURCC('M', 'J', 'P', 'G')
-        self.out = cv2.VideoWriter(path, 0, fps, size)
+        fourcc = cv2.VideoWriter_fourcc('D','I','V','X')
+        self.out = cv2.VideoWriter(path, -1, fps, size)
     
     def save_frame(self, frame):
         self.out.write(frame)

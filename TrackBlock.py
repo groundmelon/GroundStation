@@ -38,15 +38,26 @@ class TrackBlock():
         self.add_work(DISPLAY_TRACK_VIDEO)
         self.display_track_state = DISPLAY_TRACK_STATE_RAW
         util.toggle_button(comp, u'显示视频', u'关闭显示')
+        self.m_button_select_object.Enable(True)
             
     def close_track_video(self, comp):
         self.remove_work(DISPLAY_TRACK_VIDEO)
         self.display_track_state = None
         self.dc_track.DrawBitmap(util.get_null_bitmap(), 0, 0)
-        util.toggle_button(comp, u'显示视频', u'关闭显示')   
+        util.toggle_button(comp, u'显示视频', u'关闭显示')
+        self.m_button_select_object.Enable(False)
+        if self.m_button_toggle_track.is_running:   
+            #stop track
+            pass
+        self.m_button_toggle_track.Enable(False)
     
-    def toggle_track(self):
-        pass
+    def stop_track(self, comp):
+        self.remove_work(TRACK_OBJECT)
+        util.toggle_button(comp, u'开始', u'结束')
+    
+    def start_track(self, comp):
+        self.add_work(TRACK_OBJECT)
+        util.toggle_button(comp, u'开始', u'结束')
         
 # ---- 图像调整相关函数 ----
     def get_adjusted_image(self, src):    
@@ -99,6 +110,7 @@ class TrackBlock():
             self.frozen_frame = None
             self.drag_info = None
             self.toggle_drag_selection(False)
+            self.m_button_toggle_track.Enable(True)
         except AssertionError,e:
             wx.MessageBox(str(e), u"出现错误",wx.OK | wx.ICON_ERROR)
             self.sbar.update(unicode(e))

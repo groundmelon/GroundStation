@@ -52,6 +52,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
                      self.m_button_toggle_video,
                      self.m_button_toggle_xbee,
                      self.m_button_select_object,
+                     self.m_button_toggle_track,
                      self.m_button_record,
                      ]:
             comp.__setattr__('is_running', False)
@@ -157,10 +158,6 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
             self.close_track_video(event.GetEventObject())
         else:
             self.open_track_video(event.GetEventObject())
-    
-    def on_toggle_track(self, event):
-        if event.GetEventObject().is_running:
-            self.start_test()
      
     def on_radiobox_adjust(self, event):
         self.change_adjust_type()
@@ -175,6 +172,12 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
     def on_select_object(self, event):
         self.toggle_drag_selection(True)
          
+    def on_toggle_track(self, event):
+        if event.GetEventObject().is_running:
+            self.stop_track(event.GetEventObject())
+        else:
+            self.start_track(event.GetEventObject())
+    
     def on_track_bitmap_left_down(self, event):
         self.start_drag(event)
      
@@ -277,61 +280,67 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
             self.video_window.update_image_with_info(srcimg, self.UAVinfo.get_information_in_InfoEntries())
         # 结束图像传输需要先停止track
         if DISPLAY_TRACK_VIDEO in worklist:       
+            # 未框选状态，仅仅显示原始视频
             if self.display_track_state == DISPLAY_TRACK_STATE_RAW:
                 rszimg = util.cvimg_resize(srcimg, self.bitmap_track_size)
                 rszimg = self.get_adjusted_image(rszimg)
                 self.dc_track.DrawBitmap(util.cvimg_to_wxbmp(rszimg), 0, 0)               
+            # 正在框选状态
             elif self.display_track_state == DISPLAY_TRACK_STATE_SELECTION:
                 assert self.frozen_frame is not None, 'Frozen frame is none.'
                 rectimg = self.get_dragging_image(self.frozen_frame,self.drag_info.get_drag_data())
                 rszimg = util.cvimg_resize(rectimg, self.bitmap_track_size)
                 self.dc_track.DrawBitmap(util.cvimg_to_wxbmp(rszimg), 0, 0)           
+            # 显示目标追踪结果
             elif self.display_track_state == DISPLAY_TRACK_STATE_RESULT:
                 track_mode = self.m_choice_track_mode.GetStringSelection()
                 display_process = self.m_menuItem_track_display_process.IsChecked()
+                # 模板匹配模式
                 if track_mode == 'template':
                     matchimg, center, res = self.objmatch.do_tpl_match(srcimg)
                     if display_process:
                         rszimg = util.cvimg_resize(res, self.bitmap_track_size)
                     else:
                         rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
-                
+                # 边缘检测-模板匹配模式
                 elif track_mode == 'edge-tpl':
                     matchimg, center, edgeimg = self.objmatch.do_edge_match(srcimg,self.edge_arg)
                     if display_process:
                         rszimg = util.cvimg_resize(edgeimg, self.bitmap_track_size)
                     else:
                         rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
-                
+                # 纯色匹配模式
                 elif track_mode == 'color':
                     matchimg, center, mask = self.objmatch.do_color_match(srcimg)
                     if display_process:
                         rszimg = util.cvimg_resize(mask, self.bitmap_track_size)
                     else:
                         rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
-                
+                # MeanShift匹配模式
                 elif track_mode == 'meanshift':
                     matchimg, center, prj_img = self.objmatch.do_meanshift(srcimg)
                     if display_process:
                         rszimg = util.cvimg_resize(prj_img, self.bitmap_track_size)
                     else:
                         rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
-                
+                # 多目标MeanShift匹配模式
                 elif track_mode == 'multi-meanshift':
                     matchimg, center, prj_img = self.objmatch.do_multi_meanshift(srcimg, self.multimean_arg)
                     if display_process:
                         rszimg = util.cvimg_resize(prj_img, self.bitmap_track_size)
                     else:
                         rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
-                
+                # 混合匹配模式
                 elif track_mode == 'mix':
                     matchimg, center, _ = self.objmatch.do_mix(srcimg, self.multimean_arg, self.edge_arg)    
                     rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
-                
+                # 更新匹配结果显示
                 self.dc_track.DrawBitmap(util.cvimg_to_wxbmp(rszimg), 0, 0)
                 # use track information to do something
                 #print("center:%s"%(str(center)))
         
+        if TRACK_OBJECT in worklist:
+            print('tracking')
         n = time.clock()
         #print('[work time]%4.4f [cir time]%4.4f'%((n-a)*1000,(n-self.lasttime)*1000))
         self.lasttime = n
