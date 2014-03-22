@@ -273,9 +273,9 @@ class ObjectMatch(object):
             method = eval(methods[4])
         else:
             method = eval(methods[0])
-        sw.pause()
+        #sw.pause()
         res = cv2.matchTemplate(src_edge, self.edge_tpl, method)
-        sw.pause()
+        #sw.pause()
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
         if match_scale > 1:
             msk = np.less(res, min_val * match_scale)

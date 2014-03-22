@@ -3,6 +3,7 @@ encoding//attitude/attitudeMod.py=utf-8
 encoding//attitude/draw.py=utf-8
 encoding//communication/MessageProcess.py=utf-8
 encoding//communication/SerialReceiverThread.py=utf-8
+encoding//imageprocess/MovieRecord.py=utf-8
 encoding//imageprocess/ObjectTracking.py=utf-8
 encoding//imageprocess/VideoCaptureTest.py=utf-8
 encoding//imageprocess/cvtest.py=utf-8

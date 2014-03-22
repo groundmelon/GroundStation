@@ -174,7 +174,6 @@ class WebcamService(object):
     ''' 摄像头服务类，使用多线程方式防止占用过多的GUI线程处理时间 
                         使用 mmap方式进行通信，速度快  '''
     def __init__(self, frame_bitmap_size):
-        self.frame_bitmap_size = tuple(frame_bitmap_size)
         mem_tagname = 'cap_mem_buf'
         
         self.capthread = CaptureThread(mem_tagname)
@@ -192,19 +191,16 @@ class WebcamService(object):
         #img_name = r'color\colorruler.jpg'
         #self.testimg = cv2.imread(r'F:\Workplace\GroundStation\imageprocess\%s'%img_name,cv2.IMREAD_COLOR)
     
+    def get_frame_size(self):
+        return (self.frame_shape[1], self.frame_shape[0])
+    
     def mem_string_to_img(self):
         self.mmap_file.seek(0)
         s = self.mmap_file.read(self.cap_length)
         img = np.ndarray(shape = self.frame_shape, dtype = self.frame_dtype, buffer = s)
         self.frame = img
         return img
-    
-#     def get_rsz_frame(self):
-#         import time
-#         a=time.clock()
-#         frame = cv2.resize(self.mem_string_to_img(), self.frame_bitmap_size, interpolation = cv2.INTER_CUBIC)
-#         return frame
-    
+      
     def get_frame(self):
         #---测试之用--- 
         #return self.testimg

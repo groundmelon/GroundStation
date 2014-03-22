@@ -29,6 +29,9 @@ class TrackBlock():
         self.m_panel_track.Enable(switch)
         for each in self.m_panel_track.GetChildren():
             each.Enable(switch)
+        self.m_button_select_object.Enable(False)
+        self.m_button_toggle_track.Enable(False)
+        
     
     def open_track_video(self, comp):
         self.track_image_adjust_value = Objtrack.get_image_adjust_value()

@@ -149,7 +149,7 @@ JSCODESINIT = '''
             var lo = %f;
             var rg = %f;
             
-            
+
             // Set the FlyTo speed.
             ge.getOptions().setFlyToSpeed(1.0);
             // Set new latitude and longitude values.

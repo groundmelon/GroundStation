@@ -33,6 +33,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
                     ButtonBlock, MenuBlock, CommBlock, ParameterAdjustBlock,
                     ):
     def __init__(self):
+        self.lasttime = time.clock()
         super(GroundStation, self).__init__(parent = None)
         self.SetIcon(wx.Icon(r'resources/gs.ico', wx.BITMAP_TYPE_ICO))              
         
@@ -43,9 +44,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
         sizer_ge = self.m_panel_route.GetSizer()
         self.browser_ge = wx.html2.WebView.New(self.m_panel_route, size=(330,330))
         sizer_ge.Add(self.browser_ge, 1, wx.ALIGN_CENTER, 0)
-        #self.browser_ge.LoadURL(r'http://www.baidu.com')
         self.browser_ge.LoadURL(r'file:///%s/resources/ge.html'%os.getcwd().replace('\\','/'))
-        print(r'file:///%s/resources/ge.html'%os.getcwd().replace('\\','/'))
         self.GE_uninited = True
         #---- add component attributes ----
         for comp in [self.m_button_toggle_track, 
@@ -53,6 +52,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
                      self.m_button_toggle_video,
                      self.m_button_toggle_xbee,
                      self.m_button_select_object,
+                     self.m_button_record,
                      ]:
             comp.__setattr__('is_running', False)
 
@@ -143,6 +143,12 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
     
     def on_update_uavinfo(self, event):
         self.send_data_by_frame(MsgPrcs.pack_get_info())
+    
+    def on_record(self, event):
+        if event.GetEventObject().is_running:
+            self.stop_record(event.GetEventObject())
+        else:
+            self.start_record(event.GetEventObject(), self.m_filePicker_output.GetPath())
         
 #------ Track Binding Function ------   
 
@@ -254,7 +260,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
 #------ Work Function ------        
     def main_work(self, event):
         worklist = self.worklist
-                
+        a = time.clock()        
         
         if DISPLAY_ATTITUDE in worklist:
             self.update_attitude_bitmap()
@@ -263,7 +269,10 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
             srcimg = self.webcam.get_frame()
             rszimg = util.cvimg_resize(srcimg, self.bitmap_video_size)
             self.dc_video.DrawBitmap(util.cvimg_to_wxbmp(rszimg), 0, 0)
-        
+            if RECORD_VIDEO in worklist:
+                self.mov_rec.save_frame(srcimg)
+                pass
+            
         if DISPLAY_INDEPENDENT_VIDEO in worklist:
             self.video_window.update_image_with_info(srcimg, self.UAVinfo.get_information_in_InfoEntries())
         # 结束图像传输需要先停止track
@@ -322,7 +331,10 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
                 self.dc_track.DrawBitmap(util.cvimg_to_wxbmp(rszimg), 0, 0)
                 # use track information to do something
                 #print("center:%s"%(str(center)))
-
+        
+        n = time.clock()
+        #print('[work time]%4.4f [cir time]%4.4f'%((n-a)*1000,(n-self.lasttime)*1000))
+        self.lasttime = n
 
 #------ Tool Function ------       
     def update_GUI_UAVinfo(self, info):
@@ -368,7 +380,9 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
             return [2]
     
     def enable_video_components(self, switch):
-        for each in [self.m_button_video_window_show, self.m_bitmap_video]:
+        for each in [self.m_button_video_window_show, 
+                     self.m_bitmap_video,
+                     self.m_button_record,]:
             each.Enable(switch)        
     
     def OnClose(self, event):

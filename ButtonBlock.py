@@ -11,6 +11,7 @@ from imageprocess.test import WebcamService
 #from GroundStationBase import FrameGroundStationBase
 from SerialSettingDialog import SerialSetting
 from BigVideoDisplay import VideoDisplayFrame
+from imageprocess.MovieRecord import Record
 import util
 from util import DBGException
 from Definition import *
@@ -58,6 +59,8 @@ class ButtonBlock():
     def close_video(self, comp):
         try:
             self.close_independent_video()
+            if self.m_button_record.is_running:
+                self.stop_record(self.m_button_record)
             #close track
             #close track video
             self.sbar.update(u'图像传输已经关闭')
@@ -90,5 +93,15 @@ class ButtonBlock():
     def close_independent_video(self):
         if self.video_window is not None:
             self.video_window.OnClose(None)
+    
+    def start_record(self, comp, path):
+        self.mov_rec = Record(path, 24.0, self.webcam.get_frame_size())
+        self.add_work(RECORD_VIDEO)
+        util.toggle_button(comp, u'开始', u'结束')
+    
+    def stop_record(self, comp):
+        self.remove_work(RECORD_VIDEO)
+        self.mov_rec.stop()
+        util.toggle_button(comp, u'开始', u'结束')
 
 

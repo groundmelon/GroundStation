@@ -162,7 +162,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_comm.SetSizer( gbSizer6 )
 		self.m_panel_comm.Layout()
 		gbSizer6.Fit( self.m_panel_comm )
-		self.m_notebook1.AddPage( self.m_panel_comm, u"通信数据查看", False )
+		self.m_notebook1.AddPage( self.m_panel_comm, u"通信数据查看", True )
 		self.m_panel_para_adj = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		gbSizer11 = wx.GridBagSizer( 0, 0 )
 		gbSizer11.SetFlexibleDirection( wx.BOTH )
@@ -225,7 +225,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_para_adj.SetSizer( gbSizer11 )
 		self.m_panel_para_adj.Layout()
 		gbSizer11.Fit( self.m_panel_para_adj )
-		self.m_notebook1.AddPage( self.m_panel_para_adj, u"调参", True )
+		self.m_notebook1.AddPage( self.m_panel_para_adj, u"调参", False )
 		self.m_panel_track = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), wx.TAB_TRAVERSAL )
 		self.m_panel_track.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
 		self.m_panel_track.Enable( False )
@@ -331,10 +331,16 @@ class FrameGroundStationBase ( wx.Frame ):
 		gbSizer5.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_NONE )
 		
 		self.m_bitmap_video = wx.StaticBitmap( self.m_panel_image, wx.ID_ANY, wx.Bitmap( u"resources/null.bmp", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.Size( 320,240 ), wx.CLIP_CHILDREN )
-		gbSizer5.Add( self.m_bitmap_video, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_TOP|wx.ALL, 5 )
+		gbSizer5.Add( self.m_bitmap_video, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 4 ), wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_TOP|wx.ALL, 5 )
 		
 		self.m_button_video_window_show = wx.Button( self.m_panel_image, wx.ID_ANY, u"独立窗口", wx.DefaultPosition, wx.DefaultSize, 0 )
-		gbSizer5.Add( self.m_button_video_window_show, wx.GBPosition( 1, 0 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER|wx.ALL, 5 )
+		gbSizer5.Add( self.m_button_video_window_show, wx.GBPosition( 1, 1 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		self.m_button_record = wx.Button( self.m_panel_image, wx.ID_ANY, u"开始录像", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gbSizer5.Add( self.m_button_record, wx.GBPosition( 1, 2 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
+		
+		self.m_filePicker_output = wx.FilePickerCtrl( self.m_panel_image, wx.ID_ANY, u"_Output.avi", u"输出录像到", u"*.avi", wx.DefaultPosition, wx.DefaultSize, wx.FLP_SAVE|wx.FLP_USE_TEXTCTRL )
+		gbSizer5.Add( self.m_filePicker_output, wx.GBPosition( 2, 0 ), wx.GBSpan( 1, 4 ), wx.ALL|wx.EXPAND, 5 )
 		
 		
 		self.m_panel_image.SetSizer( gbSizer5 )
@@ -408,6 +414,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_toggle_track.Bind( wx.EVT_BUTTON, self.on_toggle_track )
 		self.m_textCtrl_track_arg.Bind( wx.EVT_TEXT_ENTER, self.on_track_arg_enter )
 		self.m_button_video_window_show.Bind( wx.EVT_BUTTON, self.on_video_window_show )
+		self.m_button_record.Bind( wx.EVT_BUTTON, self.on_record )
 		self.Bind( wx.EVT_MENU, self.on_save_comm_option, id = self.m_menuItem_save_comm_option.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_load_comm_option, id = self.m_menuItem_load_comm_option.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_check_comm_option, id = self.m_menuItem_check_comm_option.GetId() )
@@ -489,6 +496,9 @@ class FrameGroundStationBase ( wx.Frame ):
 		event.Skip()
 	
 	def on_video_window_show( self, event ):
+		event.Skip()
+	
+	def on_record( self, event ):
 		event.Skip()
 	
 	def on_save_comm_option( self, event ):
