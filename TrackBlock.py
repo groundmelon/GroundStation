@@ -6,7 +6,8 @@ Created on 2014-1-3
 @note: 处理跟踪相关处理
 '''
 from GroundStationBase import FrameGroundStationBase
-import wx, util
+import wx
+import util
 from Definition import *
 import imageprocess.ObjectTracking as Objtrack
 #from imageprocess.test import TrackService#StaticTest, WebcamTest

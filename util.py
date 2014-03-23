@@ -17,6 +17,25 @@ if DEBUG:
 else:
     DBGException = Exception
 
+def get_now():
+    return time.strftime('%c')
+
+TEXTSIZE = None
+PADDING = None
+WXFONT = None
+TIME_TEXT_WIDTH = None
+def init_font():
+    global TEXTSIZE
+    global PADDING
+    global WXFONT
+    global TIME_TEXT_WIDTH
+    TEXTSIZE = (9, 16)
+    PADDING = 10
+    WXFONT = wx.Font( 1, 74, 90, 90, False, "Consolas" )
+    WXFONT.SetPixelSize(TEXTSIZE)
+    TIME_TEXT_WIDTH = len(get_now()) * TEXTSIZE[0]
+    return
+
 class InfoEntry(object):
     TYPE_LABEL = 1
     TYPE_WARNING = 0
@@ -32,7 +51,7 @@ class InfoEntry(object):
             assert isinstance(arg[0], str) and isinstance(arg[1], str), 'arg[0,1] must be string.'
             self.label = arg[0]
             self.value = arg[1]
-            self.output_str = '%s:%s'%(arg[0].ljust(8), arg[1])
+            self.output_str = '%s: %s'%(arg[0].ljust(6), arg[1])
     
     def __repr__(self):
         return self.output_str
@@ -52,6 +71,14 @@ def cvimg_to_wxbmp(cvimg):
     bmp = wx.BitmapFromBuffer(img.shape[1], img.shape[0], img )
     return bmp
 
+def wxbmp_to_cvimg(wxbmp):
+    shape = (wxbmp.Size[1], wxbmp.Size[0],3)
+    buf = np.ndarray(shape, dtype=np.uint8)
+    wxbmp.CopyToBuffer(buf, wx.BitmapBufferFormat_RGB)
+    cvimg = cv2.cvtColor(buf, cv2.COLOR_RGB2BGR)
+    
+    return cvimg
+
 def cvimg_resize(cvimg, size):
     return cv2.resize(cvimg, size, interpolation = cv2.INTER_CUBIC)
 
@@ -62,7 +89,6 @@ def cvimg_rescale(cvimg, scale):
         return cv2.resize(cvimg, (0,0) , fx=scale, fy=scale, interpolation = cv2.INTER_LINEAR)
     elif scale == 1:
         return cvimg
-
 
 class SW(object):
     ''' stop watch '''

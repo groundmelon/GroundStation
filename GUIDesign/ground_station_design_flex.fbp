@@ -4699,12 +4699,12 @@
                                                         <property name="window_name"></property>
                                                         <property name="window_style">wxCLIP_CHILDREN</property>
                                                         <event name="OnChar"></event>
-                                                        <event name="OnEnterWindow"></event>
+                                                        <event name="OnEnterWindow">on_enter_bitmap_video</event>
                                                         <event name="OnEraseBackground"></event>
                                                         <event name="OnKeyDown"></event>
                                                         <event name="OnKeyUp"></event>
                                                         <event name="OnKillFocus"></event>
-                                                        <event name="OnLeaveWindow"></event>
+                                                        <event name="OnLeaveWindow">on_leave_bitmap_video</event>
                                                         <event name="OnLeftDClick"></event>
                                                         <event name="OnLeftDown"></event>
                                                         <event name="OnLeftUp"></event>
@@ -4721,6 +4721,34 @@
                                                         <event name="OnSetFocus"></event>
                                                         <event name="OnSize"></event>
                                                         <event name="OnUpdateUI"></event>
+                                                        <object class="wxMenu" expanded="1">
+                                                            <property name="label">MyMenu</property>
+                                                            <property name="name">m_menu_bitmap_video</property>
+                                                            <property name="permission">protected</property>
+                                                            <object class="separator" expanded="1">
+                                                                <property name="name">m_separator3</property>
+                                                                <property name="permission">none</property>
+                                                            </object>
+                                                            <object class="wxMenuItem" expanded="1">
+                                                                <property name="bitmap"></property>
+                                                                <property name="checked">1</property>
+                                                                <property name="enabled">1</property>
+                                                                <property name="help"></property>
+                                                                <property name="id">wxID_ANY</property>
+                                                                <property name="kind">wxITEM_CHECK</property>
+                                                                <property name="label">OSD</property>
+                                                                <property name="name">m_menuItem_video_osd</property>
+                                                                <property name="permission">none</property>
+                                                                <property name="shortcut"></property>
+                                                                <property name="unchecked_bitmap"></property>
+                                                                <event name="OnMenuSelection"></event>
+                                                                <event name="OnUpdateUI"></event>
+                                                            </object>
+                                                            <object class="separator" expanded="1">
+                                                                <property name="name">m_separator4</property>
+                                                                <property name="permission">none</property>
+                                                            </object>
+                                                        </object>
                                                     </object>
                                                 </object>
                                                 <object class="gbsizeritem" expanded="0">

@@ -100,6 +100,6 @@ class UAVInfomation(object):
         rtnval.append(util.InfoEntry(entry_type,'Yaw', ''.join([str(info['yaw']),'d'])))
         
         entry_type = util.InfoEntry.TYPE_WARNING if self.need_warning('vol', info['vol']) else util.InfoEntry.TYPE_LABEL        
-        rtnval.append(util.InfoEntry(entry_type,'Voltage', ''.join([str(info['vol']),'v'])))
+        rtnval.append(util.InfoEntry(entry_type,'Volt', ''.join([str(info['vol']),'v'])))
         
         return rtnval

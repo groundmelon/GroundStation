@@ -9,9 +9,10 @@ from TrackBlock import TrackBlock
 from ButtonBlock import ButtonBlock
 from MenuBlock import MenuBlock
 from WorkBlock import WorkBlock
+from VideoBlock import VideoBlock
 from ParameterAdjustBlock import ParameterAdjustBlock
 from CommunicationBlock import CommBlock, InputHistory
-from attitude.attitudeMod import AttitudeDisplay
+#from attitude.attitudeMod import AttitudeDisplay
 from UAVInfomation import UAVInfomation
 from StatusBarSystem import StatusBarSystem
 
@@ -29,7 +30,7 @@ from Definition import *
 from imageprocess.ObjectTracking import get_adjusted_image
 
 
-class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, 
+class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
                     ButtonBlock, MenuBlock, CommBlock, ParameterAdjustBlock,
                     ):
     def __init__(self):
@@ -139,17 +140,24 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
         else:
             self.open_video(event.GetEventObject())
     
-    def on_video_window_show(self, event):
-        self.show_independent_video()
-    
     def on_update_uavinfo(self, event):
         self.send_data_by_frame(MsgPrcs.pack_get_info())
-    
+
+#------ Video Binding Function ------    
+    def on_video_window_show(self, event):
+        self.show_independent_video()
+        
     def on_record(self, event):
         if event.GetEventObject().is_running:
             self.stop_record(event.GetEventObject())
         else:
             self.start_record(event.GetEventObject(), self.m_filePicker_output.GetPath())
+    
+    def on_enter_bitmap_video(self, event):
+        self.sbar.update(u'提示：单击右键可选择OSD选项')
+    
+    def on_leave_bitmap_video(self, event):
+        self.sbar.backward()
         
 #------ Track Binding Function ------   
 
@@ -270,11 +278,23 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock,
         
         if DISPLAY_VIDEO in worklist:
             srcimg = self.webcam.get_frame()
-            rszimg = util.cvimg_resize(srcimg, self.bitmap_video_size)
-            self.dc_video.DrawBitmap(util.cvimg_to_wxbmp(rszimg), 0, 0)
+            wxbmp = util.cvimg_to_wxbmp(srcimg)
+            memory = wx.MemoryDC()
+            memory.SelectObject( wxbmp )
+            if self.m_menuItem_video_osd.IsChecked():
+                # draw time
+                memory.SetTextForeground( wx.BLUE )
+                memory.SetFont( util.WXFONT )
+                pos = (srcimg.shape[1] - util.PADDING - util.TIME_TEXT_WIDTH, util.PADDING)
+                memory.DrawText(util.get_now(), pos[0], pos[1])
+            # 设置缩放比例
+            memory.SetUserScale(float(srcimg.shape[1])/float(self.bitmap_video_size[0]),
+                                float(srcimg.shape[0])/float(self.bitmap_video_size[1])
+                                )
+            self.dc_video.Blit(0, 0, self.bitmap_video_size[0], self.bitmap_video_size[1], memory, 0, 0)
+            memory.SelectObject(wx.NullBitmap)
             if RECORD_VIDEO in worklist:
-                self.mov_rec.save_frame(srcimg)
-                pass
+                self.mov_rec.save_frame(wxbmp)
             
         if DISPLAY_INDEPENDENT_VIDEO in worklist:
             self.video_window.update_image_with_info(srcimg, self.UAVinfo.get_information_in_InfoEntries())
@@ -419,4 +439,5 @@ class App(wx.App):
         
 if __name__ == '__main__':
     app = App(redirect=False)
+    util.init_font()
     app.MainLoop()

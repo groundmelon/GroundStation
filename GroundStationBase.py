@@ -331,6 +331,15 @@ class FrameGroundStationBase ( wx.Frame ):
 		gbSizer5.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_NONE )
 		
 		self.m_bitmap_video = wx.StaticBitmap( self.m_panel_image, wx.ID_ANY, wx.Bitmap( u"resources/null.bmp", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.Size( 320,240 ), wx.CLIP_CHILDREN )
+		self.m_menu_bitmap_video = wx.Menu()
+		self.m_menuItem_video_osd = wx.MenuItem( self.m_menu_bitmap_video, wx.ID_ANY, u"OSD", wx.EmptyString, wx.ITEM_CHECK )
+		self.m_menu_bitmap_video.AppendItem( self.m_menuItem_video_osd )
+		self.m_menuItem_video_osd.Check( True )
+		
+		self.m_menu_bitmap_video.AppendSeparator()
+		
+		self.m_bitmap_video.Bind( wx.EVT_RIGHT_DOWN, self.m_bitmap_videoOnContextMenu ) 
+		
 		gbSizer5.Add( self.m_bitmap_video, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 4 ), wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_TOP|wx.ALL, 5 )
 		
 		self.m_button_video_window_show = wx.Button( self.m_panel_image, wx.ID_ANY, u"独立窗口", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -413,6 +422,8 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_select_object.Bind( wx.EVT_BUTTON, self.on_select_object )
 		self.m_button_toggle_track.Bind( wx.EVT_BUTTON, self.on_toggle_track )
 		self.m_textCtrl_track_arg.Bind( wx.EVT_TEXT_ENTER, self.on_track_arg_enter )
+		self.m_bitmap_video.Bind( wx.EVT_ENTER_WINDOW, self.on_enter_bitmap_video )
+		self.m_bitmap_video.Bind( wx.EVT_LEAVE_WINDOW, self.on_leave_bitmap_video )
 		self.m_button_video_window_show.Bind( wx.EVT_BUTTON, self.on_video_window_show )
 		self.m_button_record.Bind( wx.EVT_BUTTON, self.on_record )
 		self.Bind( wx.EVT_MENU, self.on_save_comm_option, id = self.m_menuItem_save_comm_option.GetId() )
@@ -495,6 +506,12 @@ class FrameGroundStationBase ( wx.Frame ):
 	def on_track_arg_enter( self, event ):
 		event.Skip()
 	
+	def on_enter_bitmap_video( self, event ):
+		event.Skip()
+	
+	def on_leave_bitmap_video( self, event ):
+		event.Skip()
+	
 	def on_video_window_show( self, event ):
 		event.Skip()
 	
@@ -518,6 +535,9 @@ class FrameGroundStationBase ( wx.Frame ):
 	
 	def m_bitmap_trackOnContextMenu( self, event ):
 		self.m_bitmap_track.PopupMenu( self.m_menu_bitmap_track, event.GetPosition() )
+		
+	def m_bitmap_videoOnContextMenu( self, event ):
+		self.m_bitmap_video.PopupMenu( self.m_menu_bitmap_video, event.GetPosition() )
 		
 
 ###########################################################################

@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Sep  8 2010)
+## Python code generated with wxFormBuilder (version Feb 26 2014)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
 ###########################################################################
 
 import wx
+import wx.xrc
 
 ###########################################################################
 ## Class IndependentImageDisplayBase
@@ -23,7 +24,15 @@ class IndependentImageDisplayBase ( wx.Frame ):
 		bSizer = wx.BoxSizer( wx.VERTICAL )
 		
 		self.m_bitmap = wx.StaticBitmap( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.CLIP_CHILDREN )
+		self.m_menubitmap = wx.Menu()
+		self.m_menuItem_osd = wx.MenuItem( self.m_menubitmap, wx.ID_ANY, u"OSD", wx.EmptyString, wx.ITEM_CHECK )
+		self.m_menubitmap.AppendItem( self.m_menuItem_osd )
+		self.m_menuItem_osd.Check( True )
+		
+		self.m_bitmap.Bind( wx.EVT_RIGHT_DOWN, self.m_bitmapOnContextMenu ) 
+		
 		bSizer.Add( self.m_bitmap, 0, wx.ALIGN_CENTER|wx.EXPAND, 0 )
+		
 		
 		self.SetSizer( bSizer )
 		self.Layout()
@@ -46,4 +55,7 @@ class IndependentImageDisplayBase ( wx.Frame ):
 	def on_mouse_wheel( self, event ):
 		event.Skip()
 	
+	def m_bitmapOnContextMenu( self, event ):
+		self.m_bitmap.PopupMenu( self.m_menubitmap, event.GetPosition() )
+		
 

@@ -12,8 +12,6 @@ from Definition import DISPLAY_INDEPENDENT_VIDEO
 
 WIDTH_SCALE_BASE = 4.0
 HEIGHT_SCALE_BASE = 3.0
-PADDING = 10
-TEXTSIZE = 12
 
 LABEL_TEXT_COLOR = wx.BLUE
 WARNING_TEXT_COLOR = wx.RED
@@ -21,12 +19,12 @@ WARNING_TEXT_COLOR = wx.RED
 class VideoDisplayFrame(IndependentImageDisplayBase):
     def __init__(self, parent):
         IndependentImageDisplayBase.__init__(self, parent)
+        self.SetIcon(wx.Icon(r'resources/gs.ico', wx.BITMAP_TYPE_ICO))
         self.parent = parent
         self.Bind(wx.EVT_CLOSE, self.OnClose)
         self.user_size = (0,0)
         self.dc = wx.ClientDC(self.m_bitmap)
         self.CentreOnScreen()
-        self.font = wx.Font( TEXTSIZE, 74, 90, 90, False, "Consolas" )
     
     def refresh_size(self, bmpSize):   
         pass
@@ -68,15 +66,22 @@ class VideoDisplayFrame(IndependentImageDisplayBase):
         
         bmp = util.cvimg_to_wxbmp(img)
         memory = wx.MemoryDC( )
-        memory.SetFont( self.font )
+        memory.SetFont( util.WXFONT )
         memory.SelectObject( bmp )
-        text_left_bottom = (PADDING, PADDING + TEXTSIZE)
-        for index, item in enumerate(info):
-            if item.type == util.InfoEntry.TYPE_LABEL:
-                memory.SetTextForeground( LABEL_TEXT_COLOR )
-            elif item.type == util.InfoEntry.TYPE_WARNING:
-                memory.SetTextForeground( WARNING_TEXT_COLOR )
-            pos = (text_left_bottom[0], text_left_bottom[1]+int(index*TEXTSIZE*1.5))
-            memory.DrawText( str(item), pos[0], pos[1])
+        if self.m_menuItem_osd.IsChecked():
+            text_left_top = (util.PADDING, util.PADDING)
+            # draw info
+            for index, item in enumerate(info):
+                if item.type == util.InfoEntry.TYPE_LABEL:
+                    memory.SetTextForeground( LABEL_TEXT_COLOR )
+                elif item.type == util.InfoEntry.TYPE_WARNING:
+                    memory.SetTextForeground( WARNING_TEXT_COLOR )
+                pos = (text_left_top[0], text_left_top[1]+int(index*util.TEXTSIZE[1]*1.5))
+                memory.DrawText( str(item), pos[0], pos[1])
+            # draw time
+            memory.SetTextForeground( LABEL_TEXT_COLOR )
+            pos = (img_size[0] - util.PADDING - util.TIME_TEXT_WIDTH,
+                   text_left_top[1])
+            memory.DrawText(util.get_now(), pos[0], pos[1])
         self.dc.Blit(0, 0, bmp.Size[0], bmp.Size[1], memory, 0, 0)
         
