@@ -23,12 +23,32 @@ class VideoBlock():
         if self.video_window is not None:
             self.video_window.OnClose(None)
     
-    def start_record(self, comp, path):
-        self.mov_rec = Record(path, 24.0, self.webcam.get_frame_size())
-        self.add_work(RECORD_VIDEO)
-        util.toggle_button(comp, u'开始', u'结束')
+    def init_record(self, path):
+        try:
+            # 释放已有的mov_rec
+            try:
+                self.mov_rec.stop()
+            except AttributeError:
+                pass
+            
+            self.mov_rec = Record(path, 24.0, self.webcam.get_frame_size())
+            self.m_button_record.Enable(True)
+        except AssertionError,e:
+            wx.MessageBox(str(e), u'错误',wx.OK | wx.ICON_ERROR)      
+    
+    def start_record(self, comp):
+        try:
+            self.mov_rec.touch()
+            self.add_work(RECORD_VIDEO)
+            util.toggle_button(comp, u'开始', u'结束')
+            self.m_filePicker_output.Enable(False)
+        except AssertionError,e:
+            wx.MessageBox(str(e), u'错误',wx.OK | wx.ICON_ERROR)
+        
     
     def stop_record(self, comp):
         self.remove_work(RECORD_VIDEO)
         self.mov_rec.stop()
         util.toggle_button(comp, u'开始', u'结束')
+        self.m_button_record.Enable(False)
+        self.m_filePicker_output.Enable(True)

@@ -4994,7 +4994,7 @@
                                                         <property name="validator_style">wxFILTER_NONE</property>
                                                         <property name="validator_type">wxDefaultValidator</property>
                                                         <property name="validator_variable"></property>
-                                                        <property name="value">_Output.avi</property>
+                                                        <property name="value"></property>
                                                         <property name="wildcard">*.avi</property>
                                                         <property name="window_extra_style"></property>
                                                         <property name="window_name"></property>
@@ -5002,7 +5002,7 @@
                                                         <event name="OnChar"></event>
                                                         <event name="OnEnterWindow"></event>
                                                         <event name="OnEraseBackground"></event>
-                                                        <event name="OnFileChanged"></event>
+                                                        <event name="OnFileChanged">on_record_file_changed</event>
                                                         <event name="OnKeyDown"></event>
                                                         <event name="OnKeyUp"></event>
                                                         <event name="OnKillFocus"></event>

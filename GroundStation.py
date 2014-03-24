@@ -47,6 +47,10 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         sizer_ge.Add(self.browser_ge, 1, wx.ALIGN_CENTER, 0)
         self.browser_ge.LoadURL(r'file:///%s/resources/ge.html'%os.getcwd().replace('\\','/'))
         self.GE_uninited = True
+        
+        #---- set record labels ----
+        self.m_filePicker_output.GetPickerCtrl().SetLabel('设置视频参数')
+        
         #---- add component attributes ----
         for comp in [self.m_button_toggle_track, 
                      self.m_button_toggle_track_video,
@@ -94,6 +98,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         # --- dc init ---
         self.dc_video = wx.ClientDC(self.m_bitmap_video)
         self.dc_track = wx.ClientDC(self.m_bitmap_track)
+        self.memory = wx.MemoryDC()
         self.dc_attitude = wx.ClientDC(self.m_bitmap_attitude)
         # --- test ---
         self.multimean_arg = None
@@ -151,7 +156,10 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         if event.GetEventObject().is_running:
             self.stop_record(event.GetEventObject())
         else:
-            self.start_record(event.GetEventObject(), self.m_filePicker_output.GetPath())
+            self.start_record(event.GetEventObject())
+    
+    def on_record_file_changed(self, event):
+        self.init_record(self.m_filePicker_output.GetPath())
     
     def on_enter_bitmap_video(self, event):
         self.sbar.update(u'提示：单击右键可选择OSD选项')
@@ -279,38 +287,39 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         if DISPLAY_VIDEO in worklist:
             srcimg = self.webcam.get_frame()
             wxbmp = util.cvimg_to_wxbmp(srcimg)
-            memory = wx.MemoryDC()
-            memory.SelectObject( wxbmp )
-            if self.m_menuItem_video_osd.IsChecked():
-                # draw time
-                memory.SetTextForeground( wx.BLUE )
-                memory.SetFont( util.WXFONT )
-                pos = (srcimg.shape[1] - util.PADDING - util.TIME_TEXT_WIDTH, util.PADDING)
-                memory.DrawText(util.get_now(), pos[0], pos[1])
+            memvideo = self.memory
+            memvideo.SelectObject(wxbmp)
             # 设置缩放比例
-            memory.SetUserScale(float(srcimg.shape[1])/float(self.bitmap_video_size[0]),
+            memvideo.SetUserScale(float(srcimg.shape[1])/float(self.bitmap_video_size[0]),
                                 float(srcimg.shape[0])/float(self.bitmap_video_size[1])
                                 )
-            self.dc_video.Blit(0, 0, self.bitmap_video_size[0], self.bitmap_video_size[1], memory, 0, 0)
-            memory.SelectObject(wx.NullBitmap)
-            if RECORD_VIDEO in worklist:
-                self.mov_rec.save_frame(wxbmp)
+            if self.m_menuItem_video_osd.IsChecked():
+                # draw time
+                memvideo.SetTextForeground( wx.BLUE )
+                memvideo.SetFont( util.WXFONT )
+                pos = (srcimg.shape[1] - util.PADDING - util.TIME_TEXT_WIDTH, util.PADDING)
+                memvideo.DrawText(util.get_now(), pos[0], pos[1])
+            
+            self.dc_video.Blit(0, 0, self.bitmap_video_size[0], self.bitmap_video_size[1], memvideo, 0, 0)
+            memvideo.SelectObject(wx.NullBitmap)
+        
+        if RECORD_VIDEO in worklist:
+            self.mov_rec.save_frame(wxbmp)
             
         if DISPLAY_INDEPENDENT_VIDEO in worklist:
             self.video_window.update_image_with_info(srcimg, self.UAVinfo.get_information_in_InfoEntries())
         # 结束图像传输需要先停止track
         if DISPLAY_TRACK_VIDEO in worklist:       
-            # 未框选状态，仅仅显示原始视频
+            memtrack = self.memory
+            # 显示原始图像
             if self.display_track_state == DISPLAY_TRACK_STATE_RAW:
-                rszimg = util.cvimg_resize(srcimg, self.bitmap_track_size)
-                rszimg = self.get_adjusted_image(rszimg)
-                self.dc_track.DrawBitmap(util.cvimg_to_wxbmp(rszimg), 0, 0)               
+                rstimg = self.get_adjusted_image(srcimg)
+                rstbmp = util.cvimg_to_wxbmp(rstimg)           
             # 正在框选状态
             elif self.display_track_state == DISPLAY_TRACK_STATE_SELECTION:
                 assert self.frozen_frame is not None, 'Frozen frame is none.'
                 rectimg = self.get_dragging_image(self.frozen_frame,self.drag_info.get_drag_data())
-                rszimg = util.cvimg_resize(rectimg, self.bitmap_track_size)
-                self.dc_track.DrawBitmap(util.cvimg_to_wxbmp(rszimg), 0, 0)           
+                rstbmp = util.cvimg_to_wxbmp(rectimg)
             # 显示目标追踪结果
             elif self.display_track_state == DISPLAY_TRACK_STATE_RESULT:
                 track_mode = self.m_choice_track_mode.GetStringSelection()
@@ -319,45 +328,48 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
                 if track_mode == 'template':
                     matchimg, center, res = self.objmatch.do_tpl_match(srcimg)
                     if display_process:
-                        rszimg = util.cvimg_resize(res, self.bitmap_track_size)
+                        rstbmp = util.cvimg_to_wxbmp(res)
                     else:
-                        rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
+                        #rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
+                        rstbmp = util.cvimg_to_wxbmp(matchimg)
                 # 边缘检测-模板匹配模式
                 elif track_mode == 'edge-tpl':
                     matchimg, center, edgeimg = self.objmatch.do_edge_match(srcimg,self.edge_arg)
                     if display_process:
-                        rszimg = util.cvimg_resize(edgeimg, self.bitmap_track_size)
+                        rstbmp = util.cvimg_to_wxbmp(edgeimg)
                     else:
-                        rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
+                        rstbmp = util.cvimg_to_wxbmp(matchimg)
                 # 纯色匹配模式
                 elif track_mode == 'color':
                     matchimg, center, mask = self.objmatch.do_color_match(srcimg)
                     if display_process:
-                        rszimg = util.cvimg_resize(mask, self.bitmap_track_size)
+                        rstbmp = util.cvimg_to_wxbmp(mask)
                     else:
-                        rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
+                        rstbmp = util.cvimg_to_wxbmp(matchimg)
                 # MeanShift匹配模式
                 elif track_mode == 'meanshift':
                     matchimg, center, prj_img = self.objmatch.do_meanshift(srcimg)
                     if display_process:
-                        rszimg = util.cvimg_resize(prj_img, self.bitmap_track_size)
+                        rstbmp = util.cvimg_to_wxbmp(prj_img)
                     else:
-                        rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
+                        rstbmp = util.cvimg_to_wxbmp(matchimg)
                 # 多目标MeanShift匹配模式
                 elif track_mode == 'multi-meanshift':
                     matchimg, center, prj_img = self.objmatch.do_multi_meanshift(srcimg, self.multimean_arg)
                     if display_process:
-                        rszimg = util.cvimg_resize(prj_img, self.bitmap_track_size)
+                        rstbmp = util.cvimg_to_wxbmp(prj_img)
                     else:
-                        rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
+                        rstbmp = util.cvimg_to_wxbmp(matchimg)
                 # 混合匹配模式
                 elif track_mode == 'mix':
                     matchimg, center, _ = self.objmatch.do_mix(srcimg, self.multimean_arg, self.edge_arg)    
-                    rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
-                # 更新匹配结果显示
-                self.dc_track.DrawBitmap(util.cvimg_to_wxbmp(rszimg), 0, 0)
-                # use track information to do something
-                #print("center:%s"%(str(center)))
+                    rstbmp = util.cvimg_to_wxbmp(matchimg)
+            # 更新track bitmap 界面
+            memtrack.SelectObject(rstbmp)
+            memtrack.SetUserScale(float(srcimg.shape[1])/float(self.bitmap_track_size[0]),
+                             float(srcimg.shape[0])/float(self.bitmap_track_size[1]))
+            self.dc_track.Blit(0, 0, self.bitmap_track_size[0], self.bitmap_track_size[1], memtrack, 0, 0)
+                
         
         if TRACK_OBJECT in worklist:
             print('tracking')
@@ -411,8 +423,11 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
     def enable_video_components(self, switch):
         for each in [self.m_button_video_window_show, 
                      self.m_bitmap_video,
-                     self.m_button_record,]:
-            each.Enable(switch)        
+                     self.m_button_record,
+                     self.m_filePicker_output
+                     ]:
+            each.Enable(switch)  
+        self.m_button_record.Enable(False)         
     
     def OnClose(self, event):
         print('Close window...')

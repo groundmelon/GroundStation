@@ -13,9 +13,10 @@ RCVEND = 0xAA
 
 # ---- Send Msg Type ID ----
 PKGTYPE_PID = {'X':0x01, 'Y':0x02, 'Z':0x03}
-PKGTYPE_INFO = 0x04
-PKGTYPE_LOC = 0x0F
-PKGTYPE_SETPID = 0x55
+PKGTYPE_UNUSED = 0x04 | 0x00
+PKGTYPE_INFO = 0x05
+PKGTYPE_LOC = 0x0F # invalid
+PKGTYPE_SETPID = 0x55 # invalid
 
 
 
@@ -31,6 +32,7 @@ def pack_adj_pid_para(para, axis):
     assert len(para) == 3, 'Parameter length error.' 
     typ = packbyte(PKGTYPE_PID[axis])
     body = ''.join([struct.pack('<f',v) for v in para])
+    body = ''.join([body, '\x00'*8])
     return pack(typ, body)
 
 def pack_get_info():

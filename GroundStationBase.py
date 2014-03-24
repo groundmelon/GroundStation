@@ -332,6 +332,8 @@ class FrameGroundStationBase ( wx.Frame ):
 		
 		self.m_bitmap_video = wx.StaticBitmap( self.m_panel_image, wx.ID_ANY, wx.Bitmap( u"resources/null.bmp", wx.BITMAP_TYPE_ANY ), wx.DefaultPosition, wx.Size( 320,240 ), wx.CLIP_CHILDREN )
 		self.m_menu_bitmap_video = wx.Menu()
+		self.m_menu_bitmap_video.AppendSeparator()
+		
 		self.m_menuItem_video_osd = wx.MenuItem( self.m_menu_bitmap_video, wx.ID_ANY, u"OSD", wx.EmptyString, wx.ITEM_CHECK )
 		self.m_menu_bitmap_video.AppendItem( self.m_menuItem_video_osd )
 		self.m_menuItem_video_osd.Check( True )
@@ -348,7 +350,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_record = wx.Button( self.m_panel_image, wx.ID_ANY, u"开始录像", wx.DefaultPosition, wx.DefaultSize, 0 )
 		gbSizer5.Add( self.m_button_record, wx.GBPosition( 1, 2 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
 		
-		self.m_filePicker_output = wx.FilePickerCtrl( self.m_panel_image, wx.ID_ANY, u"_Output.avi", u"输出录像到", u"*.avi", wx.DefaultPosition, wx.DefaultSize, wx.FLP_SAVE|wx.FLP_USE_TEXTCTRL )
+		self.m_filePicker_output = wx.FilePickerCtrl( self.m_panel_image, wx.ID_ANY, wx.EmptyString, u"输出录像到", u"*.avi", wx.DefaultPosition, wx.DefaultSize, wx.FLP_SAVE|wx.FLP_USE_TEXTCTRL )
 		gbSizer5.Add( self.m_filePicker_output, wx.GBPosition( 2, 0 ), wx.GBSpan( 1, 4 ), wx.ALL|wx.EXPAND, 5 )
 		
 		
@@ -426,6 +428,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_bitmap_video.Bind( wx.EVT_LEAVE_WINDOW, self.on_leave_bitmap_video )
 		self.m_button_video_window_show.Bind( wx.EVT_BUTTON, self.on_video_window_show )
 		self.m_button_record.Bind( wx.EVT_BUTTON, self.on_record )
+		self.m_filePicker_output.Bind( wx.EVT_FILEPICKER_CHANGED, self.on_record_file_changed )
 		self.Bind( wx.EVT_MENU, self.on_save_comm_option, id = self.m_menuItem_save_comm_option.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_load_comm_option, id = self.m_menuItem_load_comm_option.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_check_comm_option, id = self.m_menuItem_check_comm_option.GetId() )
@@ -516,6 +519,9 @@ class FrameGroundStationBase ( wx.Frame ):
 		event.Skip()
 	
 	def on_record( self, event ):
+		event.Skip()
+	
+	def on_record_file_changed( self, event ):
 		event.Skip()
 	
 	def on_save_comm_option( self, event ):
