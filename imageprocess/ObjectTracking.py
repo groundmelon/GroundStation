@@ -149,15 +149,19 @@ class ObjectMatch(object):
 #         print('selected color is %s'%str(selected))
 #         return selected 
     
-    def draw_circles(self, src, center):
+    def draw_circles(self, src, center, color=None, radius=20):
+        if color is None:
+            color = OBJECT_MATCH_COLOR
+        else:
+            color = (0, 255,0)
         dst = src.copy()
         if isinstance(center, list) or isinstance(center, tuple):
             for c in center:
                 assert isinstance(c, util.Point), 'points in center must be util.Point'
-                cv2.circle(dst, c.tup, 20, OBJECT_MATCH_COLOR, LINE_WIDTH)
+                cv2.circle(dst, c.tup, radius, color, LINE_WIDTH)
         else:
             assert isinstance(center, util.Point), 'center must be util.Point'
-            cv2.circle(dst, c.tup, 20, OBJECT_MATCH_COLOR, LINE_WIDTH)
+            cv2.circle(dst, center.tup, radius, color, LINE_WIDTH)
         
         return dst
     

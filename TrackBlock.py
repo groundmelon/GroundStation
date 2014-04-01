@@ -10,7 +10,7 @@ import wx
 import util
 from Definition import *
 import imageprocess.ObjectTracking as Objtrack
-#from imageprocess.test import TrackService#StaticTest, WebcamTest
+from TrackAlgorithm import TrackController
 
 class DragInfomation(object):
         '''拖拽信息类，存储处理拖拽信息
@@ -48,17 +48,27 @@ class TrackBlock():
         util.toggle_button(comp, u'显示视频', u'关闭显示')
         self.m_button_select_object.Enable(False)
         if self.m_button_toggle_track.is_running:   
-            #stop track
-            pass
+            self.stop_track(self.m_button_toggle_track)
         self.m_button_toggle_track.Enable(False)
     
     def stop_track(self, comp):
+        
         self.remove_work(TRACK_OBJECT)
         util.toggle_button(comp, u'开始', u'结束')
+        self.m_button_select_object.Enable(True)
     
     def start_track(self, comp):
         self.add_work(TRACK_OBJECT)
         util.toggle_button(comp, u'开始', u'结束')
+        self.m_button_select_object.Enable(False)
+        self.trackctrl = TrackController(self.camcap.get_frame_size())
+        
+    def set_track_arg(self, s):
+        sel = self.m_choice_track_arg.GetStringSelection()
+        if 'multi' == sel:
+            self.multimean_arg = float(s)
+        elif 'edge' == sel:
+            self.edge_arg = float(s)
         
 # ---- 图像调整相关函数 ----
     def get_adjusted_image(self, src):    

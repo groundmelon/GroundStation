@@ -62,7 +62,6 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
                      self.m_button_toggle_xbee,
                      self.m_button_update_uavinfo,
                      self.m_button_select_object,
-                     self.m_button_toggle_track,
                      self.m_button_record,
                      ]:
             comp.__setattr__('is_running', False)
@@ -73,39 +72,32 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         self.load_default_comm_options()
         self.history = InputHistory(self)
         self.enable_comm_relative_components(False)
-        #self.xbee_comm_state = False
-        #self.init_track_bitmap()
-        #wx.InitAllImageHandlers()
         
         #---- init video block ----
-        self.cap_dev_num = 0
+        self.cap_dev_num = 1
         self.enable_video_components(False)
-        #self.video_on = False
         self.video_window = None
         
         #---- init track block ----
         self.enable_track_components(False)
         self.display_track_state = None
-        #self.track_video_on = False
-        #self.track_on = False
         
-        #---- init para adj block ----
+        #---- init parameter adjust block ----
         self.init_para_block()
         
-        #---- init information variables ----
+        #---- init size variables ----
         self.bitmap_track_size = tuple(self.m_bitmap_track.GetSize())
         self.bitmap_video_size = tuple(self.m_bitmap_video.GetSize())
         
         #---- init UAVInformation ----
         self.UAVinfo = UAVInfomation()
         
-        
-        
         # --- dc init ---
         self.dc_video = wx.ClientDC(self.m_bitmap_video)
         self.dc_track = wx.ClientDC(self.m_bitmap_track)
         self.memory = wx.MemoryDC()
         self.dc_attitude = wx.ClientDC(self.m_bitmap_attitude)
+        
         # --- test ---
         self.multimean_arg = None
         self.edge_arg = None
@@ -211,10 +203,6 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
      
     def on_slider_adjust_changed(self, event):
         self.change_adjust_value()
-
-# 跟踪画面在独立窗口中显示功能暂时屏蔽
-#     def on_track_image_show(self, event):
-#         self.track_imshow_window = self.create_image_show_window()
      
     def on_select_object(self, event):
         self.toggle_drag_selection(True)
@@ -293,23 +281,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         msgtype, data = self.get_backdata()
         if data:
             self.process_backdata(msgtype, data)
-#             self.UAVinfo.update(data[0], data[1], data[2], data[3], data[4], data[5], data[6])
-#             attiimg = self.UAVinfo.get_attitude_img()
-#             self.dc_attitude.DrawBitmap(util.cvimg_to_wxbmp(attiimg), 0, 0)
-#             self.update_GUI_UAVinfo(self.UAVinfo.get())
-#             self.update_GE(self.UAVinfo.get())
-    
-#     def on_update_track_bitmap(self,bmp):
-#         self.dc_track.DrawBitmap(bmp, 0, 0)
-#         #self.m_bitmap_track.SetBitmap(bmp)
-#       
-#     def on_timer_update_track_bitmap(self, event):
-#         self.st.next()
-#         self.update_track_bitmap(self.st.get_source())
 #     
-#     def update_attitude_bitmap(self):
-#         rtnval = self.attidisp.test()
-#         self.m_bitmap_attitude.SetBitmap(wx.BitmapFromBuffer(rtnval[0], rtnval[1], rtnval[2]))
     
 #------ Work Function ------        
     def main_work(self, event):
@@ -318,8 +290,6 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         
         if DISPLAY_XBEE_DATA in worklist:
             self.update_rcv_area()
-#         if DISPLAY_UAVINFO in worklist:
-#             self.send_data_by_frame(MsgPrcs.pack_get_info())
         
         if DISPLAY_VIDEO in worklist:
             srcimg = self.camcap.get_frame()
@@ -328,11 +298,10 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
             memvideo.SelectObject(wxbmp)
 
             if self.m_menuItem_video_osd.IsChecked():
-                # draw time
+                # draw OSD information on bitmap_video
                 memvideo.SetTextForeground( wx.BLUE )
                 memvideo.SetFont( util.WXFONT )
                 pos = (srcimg.shape[1] - util.PADDING - util.TIME_TEXT_WIDTH, util.PADDING)
-                #pos = (self.bitmap_video_size[0] - util.PADDING - util.TIME_TEXT_WIDTH, util.PADDING)
                 memvideo.DrawText(util.get_now(), pos[0], pos[1])
 
             # 设置缩放比例
@@ -370,7 +339,6 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
                     if display_process:
                         rstbmp = util.cvimg_to_wxbmp(res)
                     else:
-                        #rszimg = util.cvimg_resize(matchimg, self.bitmap_track_size)
                         rstbmp = util.cvimg_to_wxbmp(matchimg)
                 # 边缘检测-模板匹配模式
                 elif track_mode == 'edge-tpl':
@@ -412,7 +380,17 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
                 
         
         if TRACK_OBJECT in worklist:
-            print('tracking')
+            self.trackctrl.add_pt(center)
+            self.trackctrl.update_h(3)
+            self.trackctrl.get_u()
+            
+            rstimg = self.objmatch.draw_circles(matchimg, self.trackctrl.pts[-1], color='GREEN', radius=10)
+            rstbmp = util.cvimg_to_wxbmp(rstimg)
+            memtrack.SelectObject(rstbmp)
+            memtrack.SetUserScale(float(srcimg.shape[1])/float(self.bitmap_track_size[0]),
+                             float(srcimg.shape[0])/float(self.bitmap_track_size[1]))
+            self.dc_track.Blit(0, 0, self.bitmap_track_size[0], self.bitmap_track_size[1], memtrack, 0, 0)
+        
         n = time.clock()
         #print('[work time]%4.4f [cir time]%4.4f'%((n-a)*1000,(n-self.lasttime)*1000))
         self.lasttime = n
@@ -441,24 +419,9 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         
         self.m_textCtrl_info.ChangeValue(s)
         
-        # update image info
+        # update bitmap_atti
         attiimg = self.UAVinfo.get_attitude_img()
         self.dc_attitude.DrawBitmap(util.cvimg_to_wxbmp(attiimg), 0, 0)
-#         self.m_staticText_height.SetLabel('%.4fm'%info['height'])
-#         if self.UAVinfo.need_warning('height', info['height']):
-#             self.m_staticText_height.SetForegroundColour((255,0,0))
-#         else:
-#             self.m_staticText_height.SetForegroundColour((0,0,0))
-#         
-#         self.m_staticText_vol.SetLabel('%.4fv'%info['vol'])
-#         if self.UAVinfo.need_warning('vol', info['vol']):
-#             self.m_staticText_vol.SetForegroundColour((255,0,0))
-#         else:
-#             self.m_staticText_vol.SetForegroundColour((0,0,0))
-#         
-#         self.m_staticText_pitch.SetLabel('%.4fd'%info['pitch'])
-#         self.m_staticText_roll.SetLabel('%.4fd'%info['roll'])
-#         self.m_staticText_yaw.SetLabel('%.4fd'%info['yaw'])
     
     def update_GE(self, info):
         la = info['la']
@@ -469,13 +432,6 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         else:
             js = util.JSCODES%(la,lo, info['height']*1.2)
         self.browser_ge.RunScript(js)
-    
-    def set_track_arg(self, s):
-        sel = self.m_choice_track_arg.GetStringSelection()
-        if 'multi' == sel:
-            self.multimean_arg = float(s)
-        elif 'edge' == sel:
-            self.edge_arg = float(s)
     
     def get_hist_channel(self):
         if self.m_menuItem_track_hist_h.IsChecked():
@@ -498,10 +454,15 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         print('Close window...')
         #self.Bind(wx.EVT_IDLE, None)
         self.timer.Stop()
+        self.timer1.Stop()
         try:
             self.camcap.release()
         except AttributeError:
             print('No camcap, release failed.')
+        if self.m_button_toggle_xbee.is_running:
+            self.close_xbee(self.m_button_toggle_xbee)
+        if self.m_button_toggle_track_video.is_running:
+            self.close_video(self.m_button_toggle_track_video)
         self.Destroy()
 
 class App(wx.App):

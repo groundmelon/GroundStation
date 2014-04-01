@@ -6,8 +6,9 @@ Created on 2014-3-18
 '''
 from GroundStationBase import FrameGroundStationBase
 import communication.MessageProcess as MsgPrcs
+import os
 
-PARA_FILE_PATH = r'para.dat'
+PARA_FILE_PATH = os.getcwd() + r'\resources\para.dat'
 
 class ParameterAdjustBlock():
     def init_para_block(self):
@@ -77,7 +78,7 @@ class ParameterAdjustBlock():
         
     def show_rcv_pid(self):
         title = u'机上PID参数\n\n'
-        info = ''.join(['%s=%s/K\n'%(t.ljust(3,' '), ('%.3f'%(self.rcv_pid[t]*1000)).rjust(7,' '))
+        info = ''.join(['%s = %7.3f/K\n'%(t.rjust(3,' '), self.rcv_pid[t]*1000)
                         for t in ['XP','XI','XD','XSP',
                                   'YP','YI','YD','YSP',
                                   'ZP','ZI','ZD','ZSP',

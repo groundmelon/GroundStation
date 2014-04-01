@@ -25,6 +25,7 @@ encoding/ParameterAdjustBlock.py=utf-8
 encoding/PickleFileIO.py=utf-8
 encoding/SerialSettingDialog.py=utf-8
 encoding/StatusBarSystem.py=utf-8
+encoding/TrackAlgorithm.py=utf-8
 encoding/TrackBlock.py=utf-8
 encoding/UAVControlBlock.py=utf-8
 encoding/UAVInfomation.py=utf-8

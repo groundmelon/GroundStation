@@ -36,7 +36,6 @@ class ButtonBlock():
         try:
             if self.m_button_update_uavinfo.is_running:
                 self.unshow_uavinfo(self.m_button_update_uavinfo)
-                
             self.comm.close()
             self.enable_comm_relative_components(False)
             self.sbar.update(u'XBee通信已经关闭')
@@ -66,15 +65,14 @@ class ButtonBlock():
             self.close_independent_video()
             if self.m_button_record.is_running:
                 self.stop_record(self.m_button_record)
-            #close track
             #close track video
-            self.sbar.update(u'图像传输已经关闭')
             if self.m_button_toggle_track_video.is_running:
                 self.close_track_video(self.m_button_toggle_track_video)
             self.enable_video_components(False)
             self.camcap.release()
             self.dc_video.DrawBitmap(util.get_null_bitmap(), 0, 0)
             self.remove_work(DISPLAY_VIDEO)
+            self.sbar.update(u'图像传输已经关闭')
         except DBGException,e:
             wx.MessageBox(str(e), u"出现错误",wx.OK | wx.ICON_ERROR)
             self.SetStatusText(str(e),0)
@@ -88,7 +86,7 @@ class ButtonBlock():
         dlg.Destroy()
     
     def show_video_option(self):
-        dlg = VideoSetting(self)
+        dlg = VideoSetting(self, self.cap_dev_num)
         if dlg.ShowModal() == wx.ID_OK:
             self.cap_dev_num = dlg.get_dev_num()
         dlg.Destroy()

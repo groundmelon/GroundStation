@@ -99,11 +99,11 @@ class SW(object):
     def stop(self):
         if self.display:
             now_time = time.clock()
-            print('[%s] %.3fms'%(self.s,(now_time-self.start_time)*1000))
+            #print('[%s] %.3fms'%(self.s,(now_time-self.start_time)*1000))
     def pause(self):
         if self.display:
             now_time = time.clock()
-            print('[%s P] %.3fms'%(self.s,(now_time-self.start_time)*1000))
+            #print('[%s P] %.3fms'%(self.s,(now_time-self.start_time)*1000))
         
 NULLIMG = r'resources\null.bmp'
 def get_null_bitmap():
@@ -117,13 +117,13 @@ class Point(object):
             self.y = 0
         elif arglen == 1:
             assert isinstance(arg[0], tuple), "arg is not tuple"
-            assert isinstance(arg[0][0], int), "arg tuple[0] is not int"
-            assert isinstance(arg[0][1], int), "arg tuple[1] is not int"
+            assert isinstance(arg[0][0], (int,float)), "arg tuple[0] is not int or float"
+            assert isinstance(arg[0][1], (int,float)), "arg tuple[1] is not int or float"
             self.x = arg[0][0]
             self.y = arg[0][1]
         elif arglen == 2:
-            assert isinstance(arg[0], int), "arg x is not int"
-            assert isinstance(arg[1], int), "arg y is not int"
+            assert isinstance(arg[0], (int,float)), "arg x is not int or float"
+            assert isinstance(arg[1], (int,float)), "arg y is not int or float"
             self.x = arg[0]
             self.y = arg[1]
         else:
@@ -131,7 +131,7 @@ class Point(object):
         
         self.tup = (self.x, self.y) # tuple represent
     def __repr__(self):
-        return '<pt(%d,%d)>'%(self.x, self.y)
+        return '<pt(%.2f,%.2f)>'%(self.x, self.y)
 
 JSCODES = '''
             // Get the current view.

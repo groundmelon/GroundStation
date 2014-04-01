@@ -1,5 +1,4 @@
 *.pyc
 *.bak
 *.avi
-py2exe
-resources\uavinfotxt
+debug
