@@ -10,7 +10,7 @@ import serial
 from imageprocess.ImageCapture import ImageCapture
 #from GroundStationBase import FrameGroundStationBase
 from SerialSettingDialog import SerialSetting
-from VideoSettingDialoag import VideoSetting
+from VideoSettingDialog import VideoSetting
 import util
 from util import DBGException
 from Definition import *

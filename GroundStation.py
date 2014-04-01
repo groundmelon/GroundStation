@@ -10,7 +10,7 @@ from ButtonBlock import ButtonBlock
 from MenuBlock import MenuBlock
 from WorkBlock import WorkBlock
 from VideoBlock import VideoBlock
-from UAVContrlBlock import UAVCtrlBlock
+from UAVControlBlock import UAVCtrlBlock
 from ParameterAdjustBlock import ParameterAdjustBlock
 from CommunicationBlock import CommBlock, InputHistory
 #from attitude.attitudeMod import AttitudeDisplay
@@ -78,7 +78,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         #wx.InitAllImageHandlers()
         
         #---- init video block ----
-        self.cap_dev_num = 1
+        self.cap_dev_num = 0
         self.enable_video_components(False)
         #self.video_on = False
         self.video_window = None

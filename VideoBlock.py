@@ -31,7 +31,7 @@ class VideoBlock():
             except AttributeError:
                 pass
             
-            self.mov_rec = Record(path, 24.0, self.webcam.get_frame_size())
+            self.mov_rec = Record(path, 24.0, self.camcap.get_frame_size())
             self.m_button_record.Enable(True)
         except AssertionError,e:
             wx.MessageBox(str(e), u'错误',wx.OK | wx.ICON_ERROR)      
