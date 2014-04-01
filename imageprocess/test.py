@@ -215,7 +215,7 @@ class CaptureThread(threading.Thread):
     def __init__(self, mem_tagname):
         threading.Thread.__init__(self)
         self.stop_thread = False              
-        self.cap = cv2.VideoCapture(0)
+        self.cap = cv2.VideoCapture(1)
         self.cap.read()
         _, self.frame = self.cap.read()
         s = self.frame.tostring()

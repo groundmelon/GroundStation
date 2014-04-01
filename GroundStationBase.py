@@ -47,68 +47,36 @@ class FrameGroundStationBase ( wx.Frame ):
 		gSizer2.Add( self.m_button_toggle_video, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		self.m_button_update_uavinfo = wx.Button( self.m_panel2, wx.ID_ANY, u"更新UAV状态", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_menu_update_uavinfo = wx.Menu()
+		self.m_menuItem_clear_uav_info = wx.MenuItem( self.m_menu_update_uavinfo, wx.ID_ANY, u"清除UAV信息缓存", wx.EmptyString, wx.ITEM_NORMAL )
+		self.m_menu_update_uavinfo.AppendItem( self.m_menuItem_clear_uav_info )
+		
+		self.m_button_update_uavinfo.Bind( wx.EVT_RIGHT_DOWN, self.m_button_update_uavinfoOnContextMenu ) 
+		
 		gSizer2.Add( self.m_button_update_uavinfo, 0, wx.ALL, 5 )
 		
+		self.m_button_save_uav_info = wx.Button( self.m_panel2, wx.ID_ANY, u"保存UAV状态", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_button_save_uav_info.SetToolTipString( u"右键选择是否清空缓存" )
 		
-		gbSizer1.Add( gSizer2, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 2 ), wx.ALIGN_LEFT|wx.ALIGN_TOP, 5 )
+		self.m_menu_save_uav_info = wx.Menu()
+		self.m_menuItem_clear_uav_info_after_save = wx.MenuItem( self.m_menu_save_uav_info, wx.ID_ANY, u"保存后清空UAV信息缓存", wx.EmptyString, wx.ITEM_CHECK )
+		self.m_menu_save_uav_info.AppendItem( self.m_menuItem_clear_uav_info_after_save )
+		self.m_menuItem_clear_uav_info_after_save.Check( True )
+		
+		self.m_button_save_uav_info.Bind( wx.EVT_RIGHT_DOWN, self.m_button_save_uav_infoOnContextMenu ) 
+		
+		gSizer2.Add( self.m_button_save_uav_info, 0, wx.ALL, 5 )
+		
+		
+		gbSizer1.Add( gSizer2, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 1 ), wx.ALIGN_LEFT|wx.ALIGN_TOP, 5 )
 		
 		self.m_bitmap_attitude = wx.StaticBitmap( self.m_panel2, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( 100,100 ), 0 )
-		gbSizer1.Add( self.m_bitmap_attitude, wx.GBPosition( 0, 2 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER, 5 )
+		gbSizer1.Add( self.m_bitmap_attitude, wx.GBPosition( 0, 1 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER, 5 )
 		
-		gSizer4 = wx.GridSizer( 5, 2, 0, 0 )
+		self.m_textCtrl_info = wx.TextCtrl( self.m_panel2, wx.ID_ANY, u"---UAV Info Display---", wx.DefaultPosition, wx.Size( -1,135 ), wx.TE_MULTILINE|wx.TE_NO_VSCROLL|wx.TE_READONLY )
+		self.m_textCtrl_info.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, "Consolas" ) )
 		
-		self.m_staticText11 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"高度", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText11.Wrap( -1 )
-		gSizer4.Add( self.m_staticText11, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
-		
-		self.m_staticText_height = wx.StaticText( self.m_panel2, wx.ID_ANY, u"000.00m", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText_height.Wrap( -1 )
-		self.m_staticText_height.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, "Consolas" ) )
-		
-		gSizer4.Add( self.m_staticText_height, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL, 5 )
-		
-		self.m_staticText12 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"电压", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText12.Wrap( -1 )
-		gSizer4.Add( self.m_staticText12, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
-		
-		self.m_staticText_vol = wx.StaticText( self.m_panel2, wx.ID_ANY, u"00.000v", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText_vol.Wrap( -1 )
-		self.m_staticText_vol.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, "Consolas" ) )
-		
-		gSizer4.Add( self.m_staticText_vol, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL, 5 )
-		
-		self.m_staticText15 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"俯仰", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText15.Wrap( -1 )
-		gSizer4.Add( self.m_staticText15, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
-		
-		self.m_staticText_pitch = wx.StaticText( self.m_panel2, wx.ID_ANY, u"0.0000d", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText_pitch.Wrap( -1 )
-		self.m_staticText_pitch.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, "Consolas" ) )
-		
-		gSizer4.Add( self.m_staticText_pitch, 0, wx.ALIGN_LEFT|wx.ALL, 5 )
-		
-		self.m_staticText17 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"横滚", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText17.Wrap( -1 )
-		gSizer4.Add( self.m_staticText17, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
-		
-		self.m_staticText_roll = wx.StaticText( self.m_panel2, wx.ID_ANY, u"0.0000d", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText_roll.Wrap( -1 )
-		self.m_staticText_roll.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, "Consolas" ) )
-		
-		gSizer4.Add( self.m_staticText_roll, 0, wx.ALIGN_LEFT|wx.ALL, 5 )
-		
-		self.m_staticText19 = wx.StaticText( self.m_panel2, wx.ID_ANY, u"偏航", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText19.Wrap( -1 )
-		gSizer4.Add( self.m_staticText19, 0, wx.ALIGN_RIGHT|wx.ALL, 5 )
-		
-		self.m_staticText_yaw = wx.StaticText( self.m_panel2, wx.ID_ANY, u"0.0000d", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_staticText_yaw.Wrap( -1 )
-		self.m_staticText_yaw.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, "Consolas" ) )
-		
-		gSizer4.Add( self.m_staticText_yaw, 0, wx.ALIGN_LEFT|wx.ALL, 5 )
-		
-		
-		gbSizer1.Add( gSizer4, wx.GBPosition( 0, 3 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER, 5 )
+		gbSizer1.Add( self.m_textCtrl_info, wx.GBPosition( 0, 2 ), wx.GBSpan( 1, 2 ), wx.ALIGN_CENTER_HORIZONTAL|wx.ALL|wx.EXPAND, 5 )
 		
 		self.m_notebook1 = wx.Notebook( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_panel_comm = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), wx.TAB_TRAVERSAL )
@@ -162,7 +130,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_comm.SetSizer( gbSizer6 )
 		self.m_panel_comm.Layout()
 		gbSizer6.Fit( self.m_panel_comm )
-		self.m_notebook1.AddPage( self.m_panel_comm, u"通信数据查看", True )
+		self.m_notebook1.AddPage( self.m_panel_comm, u"通信数据查看", False )
 		self.m_panel_para_adj = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		gbSizer11 = wx.GridBagSizer( 0, 0 )
 		gbSizer11.SetFlexibleDirection( wx.BOTH )
@@ -171,7 +139,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_grid_para_adj = wx.grid.Grid( self.m_panel_para_adj, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
 		
 		# Grid
-		self.m_grid_para_adj.CreateGrid( 9, 1 )
+		self.m_grid_para_adj.CreateGrid( 16, 1 )
 		self.m_grid_para_adj.EnableEditing( True )
 		self.m_grid_para_adj.EnableGridLines( True )
 		self.m_grid_para_adj.EnableDragGridSize( False )
@@ -179,29 +147,38 @@ class FrameGroundStationBase ( wx.Frame ):
 		
 		# Columns
 		self.m_grid_para_adj.EnableDragColMove( False )
-		self.m_grid_para_adj.EnableDragColSize( True )
+		self.m_grid_para_adj.EnableDragColSize( False )
 		self.m_grid_para_adj.SetColLabelSize( 30 )
-		self.m_grid_para_adj.SetColLabelValue( 0, u"Value" )
+		self.m_grid_para_adj.SetColLabelValue( 0, u"Value * K" )
 		self.m_grid_para_adj.SetColLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		# Rows
-		self.m_grid_para_adj.EnableDragRowSize( True )
+		self.m_grid_para_adj.EnableDragRowSize( False )
 		self.m_grid_para_adj.SetRowLabelSize( 60 )
 		self.m_grid_para_adj.SetRowLabelValue( 0, u"XP" )
 		self.m_grid_para_adj.SetRowLabelValue( 1, u"XI" )
 		self.m_grid_para_adj.SetRowLabelValue( 2, u"XD" )
-		self.m_grid_para_adj.SetRowLabelValue( 3, u"YP" )
-		self.m_grid_para_adj.SetRowLabelValue( 4, u"YI" )
-		self.m_grid_para_adj.SetRowLabelValue( 5, u"YD" )
-		self.m_grid_para_adj.SetRowLabelValue( 6, u"ZP" )
-		self.m_grid_para_adj.SetRowLabelValue( 7, u"ZI" )
-		self.m_grid_para_adj.SetRowLabelValue( 8, u"ZD" )
+		self.m_grid_para_adj.SetRowLabelValue( 3, u"XSP" )
+		self.m_grid_para_adj.SetRowLabelValue( 4, u"YP" )
+		self.m_grid_para_adj.SetRowLabelValue( 5, u"YI" )
+		self.m_grid_para_adj.SetRowLabelValue( 6, u"YD" )
+		self.m_grid_para_adj.SetRowLabelValue( 7, u"YSP" )
+		self.m_grid_para_adj.SetRowLabelValue( 8, u"ZP" )
+		self.m_grid_para_adj.SetRowLabelValue( 9, u"ZI" )
+		self.m_grid_para_adj.SetRowLabelValue( 10, u"ZD" )
+		self.m_grid_para_adj.SetRowLabelValue( 11, u"ZSP" )
+		self.m_grid_para_adj.SetRowLabelValue( 12, u"HP" )
+		self.m_grid_para_adj.SetRowLabelValue( 13, u"HI" )
+		self.m_grid_para_adj.SetRowLabelValue( 14, u"HD" )
+		self.m_grid_para_adj.SetRowLabelValue( 15, u"HSP" )
 		self.m_grid_para_adj.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		# Label Appearance
 		
 		# Cell Defaults
 		self.m_grid_para_adj.SetDefaultCellAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
+		self.m_grid_para_adj.SetMinSize( wx.Size( 160,240 ) )
+		
 		gbSizer11.Add( self.m_grid_para_adj, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 2 ), wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		self.m_button_send_para = wx.Button( self.m_panel_para_adj, wx.ID_ANY, u"发送参数", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -216,8 +193,43 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_load_para = wx.Button( self.m_panel_para_adj, wx.ID_ANY, u"读取参数", wx.DefaultPosition, wx.DefaultSize, 0 )
 		gbSizer11.Add( self.m_button_load_para, wx.GBPosition( 2, 1 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
 		
-		self.m_textCtrl_showpid = wx.TextCtrl( self.m_panel_para_adj, wx.ID_ANY, u"机上PID参数", wx.DefaultPosition, wx.Size( 120,200 ), wx.TE_CENTRE|wx.TE_MULTILINE|wx.TE_NO_VSCROLL|wx.TE_READONLY )
-		self.m_textCtrl_showpid.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, "Consolas" ) )
+		bSizer4 = wx.BoxSizer( wx.VERTICAL )
+		
+		bSizer6 = wx.BoxSizer( wx.VERTICAL )
+		
+		self.m_staticText20 = wx.StaticText( self.m_panel_para_adj, wx.ID_ANY, u"轴向选择", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText20.Wrap( -1 )
+		bSizer6.Add( self.m_staticText20, 0, wx.ALL, 5 )
+		
+		gSizer4 = wx.GridSizer( 2, 2, 0, 0 )
+		
+		self.m_checkBox_para_x = wx.CheckBox( self.m_panel_para_adj, wx.ID_ANY, u"X", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_checkBox_para_x.SetValue(True) 
+		gSizer4.Add( self.m_checkBox_para_x, 0, wx.ALL, 5 )
+		
+		self.m_checkBox_para_y = wx.CheckBox( self.m_panel_para_adj, wx.ID_ANY, u"Y", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_checkBox_para_y.SetValue(True) 
+		gSizer4.Add( self.m_checkBox_para_y, 0, wx.ALL, 5 )
+		
+		self.m_checkBox_para_z = wx.CheckBox( self.m_panel_para_adj, wx.ID_ANY, u"Z", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_checkBox_para_z.SetValue(True) 
+		gSizer4.Add( self.m_checkBox_para_z, 0, wx.ALL, 5 )
+		
+		self.m_checkBox_para_h = wx.CheckBox( self.m_panel_para_adj, wx.ID_ANY, u"H", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_checkBox_para_h.SetValue(True) 
+		gSizer4.Add( self.m_checkBox_para_h, 0, wx.ALL, 5 )
+		
+		
+		bSizer6.Add( gSizer4, 1, wx.EXPAND, 5 )
+		
+		
+		bSizer4.Add( bSizer6, 1, wx.EXPAND, 5 )
+		
+		
+		gbSizer11.Add( bSizer4, wx.GBPosition( 1, 2 ), wx.GBSpan( 2, 1 ), wx.EXPAND, 5 )
+		
+		self.m_textCtrl_showpid = wx.TextCtrl( self.m_panel_para_adj, wx.ID_ANY, u"机上PID参数", wx.DefaultPosition, wx.Size( 120,240 ), wx.TE_CENTRE|wx.TE_MULTILINE|wx.TE_NO_VSCROLL|wx.TE_READONLY )
+		self.m_textCtrl_showpid.SetFont( wx.Font( 8, 75, 90, 90, False, "Consolas" ) )
 		
 		gbSizer11.Add( self.m_textCtrl_showpid, wx.GBPosition( 0, 2 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
 		
@@ -225,7 +237,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_para_adj.SetSizer( gbSizer11 )
 		self.m_panel_para_adj.Layout()
 		gbSizer11.Fit( self.m_panel_para_adj )
-		self.m_notebook1.AddPage( self.m_panel_para_adj, u"调参", False )
+		self.m_notebook1.AddPage( self.m_panel_para_adj, u"调参", True )
 		self.m_panel_track = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), wx.TAB_TRAVERSAL )
 		self.m_panel_track.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
 		self.m_panel_track.Enable( False )
@@ -357,7 +369,34 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_image.SetSizer( gbSizer5 )
 		self.m_panel_image.Layout()
 		gbSizer5.Fit( self.m_panel_image )
-		self.m_notebook2.AddPage( self.m_panel_image, u"实时图像", False )
+		self.m_notebook2.AddPage( self.m_panel_image, u"实时图像", True )
+		self.m_panel_uavctrl = wx.Panel( self.m_notebook2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		gbSizer7 = wx.GridBagSizer( 0, 0 )
+		gbSizer7.SetFlexibleDirection( wx.BOTH )
+		gbSizer7.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+		
+		self.m_staticText12 = wx.StaticText( self.m_panel_uavctrl, wx.ID_ANY, u"云台俯仰", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText12.Wrap( -1 )
+		gbSizer7.Add( self.m_staticText12, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		self.m_spinCtrl_PT_pitch = wx.SpinCtrl( self.m_panel_uavctrl, wx.ID_ANY, u"-90", wx.DefaultPosition, wx.Size( 60,-1 ), wx.SP_ARROW_KEYS, -135, 90, -93 )
+		gbSizer7.Add( self.m_spinCtrl_PT_pitch, wx.GBPosition( 0, 1 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		self.m_staticText13 = wx.StaticText( self.m_panel_uavctrl, wx.ID_ANY, u"云台横滚", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText13.Wrap( -1 )
+		gbSizer7.Add( self.m_staticText13, wx.GBPosition( 0, 2 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		self.m_spinCtrl_PT_roll = wx.SpinCtrl( self.m_panel_uavctrl, wx.ID_ANY, u"0", wx.DefaultPosition, wx.Size( 60,-1 ), wx.SP_ARROW_KEYS, -45, 45, 0 )
+		gbSizer7.Add( self.m_spinCtrl_PT_roll, wx.GBPosition( 0, 3 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		self.m_button_PT_send = wx.Button( self.m_panel_uavctrl, wx.ID_ANY, u"  发送  ", wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_EXACTFIT )
+		gbSizer7.Add( self.m_button_PT_send, wx.GBPosition( 0, 4 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		
+		self.m_panel_uavctrl.SetSizer( gbSizer7 )
+		self.m_panel_uavctrl.Layout()
+		gbSizer7.Fit( self.m_panel_uavctrl )
+		self.m_notebook2.AddPage( self.m_panel_uavctrl, u"UAV控制", False )
 		
 		gbSizer1.Add( self.m_notebook2, wx.GBPosition( 1, 2 ), wx.GBSpan( 1, 2 ), wx.ALIGN_LEFT|wx.ALIGN_TOP|wx.EXPAND, 0 )
 		
@@ -406,6 +445,8 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_toggle_xbee.Bind( wx.EVT_BUTTON, self.on_toggle_xbee )
 		self.m_button_toggle_video.Bind( wx.EVT_BUTTON, self.on_toggle_video )
 		self.m_button_update_uavinfo.Bind( wx.EVT_BUTTON, self.on_update_uavinfo )
+		self.Bind( wx.EVT_MENU, self.on_clear_uav_info, id = self.m_menuItem_clear_uav_info.GetId() )
+		self.m_button_save_uav_info.Bind( wx.EVT_BUTTON, self.on_save_uav_info )
 		self.m_choice_recv_style.Bind( wx.EVT_CHOICE, self.on_recv_style_choice )
 		self.m_button_recv_clear.Bind( wx.EVT_BUTTON, self.on_clear_receive )
 		self.m_textCtrl_comm_send.Bind( wx.EVT_CHAR, self.on_send_area_char )
@@ -429,6 +470,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_video_window_show.Bind( wx.EVT_BUTTON, self.on_video_window_show )
 		self.m_button_record.Bind( wx.EVT_BUTTON, self.on_record )
 		self.m_filePicker_output.Bind( wx.EVT_FILEPICKER_CHANGED, self.on_record_file_changed )
+		self.m_button_PT_send.Bind( wx.EVT_BUTTON, self.on_PT_send )
 		self.Bind( wx.EVT_MENU, self.on_save_comm_option, id = self.m_menuItem_save_comm_option.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_load_comm_option, id = self.m_menuItem_load_comm_option.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_check_comm_option, id = self.m_menuItem_check_comm_option.GetId() )
@@ -453,6 +495,12 @@ class FrameGroundStationBase ( wx.Frame ):
 		event.Skip()
 	
 	def on_update_uavinfo( self, event ):
+		event.Skip()
+	
+	def on_clear_uav_info( self, event ):
+		event.Skip()
+	
+	def on_save_uav_info( self, event ):
 		event.Skip()
 	
 	def on_recv_style_choice( self, event ):
@@ -524,6 +572,9 @@ class FrameGroundStationBase ( wx.Frame ):
 	def on_record_file_changed( self, event ):
 		event.Skip()
 	
+	def on_PT_send( self, event ):
+		event.Skip()
+	
 	def on_save_comm_option( self, event ):
 		event.Skip()
 	
@@ -539,6 +590,12 @@ class FrameGroundStationBase ( wx.Frame ):
 	def on_about( self, event ):
 		event.Skip()
 	
+	def m_button_update_uavinfoOnContextMenu( self, event ):
+		self.m_button_update_uavinfo.PopupMenu( self.m_menu_update_uavinfo, event.GetPosition() )
+		
+	def m_button_save_uav_infoOnContextMenu( self, event ):
+		self.m_button_save_uav_info.PopupMenu( self.m_menu_save_uav_info, event.GetPosition() )
+		
 	def m_bitmap_trackOnContextMenu( self, event ):
 		self.m_bitmap_track.PopupMenu( self.m_menu_bitmap_track, event.GetPosition() )
 		
@@ -648,5 +705,52 @@ class frame_serial_setting ( wx.Dialog ):
 	# Virtual event handlers, overide them in your derived class
 	def on_see_com_info( self, event ):
 		event.Skip()
+	
+
+###########################################################################
+## Class VideoSettingDialog
+###########################################################################
+
+class VideoSettingDialog ( wx.Dialog ):
+	
+	def __init__( self, parent ):
+		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"视频设置", pos = wx.DefaultPosition, size = wx.DefaultSize, style = wx.DEFAULT_DIALOG_STYLE )
+		
+		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
+		
+		bSizer5 = wx.BoxSizer( wx.VERTICAL )
+		
+		gSizer4 = wx.GridSizer( 1, 2, 0, 0 )
+		
+		self.m_staticText11 = wx.StaticText( self, wx.ID_ANY, u"选择设备号", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText11.Wrap( -1 )
+		gSizer4.Add( self.m_staticText11, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		m_choiceChoices = [ u"0" ]
+		self.m_choice = wx.Choice( self, wx.ID_ANY, wx.DefaultPosition, wx.Size( 80,-1 ), m_choiceChoices, 0 )
+		self.m_choice.SetSelection( 0 )
+		gSizer4.Add( self.m_choice, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		
+		bSizer5.Add( gSizer4, 1, wx.EXPAND, 5 )
+		
+		m_sdbSizer1 = wx.StdDialogButtonSizer()
+		self.m_sdbSizer1OK = wx.Button( self, wx.ID_OK )
+		m_sdbSizer1.AddButton( self.m_sdbSizer1OK )
+		self.m_sdbSizer1Cancel = wx.Button( self, wx.ID_CANCEL )
+		m_sdbSizer1.AddButton( self.m_sdbSizer1Cancel )
+		m_sdbSizer1.Realize();
+		
+		bSizer5.Add( m_sdbSizer1, 1, wx.ALIGN_CENTER, 5 )
+		
+		
+		self.SetSizer( bSizer5 )
+		self.Layout()
+		bSizer5.Fit( self )
+		
+		self.Centre( wx.BOTH )
+	
+	def __del__( self ):
+		pass
 	
 

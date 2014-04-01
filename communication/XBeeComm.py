@@ -14,7 +14,8 @@ class XBee(object):
         self.window = window
         self.ser = serial.Serial()
         self.rcvbuf = []
-        self.max_buffer_length = 8192
+        self.newbuf = []
+        self.max_buffer_length = 256
     
     def get_supported_info(self):       
         info = {}
@@ -58,11 +59,17 @@ class XBee(object):
         
     def on_receive_char(self, ch):     
         self.rcvbuf.append(ch)
+        self.newbuf.append(ch)
         if len(self.rcvbuf) > self.max_buffer_length:
             self.rcvbuf.pop(0)
     
     def get_rcvbuf(self):
         return self.rcvbuf
+    
+    def get_new_buf(self):
+        temp = self.newbuf
+        self.newbuf = []
+        return temp
     
     def clear_rcvbuf(self):
         self.rcvbuf = []

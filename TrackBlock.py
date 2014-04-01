@@ -95,7 +95,7 @@ class TrackBlock():
         self.drag_info.start_drag(event.GetPositionTuple())
         self.m_bitmap_track.Bind( wx.EVT_MOTION, self.on_track_bitmap_motion )
         self.display_track_state = DISPLAY_TRACK_STATE_SELECTION
-        self.frozen_frame = self.webcam.get_frame()
+        self.frozen_frame = self.camcap.get_frame()
         self.sbar.update(u'按住左键拖拽')
         
     def on_drag(self, event):

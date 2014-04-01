@@ -42,43 +42,62 @@ class CommBlock():
     
     
     
-    def update_rcv_area(self):
-        data = self.comm.get_rcvbuf()
-        if self.m_choice_recv_style.GetStringSelection() == 'HEX':
-            s = ' '.join([b2a_hex(x) for x in data]).upper()
-        elif self.m_choice_recv_style.GetStringSelection() == 'ASCII':
-            s = ''.join([x for x in data])
+    def update_rcv_area(self, refresh = False):
+        if refresh:
+            data = self.comm.get_rcvbuf()
+            func = 'ChangeValue'
         else:
-            assert False, u'Send type is not ASCII nor HEX!'
-            return
-        self.m_textCtrl_comm_receive.SetValue('')
-        self.m_textCtrl_comm_receive.AppendText(s.__repr__()[1:-1])
+            data = self.comm.get_new_buf()
+            func = 'AppendText'
+        if data:
+            if self.m_choice_recv_style.GetStringSelection() == 'HEX':
+                s = ' '.join([b2a_hex(x) for x in data]).upper()+' '
+            elif self.m_choice_recv_style.GetStringSelection() == 'ASCII':
+                s = ''.join([x if x<'\xF0' else ' ' for x in data])
+            else:
+                assert False, u'Send type is not ASCII nor HEX!'
+                return
+        else:
+            s = ''
+        #eval("self.m_textCtrl_comm_receive.%s"%func)('%s'%s.__repr__()[1:-1])
+        eval("self.m_textCtrl_comm_receive.%s"%func)(s)
     
     def process_backdata(self, msgtype, data):
         for (k,v) in MsgPrcs.PKGTYPE_PID.iteritems():
             if v == msgtype:
-                self.update_rcv_pid(k, data[:3])
+                self.update_rcv_pid(k, data[:4])
                 return True
         if msgtype == MsgPrcs.PKGTYPE_INFO:
-            self.UAVinfo.update(data[0], data[1], data[2], data[3], data[4], None, None)
-            attiimg = self.UAVinfo.get_attitude_img()
-            self.dc_attitude.DrawBitmap(util.cvimg_to_wxbmp(attiimg), 0, 0)
-            self.update_GUI_UAVinfo(self.UAVinfo.get())
-            
+            self.UAVinfo.update_info(data[0], data[1], data[2], data[3], data[4])
+        
         elif msgtype == MsgPrcs.PKGTYPE_LOC:
             self.UAVinfo.update(None, None, None, None, None, data[0], data[1])
             self.update_GE(self.UAVinfo.get())
-    
-    def enable_comm_components(self, switch):
-        self.m_panel_comm.Enable(switch)
-        for each in self.m_panel_comm.GetChildren():
-            each.Enable(switch)
         
-        self.m_panel_para_adj.Enable(switch)
+        elif msgtype == MsgPrcs.PKGTYPE_REF:
+            self.UAVinfo.update_ref(data[0], data[1], data[2], data[3], data[4])
+        
+        elif msgtype == MsgPrcs.PKGTYPE_U0:
+            self.UAVinfo.update_u0(data[0], data[1], data[2], data[3], data[4])
+        
+        elif msgtype == MsgPrcs.PKGTYPE_U1:
+            self.UAVinfo.update_u1(data[0], data[1], data[2], data[3], data[4])
+            
+    def enable_comm_relative_components(self, switch):
+        #self.m_panel_comm.Enable(switch)
+        for each in self.m_panel_comm.GetChildren():
+            if each != self.m_textCtrl_comm_receive:
+                each.Enable(switch)
+        
+        #self.m_panel_para_adj.Enable(switch)
         for each in self.m_panel_para_adj.GetChildren():
             each.Enable(switch)
         
         self.m_button_update_uavinfo.Enable(switch)
+        
+        #self.m_panel_uavctrl.Enable(switch)
+        for each in self.m_panel_uavctrl.GetChildren():
+            each.Enable(switch)
     
     def load_default_comm_options(self):
         # load default settings

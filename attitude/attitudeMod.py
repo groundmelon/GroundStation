@@ -25,36 +25,41 @@ class AttitudeDisplay(object):
         self.im_empty = cv2.imread(r'%s\empty.bmp'%path )
     
         # --------- test ------------ 
-        self.count = -1
-        self.pitch = []
-        self.roll = []
-        self.yaw = []
-        lst = range(0, 60, 5) + range(60, -60, -5) + range(-60,0,5)
-        
-        
-        for i in lst:
-            self.pitch.append(i)
-            self.roll.append(0)
-            self.yaw.append(0)
-        for i in lst:
-            self.pitch.append(0)
-            self.roll.append(i)
-            self.yaw.append(0)
-         
-        self.lstlen = len(lst*2)
-        return None
+#         self.count = -1
+#         self.pitch = []
+#         self.roll = []
+#         self.yaw = []
+#         lst = range(0, 60, 5) + range(60, -60, -5) + range(-60,0,5)
+#         
+#         
+#         for i in lst:
+#             self.pitch.append(i)
+#             self.roll.append(0)
+#             self.yaw.append(0)
+#         for i in lst:
+#             self.pitch.append(0)
+#             self.roll.append(i)
+#             self.yaw.append(0)
+#          
+#         self.lstlen = len(lst*2)
+#         return None
             
-    def test(self):
-        self.count = (self.count + 1) % self.lstlen
-        #print(self.count, self.pitch[self.count],self.roll[self.count],self.yaw[self.count])
-        return self.generate_attitude_bitmap(self.pitch[self.count],
-                                             self.roll[self.count],
-                                             self.yaw[self.count],
-                                             is_radius = False
-                                             )
+#     def test(self):
+#         self.count = (self.count + 1) % self.lstlen
+#         #print(self.count, self.pitch[self.count],self.roll[self.count],self.yaw[self.count])
+#         return self.generate_attitude_bitmap(self.pitch[self.count],
+#                                              self.roll[self.count],
+#                                              self.yaw[self.count],
+#                                              is_radius = False
+#                                              )
                                              
         
     def generate_attitude_bitmap(self, pitch, roll, yaw, is_radius = True):
+        if not all((pitch,roll,yaw)):
+            pitch = 0
+            roll = 0
+            yaw = 0
+        
         if not is_radius:
             pitch = pitch * math.pi / 180
             roll = roll * math.pi / 180
@@ -91,6 +96,6 @@ class AttitudeDisplay(object):
 
         return im_rst#(imgdata.shape[1], imgdata.shape[0], imgdata)
 
-if __name__ == '__main__':
-    attidisp = AttitudeDisplay()
-    attidisp.generate_attitude_bitmap(-10, 30, 0, is_radius = False)
+# if __name__ == '__main__':
+#     attidisp = AttitudeDisplay()
+#     attidisp.generate_attitude_bitmap(-10, 30, 0, is_radius = False)

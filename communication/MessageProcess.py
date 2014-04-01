@@ -12,9 +12,13 @@ RCVHEAD = 0xFF
 RCVEND = 0xAA
 
 # ---- Send Msg Type ID ----
-PKGTYPE_PID = {'X':0x01, 'Y':0x02, 'Z':0x03}
-PKGTYPE_UNUSED = 0x04 | 0x00
+PKGTYPE_PID = {'X':0x01, 'Y':0x02, 'Z':0x03, 'H':0x04}
+PKGTYPE_UNUSED = 0x00
 PKGTYPE_INFO = 0x05
+PKGTYPE_REF = 0x06
+PKGTYPE_U0 = 0x07 # U pitch P,I,D roll P,I
+PKGTYPE_U1 = 0x08 # U roll D yaw P,I,D UAVTIME
+PKGTYPE_PT = 0x09 # Pan/Tilt camera control
 PKGTYPE_LOC = 0x0F # invalid
 PKGTYPE_SETPID = 0x55 # invalid
 
@@ -29,20 +33,25 @@ def packbyte(b):
     return struct.pack('B', b)
 
 def pack_adj_pid_para(para, axis):
-    assert len(para) == 3, 'Parameter length error.' 
+    assert len(para) == 4, 'Parameter length error.' 
     typ = packbyte(PKGTYPE_PID[axis])
     body = ''.join([struct.pack('<f',v) for v in para])
-    body = ''.join([body, '\x00'*8])
+    body = ''.join([body, '\x00'*4])
     return pack(typ, body)
 
 def pack_get_info():
     typ = packbyte(PKGTYPE_INFO)
-    body = '\x01\x00\x00\x00' + '\x00'*16
+    body = '\x01\x00\x00\x00' + '\x00'*4*4
     return pack(typ, body)
 
 def pack_set_pid_para():
     typ = packbyte(PKGTYPE_SETPID)
     body = ''.join([struct.pack('<iIf',-15,15,1.0)])
+    return pack(typ, body)
+
+def pack_pt(p, r):
+    typ = packbyte(PKGTYPE_PT)
+    body = ''.join([struct.pack('<ff', p, r),'\x00'*4*3])
     return pack(typ, body)
 
 def unpack(buf):
