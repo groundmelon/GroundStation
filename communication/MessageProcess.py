@@ -17,8 +17,9 @@ PKGTYPE_UNUSED = 0x00
 PKGTYPE_INFO = 0x05
 PKGTYPE_REF = 0x06
 PKGTYPE_U0 = 0x07 # U pitch P,I,D roll P,I
-PKGTYPE_U1 = 0x08 # U roll D yaw P,I,D UAVTIME
+PKGTYPE_U1 = 0x08 # roll D, MOTOR,AutoHeight,SmartDirection,UAVTIME
 PKGTYPE_PT = 0x09 # Pan/Tilt camera control
+PKGTYPE_SD = 0x0A # Smart Direction
 PKGTYPE_LOC = 0x0F # invalid
 PKGTYPE_SETPID = 0x55 # invalid
 
@@ -54,6 +55,14 @@ def pack_pt(p, r):
     body = ''.join([struct.pack('<ff', p, r),'\x00'*4*3])
     return pack(typ, body)
 
+def pack_smart_direction(switch):
+    typ = packbyte(PKGTYPE_SD)
+    if switch:
+        body = ''.join([struct.pack('<f',1500),'\x00'*4*4])
+    else:
+        body = ''.join([struct.pack('<f',800),'\x00'*4*4])
+    return pack(typ, body)    
+    
 def unpack(buf):
     rst = struct.unpack('<2B5fB', buf)
     if (rst[0] == RCVHEAD) and (rst[-1] == RCVEND):

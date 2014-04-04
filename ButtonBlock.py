@@ -36,6 +36,9 @@ class ButtonBlock():
         try:
             if self.m_button_update_uavinfo.is_running:
                 self.unshow_uavinfo(self.m_button_update_uavinfo)
+            if self.m_button_toggle_joystick.is_running:
+                self.close_joystick(self.m_button_toggle_joystick)
+            
             self.comm.close()
             self.enable_comm_relative_components(False)
             self.sbar.update(u'XBee通信已经关闭')
@@ -57,6 +60,9 @@ class ButtonBlock():
         except DBGException,e :#Exception,e:
             wx.MessageBox(str(e), u"出现错误",wx.OK | wx.ICON_ERROR)
             self.SetStatusText(str(e),0)
+        except ImageCapture.NoDeviceError:
+            wx.MessageBox(u'设备号<%d>对应的设备不存在！'%self.cap_dev_num, u"出现错误",wx.OK | wx.ICON_ERROR)
+            self.SetStatusText(u'设备号<%d>对应的设备不存在！'%self.cap_dev_num, 0)
         else:    
             util.toggle_button(comp, u'开始', u'结束')
             

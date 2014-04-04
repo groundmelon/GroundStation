@@ -31,8 +31,8 @@ def init_font():
     global TIME_TEXT_WIDTH
     TEXTSIZE = (9, 16)
     PADDING = 10
-    WXFONT = wx.Font( 1, 74, 90, 90, False, "Consolas" )
-    WXFONT.SetPixelSize(TEXTSIZE)
+    WXFONT = wx.Font( 10, wx.MODERN, wx.NORMAL, wx.NORMAL, False, "Consolas" )
+    #WXFONT.SetPixelSize(TEXTSIZE)
     TIME_TEXT_WIDTH = len(get_now()) * TEXTSIZE[0]
     return
 

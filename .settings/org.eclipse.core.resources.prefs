@@ -20,6 +20,7 @@ encoding/Definition.py=utf-8
 encoding/GroundStation.py=utf-8
 encoding/GroundStationBase.py=utf-8
 encoding/IndependentImageDisplayBase.py=utf-8
+encoding/JoyController.py=utf-8
 encoding/MenuBlock.py=utf-8
 encoding/ParameterAdjustBlock.py=utf-8
 encoding/PickleFileIO.py=utf-8

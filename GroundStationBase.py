@@ -68,15 +68,24 @@ class FrameGroundStationBase ( wx.Frame ):
 		gSizer2.Add( self.m_button_save_uav_info, 0, wx.ALL, 5 )
 		
 		
-		gbSizer1.Add( gSizer2, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 1 ), wx.ALIGN_LEFT|wx.ALIGN_TOP, 5 )
+		gbSizer1.Add( gSizer2, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER|wx.ALIGN_LEFT|wx.ALIGN_TOP, 5 )
 		
 		self.m_bitmap_attitude = wx.StaticBitmap( self.m_panel2, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( 100,100 ), 0 )
 		gbSizer1.Add( self.m_bitmap_attitude, wx.GBPosition( 0, 1 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER, 5 )
 		
-		self.m_textCtrl_info = wx.TextCtrl( self.m_panel2, wx.ID_ANY, u"---UAV Info Display---", wx.DefaultPosition, wx.Size( -1,135 ), wx.TE_MULTILINE|wx.TE_NO_VSCROLL|wx.TE_READONLY )
-		self.m_textCtrl_info.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 90, False, "Consolas" ) )
+		self.m_panel9 = wx.Panel( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
+		bSizer7 = wx.BoxSizer( wx.VERTICAL )
 		
-		gbSizer1.Add( self.m_textCtrl_info, wx.GBPosition( 0, 2 ), wx.GBSpan( 1, 2 ), wx.ALIGN_CENTER_HORIZONTAL|wx.ALL|wx.EXPAND, 5 )
+		self.m_bitmap_uavinfo = wx.StaticBitmap( self.m_panel9, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
+		self.m_bitmap_uavinfo.SetMinSize( wx.Size( -1,110 ) )
+		
+		bSizer7.Add( self.m_bitmap_uavinfo, 1, wx.ALL|wx.EXPAND, 5 )
+		
+		
+		self.m_panel9.SetSizer( bSizer7 )
+		self.m_panel9.Layout()
+		bSizer7.Fit( self.m_panel9 )
+		gbSizer1.Add( self.m_panel9, wx.GBPosition( 0, 2 ), wx.GBSpan( 1, 2 ), wx.ALIGN_CENTER|wx.ALL|wx.EXPAND, 5 )
 		
 		self.m_notebook1 = wx.Notebook( self.m_panel2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_panel_comm = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), wx.TAB_TRAVERSAL )
@@ -127,6 +136,11 @@ class FrameGroundStationBase ( wx.Frame ):
 		gbSizer6.Add( self.m_checkBox_sent_clear, wx.GBPosition( 5, 1 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER|wx.ALL|wx.EXPAND, 5 )
 		
 		
+		gbSizer6.AddGrowableCol( 0 )
+		gbSizer6.AddGrowableCol( 1 )
+		gbSizer6.AddGrowableCol( 2 )
+		gbSizer6.AddGrowableCol( 3 )
+		
 		self.m_panel_comm.SetSizer( gbSizer6 )
 		self.m_panel_comm.Layout()
 		gbSizer6.Fit( self.m_panel_comm )
@@ -146,15 +160,17 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_grid_para_adj.SetMargins( 0, 0 )
 		
 		# Columns
+		self.m_grid_para_adj.SetColSize( 0, 120 )
 		self.m_grid_para_adj.EnableDragColMove( False )
-		self.m_grid_para_adj.EnableDragColSize( False )
+		self.m_grid_para_adj.EnableDragColSize( True )
 		self.m_grid_para_adj.SetColLabelSize( 30 )
 		self.m_grid_para_adj.SetColLabelValue( 0, u"Value * K" )
 		self.m_grid_para_adj.SetColLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		# Rows
-		self.m_grid_para_adj.EnableDragRowSize( False )
-		self.m_grid_para_adj.SetRowLabelSize( 60 )
+		self.m_grid_para_adj.SetRowSize( 0, 1 )
+		self.m_grid_para_adj.EnableDragRowSize( True )
+		self.m_grid_para_adj.SetRowLabelSize( 55 )
 		self.m_grid_para_adj.SetRowLabelValue( 0, u"XP" )
 		self.m_grid_para_adj.SetRowLabelValue( 1, u"XI" )
 		self.m_grid_para_adj.SetRowLabelValue( 2, u"XD" )
@@ -179,7 +195,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_grid_para_adj.SetDefaultCellAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		self.m_grid_para_adj.SetMinSize( wx.Size( 160,240 ) )
 		
-		gbSizer11.Add( self.m_grid_para_adj, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 2 ), wx.ALIGN_CENTER|wx.ALL, 5 )
+		gbSizer11.Add( self.m_grid_para_adj, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 2 ), wx.ALIGN_CENTER|wx.EXPAND, 0 )
 		
 		self.m_button_send_para = wx.Button( self.m_panel_para_adj, wx.ID_ANY, u"发送参数", wx.DefaultPosition, wx.DefaultSize, 0 )
 		gbSizer11.Add( self.m_button_send_para, wx.GBPosition( 1, 0 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
@@ -228,11 +244,19 @@ class FrameGroundStationBase ( wx.Frame ):
 		
 		gbSizer11.Add( bSizer4, wx.GBPosition( 1, 2 ), wx.GBSpan( 2, 1 ), wx.EXPAND, 5 )
 		
-		self.m_textCtrl_showpid = wx.TextCtrl( self.m_panel_para_adj, wx.ID_ANY, u"机上PID参数", wx.DefaultPosition, wx.Size( 120,240 ), wx.TE_CENTRE|wx.TE_MULTILINE|wx.TE_NO_VSCROLL|wx.TE_READONLY )
-		self.m_textCtrl_showpid.SetFont( wx.Font( 8, 75, 90, 90, False, "Consolas" ) )
+		self.m_staticText_showpid = wx.StaticText( self.m_panel_para_adj, wx.ID_ANY, u"机上PID参数", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
+		self.m_staticText_showpid.Wrap( -1 )
+		self.m_staticText_showpid.SetFont( wx.Font( 9, 75, 90, 90, False, "Consolas" ) )
+		self.m_staticText_showpid.SetMinSize( wx.Size( 120,-1 ) )
 		
-		gbSizer11.Add( self.m_textCtrl_showpid, wx.GBPosition( 0, 2 ), wx.GBSpan( 1, 1 ), wx.ALL, 5 )
+		gbSizer11.Add( self.m_staticText_showpid, wx.GBPosition( 0, 2 ), wx.GBSpan( 1, 2 ), wx.ALIGN_CENTER_HORIZONTAL|wx.ALL|wx.EXPAND, 5 )
 		
+		
+		gbSizer11.AddGrowableCol( 0 )
+		gbSizer11.AddGrowableCol( 1 )
+		gbSizer11.AddGrowableCol( 2 )
+		gbSizer11.AddGrowableCol( 3 )
+		gbSizer11.AddGrowableRow( 0 )
 		
 		self.m_panel_para_adj.SetSizer( gbSizer11 )
 		self.m_panel_para_adj.Layout()
@@ -369,7 +393,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_image.SetSizer( gbSizer5 )
 		self.m_panel_image.Layout()
 		gbSizer5.Fit( self.m_panel_image )
-		self.m_notebook2.AddPage( self.m_panel_image, u"实时图像", True )
+		self.m_notebook2.AddPage( self.m_panel_image, u"实时图像", False )
 		self.m_panel_uavctrl = wx.Panel( self.m_notebook2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		gbSizer7 = wx.GridBagSizer( 0, 0 )
 		gbSizer7.SetFlexibleDirection( wx.BOTH )
@@ -392,14 +416,33 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_PT_send = wx.Button( self.m_panel_uavctrl, wx.ID_ANY, u"  发送  ", wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_EXACTFIT )
 		gbSizer7.Add( self.m_button_PT_send, wx.GBPosition( 0, 4 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER|wx.ALL, 5 )
 		
+		self.m_checkBox_smart_direction = wx.CheckBox( self.m_panel_uavctrl, wx.ID_ANY, u"Smart Dirction", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gbSizer7.Add( self.m_checkBox_smart_direction, wx.GBPosition( 1, 0 ), wx.GBSpan( 1, 2 ), wx.ALL, 5 )
+		
+		self.m_button_toggle_joystick = wx.Button( self.m_panel_uavctrl, wx.ID_ANY, u"开启摇杆", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gbSizer7.Add( self.m_button_toggle_joystick, wx.GBPosition( 2, 0 ), wx.GBSpan( 1, 5 ), wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		self.m_staticText_joystick = wx.StaticText( self.m_panel_uavctrl, wx.ID_ANY, u"Joystick OFF", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText_joystick.Wrap( -1 )
+		self.m_staticText_joystick.SetFont( wx.Font( 9, 75, 90, 90, False, "Consolas" ) )
+		
+		gbSizer7.Add( self.m_staticText_joystick, wx.GBPosition( 3, 0 ), wx.GBSpan( 1, 5 ), wx.ALIGN_CENTER|wx.ALL, 5 )
+		
 		
 		self.m_panel_uavctrl.SetSizer( gbSizer7 )
 		self.m_panel_uavctrl.Layout()
 		gbSizer7.Fit( self.m_panel_uavctrl )
-		self.m_notebook2.AddPage( self.m_panel_uavctrl, u"UAV控制", False )
+		self.m_notebook2.AddPage( self.m_panel_uavctrl, u"UAV控制", True )
 		
 		gbSizer1.Add( self.m_notebook2, wx.GBPosition( 1, 2 ), wx.GBSpan( 1, 2 ), wx.ALIGN_LEFT|wx.ALIGN_TOP|wx.EXPAND, 0 )
 		
+		
+		gbSizer1.AddGrowableCol( 0 )
+		gbSizer1.AddGrowableCol( 1 )
+		gbSizer1.AddGrowableCol( 2 )
+		gbSizer1.AddGrowableCol( 3 )
+		gbSizer1.AddGrowableRow( 0 )
+		gbSizer1.AddGrowableRow( 1 )
 		
 		self.m_panel2.SetSizer( gbSizer1 )
 		self.m_panel2.Layout()
@@ -471,6 +514,8 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_record.Bind( wx.EVT_BUTTON, self.on_record )
 		self.m_filePicker_output.Bind( wx.EVT_FILEPICKER_CHANGED, self.on_record_file_changed )
 		self.m_button_PT_send.Bind( wx.EVT_BUTTON, self.on_PT_send )
+		self.m_checkBox_smart_direction.Bind( wx.EVT_CHECKBOX, self.on_toggle_smart_direction )
+		self.m_button_toggle_joystick.Bind( wx.EVT_BUTTON, self.on_toggle_joystick )
 		self.Bind( wx.EVT_MENU, self.on_save_comm_option, id = self.m_menuItem_save_comm_option.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_load_comm_option, id = self.m_menuItem_load_comm_option.GetId() )
 		self.Bind( wx.EVT_MENU, self.on_check_comm_option, id = self.m_menuItem_check_comm_option.GetId() )
@@ -573,6 +618,12 @@ class FrameGroundStationBase ( wx.Frame ):
 		event.Skip()
 	
 	def on_PT_send( self, event ):
+		event.Skip()
+	
+	def on_toggle_smart_direction( self, event ):
+		event.Skip()
+	
+	def on_toggle_joystick( self, event ):
 		event.Skip()
 	
 	def on_save_comm_option( self, event ):

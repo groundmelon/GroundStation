@@ -23,6 +23,7 @@ DEV_NUM_LIST = get_dev_num_list()
 
 
 class ImageCapture():
+    NoDeviceError = vidcap.error
     def __init__(self, devnum):
         self.cam = Device(devnum)
         self.cam.displayCaptureFilterProperties()

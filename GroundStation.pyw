@@ -98,7 +98,6 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         self.dc_track = wx.ClientDC(self.m_bitmap_track)
         self.memory = wx.MemoryDC()
         self.dc_attitude = wx.ClientDC(self.m_bitmap_attitude)
-        self.dc_uavinfo = wx.ClientDC(self.m_bitmap_uavinfo)
         
         # --- test ---
         self.multimean_arg = None
@@ -197,10 +196,6 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
             self.close_joystick(event.GetEventObject())
         else:
             self.open_joystick(event.GetEventObject())
-    
-    def on_toggle_smart_direction(self, event):
-        rtn = self.toggle_smart_direction(self.m_checkBox_smart_direction.IsChecked())
-        self.sbar.update(u'Smart Direction已经发送(%d)'%rtn)
         
 #------ Track Binding Function ------   
 
@@ -425,61 +420,22 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         for k,v in info.iteritems():
             if v is None:
                 info[k] = float('nan')
-
-        mem = wx.MemoryDC()
-        mem.SetFont(util.WXFONT)
+        s =  '---UAV Info Display---\tUAVTime : %.3Fs\n\n'%info['uavtime']
+        s += ' pitch  =%9.3Fd\tRpitch  =%9.3Fd\n'%(info['pitch'], info['ref_pitch'])
+        s += ' roll   =%9.3Fd\tRroll   =%9.3Fd\n'%(info['roll'], info['ref_roll'])
+        s += ' yaw    =%9.3Fd\tRyaw    =%9.3Fd\n'%(info['yaw'], info['ref_yaw'])
         
-        csz = mem.GetTextExtent(' ')
-        sz = (45*csz[0], 9*csz[1])
-        padding = csz[0]*4
+        s_war = '*' if self.UAVinfo.need_warning('height', info['height']) else ' '
+        s += '%sheight =%9.3Fm\tRheight =%9.3Fm\n'%(s_war, info['height'],info['ref_height'])
         
-        self.m_bitmap_uavinfo.SetSize(sz)
-        self.m_bitmap_uavinfo.CenterOnParent()
-        mem.SelectObject(wx.BitmapFromImage(wx.ImageFromData(sz[0],sz[1],'\xf0'*sz[0]*sz[1]*3)))
+        s_war = '*' if self.UAVinfo.need_warning('volt', info['volt']) else ' '
+        s += '%svolt   =%9.3FV\tRthrust =%9.3F \n'%(s_war, info['volt'], info['ref_thrust'])
         
-        pos = (0,5)
-        
-        def write(s, color):
-            if color is None:
-                color = wx.BLUE
-            mem.SetTextForeground(color)
-            mem.DrawText(s, pos[0], pos[1])
-            return (pos[0] + mem.GetTextExtent(s)[0] + padding, pos[1])
-        
-        def writeln(s, color):
-            rtn =  write(s, color)
-            return (0, rtn[1]+csz[1])
-            
-        def get_st_color(value):
-            if value == 0:
-                return wx.Colour(255,0,0)
-            elif value == 2:
-                return wx.Colour(255,255,0)
-            elif value == 1:
-                return wx.Colour(20,215,0)
-            else:
-                return wx.Colour(160,160,160)
-        
-        pos = writeln('--UAVInfo Display--    UAVTime :%9.3Fs'%info['uavtime'], None)
-        pos = writeln('', None)
-        pos = writeln(' pitch  =%9.3Fd    Rpitch  =%9.3Fd'%(info['pitch'], info['ref_pitch']), None)
-        pos = writeln(' roll   =%9.3Fd    Rroll   =%9.3Fd'%(info['roll'], info['ref_roll']), None)
-        pos = writeln(' yaw    =%9.3Fd    Ryaw    =%9.3Fd'%(info['yaw'], info['ref_yaw']), None)
-        pos = write(' height =%9.3Fm'%info['height'],
-                    wx.RED if self.UAVinfo.need_warning('height', info['height']) else None)
-        pos = writeln('Rheight =%9.3Fm\n'%(info['ref_height']), None)
-        pos = write(' volt   =%9.3FV'%info['volt'],
-                    wx.RED if self.UAVinfo.need_warning('volt', info['volt']) else None)
-        pos = writeln('Rthrust =%9.3F'%(info['ref_thrust']), None)
-        pos = write(' MOTOR', get_st_color(info['st_mt']))
-        pos = write('AutoHeight', get_st_color(info['st_ah']))
-        pos = write('SmartDirection', get_st_color(info['st_sd']))
-
-        self.dc_uavinfo.Blit(0, 0, sz[0],sz[1], mem, 0, 0)
+        self.m_staticText_uavinfo.SetLabel(s)
         
         # update bitmap_atti
         attiimg = self.UAVinfo.get_attitude_img()
-        self.dc_attitude.DrawBitmap(util.cvimg_to_wxbmp(attiimg), 0, 0)        
+        self.dc_attitude.DrawBitmap(util.cvimg_to_wxbmp(attiimg), 0, 0)
     
     def update_GE(self, info):
         la = info['la']

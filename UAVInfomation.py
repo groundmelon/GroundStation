@@ -33,6 +33,9 @@ class InfoItem():
         self.YUp = init_val
         self.YUi = init_val
         self.YUd = init_val
+        self.st_mt = init_val # motor state
+        self.st_ah = init_val # auto height state
+        self.st_sd = init_val # smart direction state
         self.uavtime = init_val
         self.la = LA
         self.lo = LO
@@ -110,13 +113,16 @@ class UAVInfomation(object):
                 self.add_item()
         return
          
-    def update_u1(self, PUd, YUp, YUi, YUd, uavtime):
+    def update_u1(self, PUd, a, b, c, uavtime):
         while True:
             try:
                 self.infobuf[-1].add('PUd', PUd)
-                self.infobuf[-1].add('YUp', YUp)
-                self.infobuf[-1].add('YUi', YUi)
-                self.infobuf[-1].add('YUd', YUd)
+#                 self.infobuf[-1].add('YUp', a)
+#                 self.infobuf[-1].add('YUi', b)
+#                 self.infobuf[-1].add('YUd', c)
+                self.infobuf[-1].add('st_mt', a)
+                self.infobuf[-1].add('st_ah', b)
+                self.infobuf[-1].add('st_sd', c)
                 self.infobuf[-1].add('uavtime', uavtime)
                 break
             except InfoItem.OverrideException, e:
@@ -140,6 +146,9 @@ class UAVInfomation(object):
                 'ref_thrust': data.ref_thrust,
                 'ref_height': data.ref_height,
                 'uavtime': data.uavtime,
+                'st_mt': data.st_mt,
+                'st_ah': data.st_ah,
+                'st_sd': data.st_sd,
                 }
     def get(self, index=-1):
         return self.get_by_index(index)
@@ -198,30 +207,32 @@ class UAVInfomation(object):
                     f.write('No.1height\t2pitch\t3roll\t4yaw\t5volt\t6Rpitch\t7Rroll\t8Ryaw\t9Rthr\t10Rheight\t11la\t12lo')
                     f.write('\t13PUp\t14PUi\t15PUd\t16RUp\t17RUi\t18RUd\t19YUp\t20YUi\t21YUd\t22UAVTime\n')
                     for i in range(len(self.infobuf)):
+                        lst = []
                         data = self.infobuf[i]
-                        f.write('%s\t'%str(data.height))
-                        f.write('%s\t'%str(data.pitch))
-                        f.write('%s\t'%str(data.roll))
-                        f.write('%s\t'%str(data.yaw))
-                        f.write('%s\t'%str(data.volt))
-                        f.write('%s\t'%str(data.ref_pitch))
-                        f.write('%s\t'%str(data.ref_roll))
-                        f.write('%s\t'%str(data.ref_yaw))
-                        f.write('%s\t'%str(data.ref_thrust))
-                        f.write('%s\t'%str(data.ref_height))
-                        f.write('%s\t'%str(data.la))
-                        f.write('%s\t'%str(data.lo))
-                        f.write('%s\t'%str(data.PUp))
-                        f.write('%s\t'%str(data.PUi))
-                        f.write('%s\t'%str(data.PUd))
-                        f.write('%s\t'%str(data.RUp))
-                        f.write('%s\t'%str(data.RUi))
-                        f.write('%s\t'%str(data.RUd))
-                        f.write('%s\t'%str(data.YUp))
-                        f.write('%s\t'%str(data.YUi))
-                        f.write('%s\t'%str(data.YUd))
-                        f.write('%s\t'%str(data.uavtime))
-                        f.write('\n')
+                        lst.append('%s\t'%str(data.height))
+                        lst.append('%s\t'%str(data.pitch))
+                        lst.append('%s\t'%str(data.roll))
+                        lst.append('%s\t'%str(data.yaw))
+                        lst.append('%s\t'%str(data.volt))
+                        lst.append('%s\t'%str(data.ref_pitch))
+                        lst.append('%s\t'%str(data.ref_roll))
+                        lst.append('%s\t'%str(data.ref_yaw))
+                        lst.append('%s\t'%str(data.ref_thrust))
+                        lst.append('%s\t'%str(data.ref_height))
+                        lst.append('%s\t'%str(data.la))
+                        lst.append('%s\t'%str(data.lo))
+                        lst.append('%s\t'%str(data.PUp))
+                        lst.append('%s\t'%str(data.PUi))
+                        lst.append('%s\t'%str(data.PUd))
+                        lst.append('%s\t'%str(data.RUp))
+                        lst.append('%s\t'%str(data.RUi))
+                        lst.append('%s\t'%str(data.RUd))
+                        lst.append('%s\t'%str(data.YUp))
+                        lst.append('%s\t'%str(data.YUi))
+                        lst.append('%s\t'%str(data.YUd))
+                        lst.append('%s\t'%str(data.uavtime))
+                        lst.append('\n')
+                        f.write((''.join(lst)).replace('None', '0.0'))
                     f.close()
                 window.sbar.update(u'UAV信息已经保存。')
             except Exception,e:
@@ -238,29 +249,32 @@ class UAVInfomation(object):
             f.write('\t13PUp\t14PUi\t15PUd\t16RUp\t17RUi\t18RUd\t19YUp\t20YUi\t21YUd\t22UAVTime\n')
             for i in range(len(self.infobuf)):
                 data = self.infobuf[i]
-                f.write('%s\t'%str(data.height))
-                f.write('%s\t'%str(data.pitch))
-                f.write('%s\t'%str(data.roll))
-                f.write('%s\t'%str(data.yaw))
-                f.write('%s\t'%str(data.volt))
-                f.write('%s\t'%str(data.ref_pitch))
-                f.write('%s\t'%str(data.ref_roll))
-                f.write('%s\t'%str(data.ref_yaw))
-                f.write('%s\t'%str(data.ref_thrust))
-                f.write('%s\t'%str(data.ref_height))
-                f.write('%s\t'%str(data.la))
-                f.write('%s\t'%str(data.lo))
-                f.write('%s\t'%str(data.PUp))
-                f.write('%s\t'%str(data.PUi))
-                f.write('%s\t'%str(data.PUd))
-                f.write('%s\t'%str(data.RUp))
-                f.write('%s\t'%str(data.RUi))
-                f.write('%s\t'%str(data.RUd))
-                f.write('%s\t'%str(data.YUp))
-                f.write('%s\t'%str(data.YUi))
-                f.write('%s\t'%str(data.YUd))
-                f.write('%s\t'%str(data.uavtime))
-                f.write('\n')
+                lst = []
+                data = self.infobuf[i]
+                lst.append('%s\t'%str(data.height))
+                lst.append('%s\t'%str(data.pitch))
+                lst.append('%s\t'%str(data.roll))
+                lst.append('%s\t'%str(data.yaw))
+                lst.append('%s\t'%str(data.volt))
+                lst.append('%s\t'%str(data.ref_pitch))
+                lst.append('%s\t'%str(data.ref_roll))
+                lst.append('%s\t'%str(data.ref_yaw))
+                lst.append('%s\t'%str(data.ref_thrust))
+                lst.append('%s\t'%str(data.ref_height))
+                lst.append('%s\t'%str(data.la))
+                lst.append('%s\t'%str(data.lo))
+                lst.append('%s\t'%str(data.PUp))
+                lst.append('%s\t'%str(data.PUi))
+                lst.append('%s\t'%str(data.PUd))
+                lst.append('%s\t'%str(data.RUp))
+                lst.append('%s\t'%str(data.RUi))
+                lst.append('%s\t'%str(data.RUd))
+                lst.append('%s\t'%str(data.YUp))
+                lst.append('%s\t'%str(data.YUi))
+                lst.append('%s\t'%str(data.YUd))
+                lst.append('%s\t'%str(data.uavtime))
+                lst.append('\n')
+                f.write(''.join(lst))
             f.close()
 
 if __name__ == '__main__':

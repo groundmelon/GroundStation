@@ -84,5 +84,5 @@ class ParameterAdjustBlock():
                                   'ZP','ZI','ZD','ZSP',
                                   'HP','HI','HD','HSP']
                         ])
-        self.m_textCtrl_showpid.SetValue(''.join([title, info]))
+        self.m_staticText_showpid.SetLabel(''.join([title, info]))
         
