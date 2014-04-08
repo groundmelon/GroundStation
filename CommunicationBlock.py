@@ -36,7 +36,7 @@ class CommBlock():
                         更新经纬坐标：        FF 0F 10 EE 36 42 BC 41 FD 42 00 00 00 00 00 00 00 00 00 00 00 00 AA
         '''
         if len(buf)>=23:
-            return MsgPrcs.unpack(''.join(buf[-23:]))
+            return MsgPrcs.unpack_type(''.join(buf[-23::]))
         else:
             return (None, None)
     
@@ -59,28 +59,37 @@ class CommBlock():
                 return
         else:
             s = ''
-        #eval("self.m_textCtrl_comm_receive.%s"%func)('%s'%s.__repr__()[1:-1])
         eval("self.m_textCtrl_comm_receive.%s"%func)(s)
     
-    def process_backdata(self, msgtype, data):
+    def process_backdata(self, msgtype, buf):
         for (k,v) in MsgPrcs.PKGTYPE_PID.iteritems():
             if v == msgtype:
+                data = MsgPrcs.unpack_5f(buf)
                 self.update_rcv_pid(k, data[:4])
                 return True
         if msgtype == MsgPrcs.PKGTYPE_INFO:
+            data = MsgPrcs.unpack_5f(buf)
             self.UAVinfo.update_info(data[0], data[1], data[2], data[3], data[4])
         
         elif msgtype == MsgPrcs.PKGTYPE_LOC:
+            data = MsgPrcs.unpack_5f(buf)
             self.UAVinfo.update(None, None, None, None, None, data[0], data[1])
             self.update_GE(self.UAVinfo.get())
         
         elif msgtype == MsgPrcs.PKGTYPE_REF:
+            data = MsgPrcs.unpack_5f(buf)
             self.UAVinfo.update_ref(data[0], data[1], data[2], data[3], data[4])
         
+        elif msgtype == MsgPrcs.PKGTYPE_CTRL:
+            data = MsgPrcs.unpack_ctrl(buf)
+            self.UAVinfo.update_status(data)
+        
         elif msgtype == MsgPrcs.PKGTYPE_U0:
+            data = MsgPrcs.unpack_5f(buf)
             self.UAVinfo.update_u0(data[0], data[1], data[2], data[3], data[4])
         
         elif msgtype == MsgPrcs.PKGTYPE_U1:
+            data = MsgPrcs.unpack_5f(buf)
             self.UAVinfo.update_u1(data[0], data[1], data[2], data[3], data[4])
             
     def enable_comm_relative_components(self, switch):

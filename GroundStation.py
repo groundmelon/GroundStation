@@ -31,12 +31,15 @@ from Definition import *
 from imageprocess.ObjectTracking import get_adjusted_image
 
 
+MAIN_TASK_FREQ = 20 # 20Hz
+
 class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
                     ButtonBlock, MenuBlock, CommBlock, ParameterAdjustBlock,
                     UAVCtrlBlock
                     ):
     def __init__(self):
         self.lasttime = time.clock()
+        
         super(GroundStation, self).__init__(parent = None)
         self.SetIcon(wx.Icon(r'resources/gs.ico', wx.BITMAP_TYPE_ICO))              
         
@@ -49,9 +52,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         sizer_ge.Add(self.browser_ge, 1, wx.ALIGN_CENTER, 0)
         self.browser_ge.LoadURL(r'file:///%s/resources/ge.html'%os.getcwd().replace('\\','/'))
         self.GE_uninited = True
-        
-        #---- add uavinfo menuItem ----
-        
+                
         #---- set record labels ----
         self.m_filePicker_output.GetPickerCtrl().SetLabel(u'设置视频参数')
         
@@ -93,6 +94,9 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         #---- init UAVInformation ----
         self.UAVinfo = UAVInfomation()
         
+        #---- init UAV Control ----
+        self.init_uav_control()
+        
         # --- dc init ---
         self.dc_video = wx.ClientDC(self.m_bitmap_video)
         self.dc_track = wx.ClientDC(self.m_bitmap_track)
@@ -108,11 +112,12 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         #self.Bind(wx.EVT_IDLE, self.main_work)
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.main_work, self.timer)
-        self.timer.Start(1000/20)
+        self.timer.Start(1000.0/MAIN_TASK_FREQ)
+        self.timer.count = 0
         
-        self.timer1 = wx.Timer(self) 
-        self.Bind(wx.EVT_TIMER, self.main_work1, self.timer1)
-        self.timer1.Start(1000/10)
+#         self.timer1 = wx.Timer(self) 
+#         self.Bind(wx.EVT_TIMER, self.main_work1, self.timer1)
+#         self.timer1.Start(1000/10)
         
         self.Bind(wx.EVT_CLOSE, self.OnClose)
 
@@ -199,8 +204,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
             self.open_joystick(event.GetEventObject())
     
     def on_toggle_smart_direction(self, event):
-        rtn = self.toggle_smart_direction(self.m_checkBox_smart_direction.IsChecked())
-        self.sbar.update(u'Smart Direction已经发送(%d)'%rtn)
+        self.toggle_smart_direction(self.m_checkBox_smart_direction.IsChecked())
         
 #------ Track Binding Function ------   
 
@@ -293,19 +297,32 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         msgtype, data = self.get_backdata()
         if data:
             self.process_backdata(msgtype, data)
-#     
+     
     
 #------ Work Function ------        
     def main_work(self, event):
+        self.timer.count += 1
+        
         worklist = self.worklist
         a = time.clock()        
         
-        if DISPLAY_XBEE_DATA in worklist:
-            self.update_rcv_area()
+        # 5 Hz Tasks
+        if self.timer.count % (MAIN_TASK_FREQ / 5) == 0:
+            if DISPLAY_XBEE_DATA in worklist:
+                self.update_rcv_area()
+            
+            if USING_JOYSTICK in self.worklist:
+                self.do_joy_control()
+            
+            if DISPLAY_UAVINFO in self.worklist and USING_JOYSTICK not in self.worklist:
+                self.send_data_by_frame(MsgPrcs.pack_control(0, self.state_smart_direction))
         
-        if USING_JOYSTICK in worklist:
-            # send joy stick
-            pass
+        # MAIN_TASK_FREQ Hz Tasks
+        if DISPLAY_UAVINFO in self.worklist:
+            self.update_GUI_UAVinfo(self.UAVinfo.get())
+        
+        if USING_JOYSTICK in self.worklist:
+                self.update_joy_status()
         
         if DISPLAY_VIDEO in worklist:
             srcimg = self.camcap.get_frame()
@@ -411,14 +428,6 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         #print('[work time]%4.4f [cir time]%4.4f'%((n-a)*1000,(n-self.lasttime)*1000))
         self.lasttime = n
     
-    def main_work1(self, event):
-        if DISPLAY_UAVINFO in self.worklist:
-            self.send_data_by_frame(MsgPrcs.pack_get_info())
-            self.update_GUI_UAVinfo(self.UAVinfo.get())
-        
-        if USING_JOYSTICK in self.worklist:
-            self.update_joy_status()
-            
 #------ Tool Function ------       
     def update_GUI_UAVinfo(self, info):
         # update text info
@@ -431,13 +440,13 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         
         csz = mem.GetTextExtent(' ')
         sz = (45*csz[0], 9*csz[1])
-        padding = csz[0]*4
         
         self.m_bitmap_uavinfo.SetSize(sz)
         self.m_bitmap_uavinfo.CenterOnParent()
         mem.SelectObject(wx.BitmapFromImage(wx.ImageFromData(sz[0],sz[1],'\xf0'*sz[0]*sz[1]*3)))
         
         pos = (0,5)
+        padding = csz[0]*4
         
         def write(s, color):
             if color is None:
@@ -471,9 +480,10 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         pos = write(' volt   =%9.3FV'%info['volt'],
                     wx.RED if self.UAVinfo.need_warning('volt', info['volt']) else None)
         pos = writeln('Rthrust =%9.3F'%(info['ref_thrust']), None)
-        pos = write(' MOTOR', get_st_color(info['st_mt']))
+        pos = write(' JOY', get_st_color(info['st_ct']))
+        pos = write('MOTOR', get_st_color(info['st_mt']))
         pos = write('AutoHeight', get_st_color(info['st_ah']))
-        pos = write('SmartDirection', get_st_color(info['st_sd']))
+        pos = write('Smart Dir.', get_st_color(info['st_sd']))
 
         self.dc_uavinfo.Blit(0, 0, sz[0],sz[1], mem, 0, 0)
         
@@ -510,9 +520,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
     
     def OnClose(self, event):
         print('Close window...')
-        #self.Bind(wx.EVT_IDLE, None)
         self.timer.Stop()
-        self.timer1.Stop()
         try:
             self.camcap.release()
         except AttributeError:

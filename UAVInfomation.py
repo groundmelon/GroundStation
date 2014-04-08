@@ -33,6 +33,7 @@ class InfoItem():
         self.YUp = init_val
         self.YUi = init_val
         self.YUd = init_val
+        self.st_ct = init_val # control type
         self.st_mt = init_val # motor state
         self.st_ah = init_val # auto height state
         self.st_sd = init_val # smart direction state
@@ -82,6 +83,21 @@ class UAVInfomation(object):
                 self.add_item()
         return
     
+    def update_status(self, data):
+        while True:
+            try:    
+                self.infobuf[-1].add('st_ct', data[0])
+                self.infobuf[-1].add('st_mt', data[1])
+                self.infobuf[-1].add('st_ah', data[2])
+                self.infobuf[-1].add('st_sd', data[3])
+                self.infobuf[-1].add('uavtime', data[-1])
+                break
+            except InfoItem.OverrideException:
+                self.add_item()
+            except IndexError:
+                self.add_item()
+        return
+    
     def update_ref(self, ref_roll, ref_pitch, ref_yaw, ref_thrust, ref_height):
         while True:
             try:
@@ -117,13 +133,13 @@ class UAVInfomation(object):
         while True:
             try:
                 self.infobuf[-1].add('PUd', PUd)
-#                 self.infobuf[-1].add('YUp', a)
-#                 self.infobuf[-1].add('YUi', b)
-#                 self.infobuf[-1].add('YUd', c)
-                self.infobuf[-1].add('st_mt', a)
-                self.infobuf[-1].add('st_ah', b)
-                self.infobuf[-1].add('st_sd', c)
-                self.infobuf[-1].add('uavtime', uavtime)
+                self.infobuf[-1].add('YUp', a)
+                self.infobuf[-1].add('YUi', b)
+                self.infobuf[-1].add('YUd', c)
+#                 self.infobuf[-1].add('st_mt', a)
+#                 self.infobuf[-1].add('st_ah', b)
+#                 self.infobuf[-1].add('st_sd', c)
+#                 self.infobuf[-1].add('uavtime', uavtime)
                 break
             except InfoItem.OverrideException, e:
                 self.add_item()
@@ -149,6 +165,7 @@ class UAVInfomation(object):
                 'st_mt': data.st_mt,
                 'st_ah': data.st_ah,
                 'st_sd': data.st_sd,
+                'st_ct': data.st_ct
                 }
     def get(self, index=-1):
         return self.get_by_index(index)

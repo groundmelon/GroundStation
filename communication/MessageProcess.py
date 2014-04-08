@@ -19,7 +19,7 @@ PKGTYPE_REF = 0x06
 PKGTYPE_U0 = 0x07 # U pitch P,I,D roll P,I
 PKGTYPE_U1 = 0x08 # roll D, MOTOR,AutoHeight,SmartDirection,UAVTIME
 PKGTYPE_PT = 0x09 # Pan/Tilt camera control
-PKGTYPE_SD = 0x0A # Smart Direction
+PKGTYPE_CTRL = 0x05 # Control information
 PKGTYPE_LOC = 0x0F # invalid
 PKGTYPE_SETPID = 0x55 # invalid
 
@@ -28,7 +28,9 @@ PKGTYPE_SETPID = 0x55 # invalid
 
 
 def pack(typ, body):
-    return ''.join([SNDHEAD, typ, body, SNDEND])
+    rtn = ''.join([SNDHEAD, typ, body, SNDEND])
+    assert len(rtn) == 23
+    return rtn
 
 def packbyte(b):
     return struct.pack('B', b)
@@ -42,7 +44,13 @@ def pack_adj_pid_para(para, axis):
 
 def pack_get_info():
     typ = packbyte(PKGTYPE_INFO)
-    body = '\x01\x00\x00\x00' + '\x00'*4*4
+    body = '\x00'*4*5
+    return pack(typ, body)
+
+def pack_control(ctrltype=0, smart_direction=0, p=0, r=0, y=0, t=0):
+    typ = packbyte(PKGTYPE_CTRL)
+    body = struct.pack('BBBB', ctrltype, 0, 0, smart_direction)
+    body = ''.join([body, struct.pack('<ffff', r, p, y, t)])
     return pack(typ, body)
 
 def pack_set_pid_para():
@@ -55,19 +63,29 @@ def pack_pt(p, r):
     body = ''.join([struct.pack('<ff', p, r),'\x00'*4*3])
     return pack(typ, body)
 
-def pack_smart_direction(switch):
-    typ = packbyte(PKGTYPE_SD)
-    if switch:
-        body = ''.join([struct.pack('<f',1500),'\x00'*4*4])
-    else:
-        body = ''.join([struct.pack('<f',800),'\x00'*4*4])
-    return pack(typ, body)    
     
 def unpack(buf):
-    rst = struct.unpack('<2B5fB', buf)
-    if (rst[0] == RCVHEAD) and (rst[-1] == RCVEND):
+    return unpack_5f(buf)
+#     rst = struct.unpack('<2B5fB', buf)
+#     if (rst[0] == RCVHEAD) and (rst[-1] == RCVEND):
+#         typ = rst[1]
+#         data = rst[2:-1]
+#         return (typ, data)
+#     else:
+#         return (None, None)
+
+def unpack_5f(buf):
+    return struct.unpack('<5f', buf)
+
+def unpack_type(buf):
+    rst = struct.unpack('<BB20sB', buf)
+    if (rst[0] == RCVHEAD) and (rst[3] == RCVEND):
         typ = rst[1]
-        data = rst[2:-1]
+        data = rst[2]
         return (typ, data)
     else:
         return (None, None)
+
+def unpack_ctrl(buf):
+    rst = struct.unpack('<16Bf', buf)
+    return rst

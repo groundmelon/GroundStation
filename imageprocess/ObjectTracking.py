@@ -8,6 +8,12 @@ import numpy as np
 import cv2
 import util
 
+# from Queue import Full as QFull
+# from Queue import Empty as QEmpty
+# from multiprocessing import Process
+# from multiprocessing import Queue
+# import os
+
 LINE_WIDTH = 5
 DRAG_COLOR = (255,0,0)
 OBJECT_MATCH_COLOR = (0, 0, 255)
@@ -218,7 +224,7 @@ class ObjectMatch(object):
         cv2.circle(rst_res, center, 3, OBJECT_MATCH_COLOR, LINE_WIDTH)
         
         sw.stop()
-        return (rst_img, util.Point(center), rst_res)
+        return (rst_img, [util.Point(center)], rst_res)
     
     def do_edge_match(self, src, arg=None, test=False):
         sw = util.SW('edge-tpl-match')
@@ -318,7 +324,7 @@ class ObjectMatch(object):
         msk_img = src[:,::-1,:]
         center = (0,0)
         
-        return (rst_img, util.Point(center), msk_img)
+        return (rst_img, [util.Point(center)], msk_img)
 
     def do_meanshift(self, src):         
         sw = util.SW('meanShift')
@@ -336,7 +342,7 @@ class ObjectMatch(object):
         cv2.rectangle(prj_img, (x,y), (x+w,y+h), OBJECT_MATCH_COLOR, LINE_WIDTH)
         
         sw.stop()
-        return rst_img, util.Point(center), prj_img
+        return rst_img, [util.Point(center)], prj_img
     
     def do_multi_meanshift(self, src, arg):
         if arg:
@@ -411,4 +417,29 @@ class ObjectMatch(object):
         
         sw.stop()
         return dst, pts, dst
+
+# def init_child_process(objmatch, fa2ch, ch2fa):
+#     while True:
+#         try:
+#             rst = fa2ch.get(block=True, timeout=10)
+#             if rst[0] == 'draw_circles':
+#                 objmatch.draw_circles()
+#         except QEmpty:
+#             break;
+#         try:
+#             ch2fa.put(rst+2,block=True, timeout=10)
+#         except QFull:
+#             break;
+#     print('Child PID %s Timeout Exit...'%os.getpid())
+# 
+# class ObjectMatchMultiProcess(object):        
+#     def __init__(self, rect, src, hist_channel = [0]):
+#         self.objmatch = ObjectMatch(rect, src, hist_channel)
+#         print('server PID %s'%os.getpid())
+#     
+#         self.fa2ch = Queue(1)
+#         self.ch2fa = Queue(1)
+#         
+#         child_proc = Process(target=init_child_process, args=(self.objmatch, self.fa2ch, self.ch2fa))
+#         child_proc.start()
         

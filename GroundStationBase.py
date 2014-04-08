@@ -422,7 +422,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_toggle_joystick = wx.Button( self.m_panel_uavctrl, wx.ID_ANY, u"开启摇杆", wx.DefaultPosition, wx.DefaultSize, 0 )
 		gbSizer7.Add( self.m_button_toggle_joystick, wx.GBPosition( 2, 0 ), wx.GBSpan( 1, 5 ), wx.ALIGN_CENTER|wx.ALL, 5 )
 		
-		self.m_staticText_joystick = wx.StaticText( self.m_panel_uavctrl, wx.ID_ANY, u"Joystick OFF", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_staticText_joystick = wx.StaticText( self.m_panel_uavctrl, wx.ID_ANY, u"Joystick OFF", wx.DefaultPosition, wx.Size( 200,200 ), wx.ALIGN_CENTRE|wx.ST_NO_AUTORESIZE )
 		self.m_staticText_joystick.Wrap( -1 )
 		self.m_staticText_joystick.SetFont( wx.Font( 9, 75, 90, 90, False, "Consolas" ) )
 		

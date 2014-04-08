@@ -10,6 +10,7 @@ import numpy as np
 
 COLORWHITE = (255, 255, 255)
 COLORBLACK = (0, 0, 0)
+COLORRED = (0,0,255)
 COLORLIGHTBLUE = (255, 0, 0)
 COLORWINDOWDEFAULT = (240,240,240)
 
@@ -86,12 +87,15 @@ class AttitudeDisplay(object):
                         [0,100]          # left bottom
                        ], dtype = 'int32')
         
-        cv2.fillConvexPoly(im_fill, pts, COLORLIGHTBLUE)
+        cv2.fillConvexPoly(im_fill, pts, COLORLIGHTBLUE, cv2.LINE_AA)
+        
+        
         
         mask = np.equal(self.im_pmask,255)
         im_rst = self.im_panel.copy()
         im_rst[mask] = im_fill[mask]
         
+        cv2.line(im_rst, (50,50), (int(50-45*math.sin(yaw)),int(50-45*math.cos(yaw))), COLORRED, 3, cv2.LINE_AA)
         #imgdata = cv2.cvtColor(np.uint8(im_rst), cv2.cv.CV_BGR2RGB)   
 
         return im_rst#(imgdata.shape[1], imgdata.shape[0], imgdata)
