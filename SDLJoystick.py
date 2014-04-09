@@ -38,9 +38,6 @@ class SDLJoystick():
     def quit(self):
         sdl2.joystick.SDL_JoystickClose(self.ptrJOY)
         sdl2.SDL_Quit()
-        
-    def __del__(self):
-        self.quit()
     
 
 if __name__ == '__main__':

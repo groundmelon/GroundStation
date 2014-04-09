@@ -7,6 +7,7 @@ encoding//debug/multiprocesstest.py=utf-8
 encoding//imageprocess/ImageCapture.py=utf-8
 encoding//imageprocess/MovieRecord.py=utf-8
 encoding//imageprocess/ObjectTracking.py=utf-8
+encoding//imageprocess/ObjectTrackingMultiProcess.py=utf-8
 encoding//imageprocess/VideoCaptureTest.py=utf-8
 encoding//imageprocess/cvtest.py=utf-8
 encoding//imageprocess/ipythonutil.py=utf-8

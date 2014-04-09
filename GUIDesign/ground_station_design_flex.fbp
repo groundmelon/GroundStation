@@ -2016,7 +2016,7 @@
                                     <object class="notebookpage" expanded="1">
                                         <property name="bitmap"></property>
                                         <property name="label">调参</property>
-                                        <property name="select">1</property>
+                                        <property name="select">0</property>
                                         <object class="wxPanel" expanded="0">
                                             <property name="BottomDockable">1</property>
                                             <property name="LeftDockable">1</property>
@@ -3178,7 +3178,7 @@
                                     <object class="notebookpage" expanded="1">
                                         <property name="bitmap"></property>
                                         <property name="label">目标跟踪</property>
-                                        <property name="select">0</property>
+                                        <property name="select">1</property>
                                         <object class="wxPanel" expanded="1">
                                             <property name="BottomDockable">1</property>
                                             <property name="LeftDockable">1</property>
@@ -3253,7 +3253,7 @@
                                             <event name="OnSetFocus"></event>
                                             <event name="OnSize"></event>
                                             <event name="OnUpdateUI"></event>
-                                            <object class="wxGridBagSizer" expanded="0">
+                                            <object class="wxGridBagSizer" expanded="1">
                                                 <property name="empty_cell_size"></property>
                                                 <property name="flexible_direction">wxBOTH</property>
                                                 <property name="growablecols"></property>
@@ -3525,14 +3525,14 @@
                                                         <event name="OnUpdateUI"></event>
                                                     </object>
                                                 </object>
-                                                <object class="gbsizeritem" expanded="0">
+                                                <object class="gbsizeritem" expanded="1">
                                                     <property name="border">0</property>
                                                     <property name="colspan">3</property>
                                                     <property name="column">1</property>
                                                     <property name="flag">wxEXPAND</property>
                                                     <property name="row">1</property>
                                                     <property name="rowspan">1</property>
-                                                    <object class="wxGridBagSizer" expanded="0">
+                                                    <object class="wxGridBagSizer" expanded="1">
                                                         <property name="empty_cell_size"></property>
                                                         <property name="flexible_direction">wxBOTH</property>
                                                         <property name="growablecols"></property>
@@ -4034,7 +4034,7 @@
                                                                 <property name="caption"></property>
                                                                 <property name="caption_visible">1</property>
                                                                 <property name="center_pane">0</property>
-                                                                <property name="choices">&quot;template&quot; &quot;edge-tpl&quot; &quot;meanshift&quot; &quot;multi-meanshift&quot; &quot;color&quot; &quot;mix&quot;</property>
+                                                                <property name="choices">&quot;template&quot; &quot;edge-tpl&quot; &quot;meanshift&quot; &quot;multi-meanshift&quot; &quot;mix&quot;</property>
                                                                 <property name="close_button">1</property>
                                                                 <property name="context_help"></property>
                                                                 <property name="context_menu">1</property>
@@ -4470,7 +4470,7 @@
                                     <object class="notebookpage" expanded="0">
                                         <property name="bitmap"></property>
                                         <property name="label">实时图像</property>
-                                        <property name="select">0</property>
+                                        <property name="select">1</property>
                                         <object class="wxPanel" expanded="0">
                                             <property name="BottomDockable">1</property>
                                             <property name="LeftDockable">1</property>
@@ -4948,7 +4948,7 @@
                                     <object class="notebookpage" expanded="1">
                                         <property name="bitmap"></property>
                                         <property name="label">UAV控制</property>
-                                        <property name="select">1</property>
+                                        <property name="select">0</property>
                                         <object class="wxPanel" expanded="1">
                                             <property name="BottomDockable">1</property>
                                             <property name="LeftDockable">1</property>

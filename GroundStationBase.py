@@ -261,7 +261,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_para_adj.SetSizer( gbSizer11 )
 		self.m_panel_para_adj.Layout()
 		gbSizer11.Fit( self.m_panel_para_adj )
-		self.m_notebook1.AddPage( self.m_panel_para_adj, u"调参", True )
+		self.m_notebook1.AddPage( self.m_panel_para_adj, u"调参", False )
 		self.m_panel_track = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), wx.TAB_TRAVERSAL )
 		self.m_panel_track.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
 		self.m_panel_track.Enable( False )
@@ -318,7 +318,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_toggle_track = wx.Button( self.m_panel_track, wx.ID_ANY, u"开始追踪", wx.DefaultPosition, wx.Size( 80,-1 ), 0 )
 		gbSizer4.Add( self.m_button_toggle_track, wx.GBPosition( 1, 2 ), wx.GBSpan( 1, 1 ), wx.ALL, 1 )
 		
-		m_choice_track_modeChoices = [ u"template", u"edge-tpl", u"meanshift", u"multi-meanshift", u"color", u"mix" ]
+		m_choice_track_modeChoices = [ u"template", u"edge-tpl", u"meanshift", u"multi-meanshift", u"mix" ]
 		self.m_choice_track_mode = wx.Choice( self.m_panel_track, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), m_choice_track_modeChoices, 0 )
 		self.m_choice_track_mode.SetSelection( 0 )
 		self.m_choice_track_mode.SetMaxSize( wx.Size( 80,-1 ) )
@@ -342,7 +342,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_track.SetSizer( gbSizer3 )
 		self.m_panel_track.Layout()
 		gbSizer3.Fit( self.m_panel_track )
-		self.m_notebook1.AddPage( self.m_panel_track, u"目标跟踪", False )
+		self.m_notebook1.AddPage( self.m_panel_track, u"目标跟踪", True )
 		self.m_panel_route = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.m_panel_route.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
 		
@@ -393,7 +393,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_image.SetSizer( gbSizer5 )
 		self.m_panel_image.Layout()
 		gbSizer5.Fit( self.m_panel_image )
-		self.m_notebook2.AddPage( self.m_panel_image, u"实时图像", False )
+		self.m_notebook2.AddPage( self.m_panel_image, u"实时图像", True )
 		self.m_panel_uavctrl = wx.Panel( self.m_notebook2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		gbSizer7 = wx.GridBagSizer( 0, 0 )
 		gbSizer7.SetFlexibleDirection( wx.BOTH )
@@ -432,7 +432,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_uavctrl.SetSizer( gbSizer7 )
 		self.m_panel_uavctrl.Layout()
 		gbSizer7.Fit( self.m_panel_uavctrl )
-		self.m_notebook2.AddPage( self.m_panel_uavctrl, u"UAV控制", True )
+		self.m_notebook2.AddPage( self.m_panel_uavctrl, u"UAV控制", False )
 		
 		gbSizer1.Add( self.m_notebook2, wx.GBPosition( 1, 2 ), wx.GBSpan( 1, 2 ), wx.ALIGN_LEFT|wx.ALIGN_TOP|wx.EXPAND, 0 )
 		

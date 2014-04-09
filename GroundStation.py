@@ -375,18 +375,18 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
                         rstbmp = util.cvimg_to_wxbmp(matchimg)
                 # 边缘检测-模板匹配模式
                 elif track_mode == 'edge-tpl':
-                    matchimg, center, edgeimg = self.objmatch.do_edge_match(srcimg,self.edge_arg)
+                    matchimg, center, edgeimg = self.objmatch.do_edge_match(srcimg, arg=self.edge_arg)
                     if display_process:
                         rstbmp = util.cvimg_to_wxbmp(edgeimg)
                     else:
                         rstbmp = util.cvimg_to_wxbmp(matchimg)
                 # 纯色匹配模式
-                elif track_mode == 'color':
-                    matchimg, center, mask = self.objmatch.do_color_match(srcimg)
-                    if display_process:
-                        rstbmp = util.cvimg_to_wxbmp(mask)
-                    else:
-                        rstbmp = util.cvimg_to_wxbmp(matchimg)
+#                 elif track_mode == 'color':
+#                     matchimg, center, mask = self.objmatch.do_color_match(srcimg)
+#                     if display_process:
+#                         rstbmp = util.cvimg_to_wxbmp(mask)
+#                     else:
+#                         rstbmp = util.cvimg_to_wxbmp(matchimg)
                 # MeanShift匹配模式
                 elif track_mode == 'meanshift':
                     matchimg, center, prj_img = self.objmatch.do_meanshift(srcimg)
@@ -396,14 +396,14 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
                         rstbmp = util.cvimg_to_wxbmp(matchimg)
                 # 多目标MeanShift匹配模式
                 elif track_mode == 'multi-meanshift':
-                    matchimg, center, prj_img = self.objmatch.do_multi_meanshift(srcimg, self.multimean_arg)
+                    matchimg, center, prj_img = self.objmatch.do_multi_meanshift(srcimg, arg=self.multimean_arg)
                     if display_process:
                         rstbmp = util.cvimg_to_wxbmp(prj_img)
                     else:
                         rstbmp = util.cvimg_to_wxbmp(matchimg)
                 # 混合匹配模式
                 elif track_mode == 'mix':
-                    matchimg, center, _ = self.objmatch.do_mix(srcimg, self.multimean_arg, self.edge_arg)    
+                    matchimg, center, _ = self.objmatch.do_mix(srcimg, multimean_arg=self.multimean_arg, edgetpl_arg=self.edge_arg)    
                     rstbmp = util.cvimg_to_wxbmp(matchimg)
             # 更新track bitmap 界面
             memtrack.SelectObject(rstbmp)
@@ -521,10 +521,10 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
     def OnClose(self, event):
         print('Close window...')
         self.timer.Stop()
-        try:
-            self.camcap.release()
-        except AttributeError:
-            print('No camcap, release failed.')
+#         try:
+#             self.camcap.release()
+#         except AttributeError:
+#             print('No camcap, release failed.')
         if self.m_button_toggle_xbee.is_running:
             self.close_xbee(self.m_button_toggle_xbee)
         if self.m_button_toggle_track_video.is_running:

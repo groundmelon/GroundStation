@@ -8,11 +8,13 @@ import numpy as np
 import cv2
 import util
 
-# from Queue import Full as QFull
-# from Queue import Empty as QEmpty
-# from multiprocessing import Process
-# from multiprocessing import Queue
-# import os
+from Queue import Full as QFull
+from Queue import Empty as QEmpty
+import multiprocessing
+from multiprocessing import Process
+from multiprocessing import JoinableQueue
+import os
+import sys
 
 LINE_WIDTH = 5
 DRAG_COLOR = (255,0,0)
@@ -82,7 +84,7 @@ def get_selection_rect(src_size, drag_data, bitmap_size):
     return (left_top, right_bottom)
 
 # ---- 目标匹配相关 ----
-class ObjectMatch(object):
+class ObjectMatchMultiProcess(object):
     def __init__(self, rect, src, hist_channel = [0]):
         lt = rect[0]
         rb = rect[1]
@@ -198,8 +200,8 @@ class ObjectMatch(object):
         #print '%d & %d -> %s'%(len(pts0),len(pts1),str(rst)),
         return rst
     
-    def do_tpl_match(self, src):
-        sw = util.SW('tpl-match')
+    def do_tpl_match(self, src, kargs={}):
+#         sw = util.SW('tpl-match')
         
         methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
             'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
@@ -224,16 +226,18 @@ class ObjectMatch(object):
         cv2.putText(rst_res,'%f'%max_val, (0,rst_res.shape[0]), cv2.FONT_HERSHEY_SIMPLEX, 1, OBJECT_MATCH_COLOR)
         cv2.circle(rst_res, center, 3, OBJECT_MATCH_COLOR, LINE_WIDTH)
         
-        sw.stop()
+#         sw.stop()
         return (rst_img, [util.Point(center)], rst_res)
     
-    def do_edge_match(self, src, arg=None, test=False):
-        sw = util.SW('edge-tpl-match')
+    def do_edge_match(self, src, kargs={}, test=False):
+#         sw = util.SW('edge-tpl-match')
         
-        if arg:
-            match_scale = arg
+        # ---- 参数处理 -----
+        if kargs.get('arg'):
+            match_scale = kargs['arg']
         else:
             match_scale = 0.1
+        
         src_edge = cv2.Canny(src, 100,200)
         
         methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
@@ -263,19 +267,22 @@ class ObjectMatch(object):
         cv2.rectangle(rst_edge,tl, br, OBJECT_MATCH_COLOR, LINE_WIDTH)
         cv2.putText(rst_edge,'%.2f'%max_val, (0,rst_edge.shape[0]), cv2.FONT_HERSHEY_SIMPLEX, 2, OBJECT_MATCH_COLOR, LINE_WIDTH)
         
-        sw.stop()
+#         sw.stop()
         if test:
             return max_val
         else:
             return (rst_img, [center], rst_edge)
         
-    def do_multi_edge_match(self, src, arg=None, test=False):
-        sw = util.SW('multi-edge-tpl-match')
+    def do_multi_edge_match(self, src, kargs={}):
+#         sw = util.SW('multi-edge-tpl-match')
         
-        if arg:
-            match_scale = arg
+        # ---- 参数处理 -----
+        assert kargs.has_key('arg'), 'No arg naming "arg"'
+        if kargs.get('arg'):
+            match_scale = kargs['arg']
         else:
             match_scale = 0.95
+        
         src_edge = cv2.Canny(src, 100,200)
         
         methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
@@ -299,12 +306,12 @@ class ObjectMatch(object):
         h = self.track_window[3]
         center = [util.Point(d.x+w/2, d.y+h/2) for d in dots]      
         
-        sw.stop()
+#         sw.stop()
         return (None, center, None)
     
-    def do_color_match(self, src):
-        sw = util.SW('color-match')
-        print 'test',
+    def do_color_match(self, src, kargs={}):
+#         sw = util.SW('color-match')
+
 #         hls = cv2.cvtColor(src, cv2.COLOR_BGR2HLS)
 #         mask1 = cv2.inRange(hls, self.threshold[0], self.threshold[1])
 #         mask2 = cv2.inRange(hls, self.threshold[2], self.threshold[3])
@@ -320,15 +327,15 @@ class ObjectMatch(object):
 #         cv2.circle(rst_img, center, self.radius, OBJECT_MATCH_COLOR, LINE_WIDTH)
 #         msk_img = cv2.cvtColor(filted_mask, cv2.COLOR_GRAY2BGR)
         
-        sw.stop()
+#         sw.stop()
         rst_img = src[::-1,:,:]
         msk_img = src[:,::-1,:]
         center = (0,0)
         
         return (rst_img, [util.Point(center)], msk_img)
 
-    def do_meanshift(self, src):         
-        sw = util.SW('meanShift')
+    def do_meanshift(self, src, kargs={}):         
+#         sw = util.SW('meanShift')
         
         hls = cv2.cvtColor(src, cv2.COLOR_BGR2HLS)
         dst = cv2.calcBackProject([hls], self.hist_channel, self.roi_hist, [0,180], 1)
@@ -342,16 +349,19 @@ class ObjectMatch(object):
         prj_img = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
         cv2.rectangle(prj_img, (x,y), (x+w,y+h), OBJECT_MATCH_COLOR, LINE_WIDTH)
         
-        sw.stop()
+#         sw.stop()
         return rst_img, [util.Point(center)], prj_img
     
-    def do_multi_meanshift(self, src, arg):
-        if arg:
-            effect_value_multiplier = arg
-        else:
-            effect_value_multiplier = 3
+    def do_multi_meanshift(self, src, kargs={}):
         
-        sw = util.SW('multi-meanShift')
+        # ---- 参数处理 -----
+        assert kargs.has_key('arg'), 'No arg naming "arg"'
+        if kargs.get('arg'):
+            effect_value_multiplier = kargs['arg']
+        else:
+            effect_value_multiplier = 3 
+        
+#         sw = util.SW('multi-meanShift')
         
         hls = cv2.cvtColor(src, cv2.COLOR_BGR2HLS)
         dst = cv2.calcBackProject([hls], self.hist_channel, self.roi_hist, [0,180], 1)
@@ -387,17 +397,6 @@ class ObjectMatch(object):
             center = util.Point(int(window[0]+window[2]/2), int(window[1]+window[3]/2))
             center_list.append(center)
             center_list = self.remove_near_points(center_list)
-#             if not center_list:
-#                 center_list.append(center)
-#             else:
-#                 dumplicate = False
-#                 for each in center_list:
-#                     d2 = (center[0]-each[0])**2+(center[1]-each[1])**2
-#                     if d2 < self.d2_th:
-#                         dumplicate = True
-#                 if not dumplicate:
-#                     center_list.append(center)
-        #print('---- valid center ----\n%s'%str(center_list))
             
         rst_img = src.copy()
         for c in center_list:
@@ -405,42 +404,115 @@ class ObjectMatch(object):
         
         prj_img = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
         
-        sw.stop()
+#         sw.stop()
         return rst_img, center_list, prj_img
     
-    def do_mix(self, src, multimean_arg, edgetpl_arg):
-        sw = util.SW('mix')
+    def do_mix(self, src, kargs={}):
+#         sw = util.SW('mix')
         
-        _, pts0, _ = self.do_multi_meanshift(src, multimean_arg)
-        _, pts1, _ = self.do_multi_edge_match(src, edgetpl_arg)
+        # ---- 参数处理 -----
+        assert kargs.has_key('multimean_arg')
+        assert kargs.has_key('edgetpl_arg')
+        multimean_arg = kargs.get('multimean_arg')
+        edgetpl_arg = kargs.get('edgetpl_arg')
+        
+        _, pts0, _ = self.do_multi_meanshift(src, {'arg':multimean_arg})
+        _, pts1, _ = self.do_multi_edge_match(src, {'arg':edgetpl_arg})
         pts = self.pick_near_points(pts0, pts1)
         dst = self.draw_circles(src, pts)
         
-        sw.stop()
+#         sw.stop()
         return dst, pts, dst
 
-# def init_child_process(objmatch, fa2ch, ch2fa):
-#     while True:
-#         try:
-#             rst = fa2ch.get(block=True, timeout=10)
-#             if rst[0] == 'draw_circles':
-#                 objmatch.draw_circles()
-#         except QEmpty:
-#             break;
-#         try:
-#             ch2fa.put(rst+2,block=True, timeout=10)
-#         except QFull:
-#             break;
-#     print('Child PID %s Timeout Exit...'%os.getpid())
-# 
-# class ObjectMatchMultiProcess(object):        
-#     def __init__(self, rect, src, hist_channel = [0]):
-#         self.objmatch = ObjectMatch(rect, src, hist_channel)
-#         print('server PID %s'%os.getpid())
-#     
-#         self.fa2ch = Queue(1)
-#         self.ch2fa = Queue(1)
-#         
-#         child_proc = Process(target=init_child_process, args=(self.objmatch, self.fa2ch, self.ch2fa))
-#         child_proc.start()
+def child_process(lock, fa2ch, ch2fa, objmatch):
+    '''目标匹配子进程的执行函数
+    
+    '''
+    with lock:
+        print('Child PID %s Start'%os.getpid())
+        sys.stdout.flush()
+    
+    while True:
+        try:
+            rst = None
+            args = fa2ch.get(block=True, timeout=5)
+            # objmatch.do_***_match(src=args[1], **kargs=args[2])
+            with lock:
+                if args[0] == 'do_tpl_match':
+                    rst = objmatch.do_tpl_match(args[1], args[2])
+                elif args[0] == 'do_edge_match':
+                    rst = objmatch.do_edge_match(args[1], args[2])
+                elif args[0] == 'do_meanshift':
+                    rst = objmatch.do_meanshift(args[1], args[2])
+                elif args[0] == 'do_multi_meanshift':
+                    rst = objmatch.do_multi_meanshift(args[1], args[2])
+                elif args[0] == 'do_mix':
+                    rst = objmatch.do_mix(args[1], args[2])
+                else:
+                    assert False, 'invalid match type!'
+        except QEmpty:
+            break;# timeout, main process is terminated, exit loop
+        try:
+            if rst:
+                ch2fa.put(rst,block=True, timeout=5)
+        except QFull:
+            break;# timeout, main process is terminated, exit loop
+    
+    ch2fa.cancel_join_thread()
+    with lock:
+        print('Child PID %s Timeout Exit...'%os.getpid())
+        sys.stdout.flush()
+
+    return
+
+class ObjectMatch(object):        
+    def __init__(self, rect, src, hist_channel = [0]):
+        self.objmatch = ObjectMatchMultiProcess(rect, src, hist_channel)
+        self.last_rst = (src, 
+                         [util.Point((rect[0].x+rect[1].x)/2,(rect[0].y+rect[1].y)/2)],
+                         src)
+        self.lock = multiprocessing.Lock()
+        self.fa2ch = JoinableQueue(1)
+        self.ch2fa = JoinableQueue(1)
+        with self.lock:
+            print('server PID %s'%os.getpid())
+            sys.stdout.flush()
+        child_proc = Process(target=child_process, args=(self.lock, self.fa2ch, self.ch2fa, self.objmatch))
+        child_proc.start()
+        
+        
+    
+    def draw_circles(self, src, center, color=None, radius=20):
+        return self.objmatch.draw_circles(src, center, color, radius)
+    
+    def do_match(self, methodstr, src, kargs):
+        try:
+            self.fa2ch.put((methodstr,src,kargs), block=False)
+        except QFull:
+            pass
+        rst = None
+        try:    
+            rst = self.ch2fa.get(block=False, timeout=0)
+        except QEmpty:
+            pass
+        if rst is not None:
+            self.last_rst = rst
+        return self.last_rst
+    
+    def do_tpl_match(self, src, **kargs):
+        return self.do_match('do_tpl_match', src, kargs)
+    
+    def do_edge_match(self, src, **kargs):
+        return self.do_match('do_edge_match', src, kargs)
+    
+    def do_meanshift(self, src, **kargs):
+        return self.do_match('do_meanshift', src, kargs)
+    
+    def do_multi_meanshift(self, src, **kargs):
+        return self.do_match('do_multi_meanshift', src, kargs)
+    
+    def do_mix(self, src, **kargs):
+        return self.do_match('do_mix', src, kargs)
+    
+    
         

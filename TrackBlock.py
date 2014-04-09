@@ -9,7 +9,9 @@ from GroundStationBase import FrameGroundStationBase
 import wx
 import util
 from Definition import *
-import imageprocess.ObjectTracking as Objtrack
+# import imageprocess.ObjectTracking as Objtrack
+import imageprocess.ObjectTrackingMultiProcess as Objtrack
+
 from TrackAlgorithm import TrackController
 
 class DragInfomation(object):
