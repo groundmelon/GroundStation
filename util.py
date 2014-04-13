@@ -66,16 +66,15 @@ def toggle_button(comp, stop_label, running_label):
     comp.is_running = not comp.is_running
 
 def cvimg_to_wxbmp(cvimg):        
-    #img = cv2.cvtColor(np.uint8(cvimg), cv2.cv.CV_BGR2RGB)
-    img = cv2.cvtColor(np.uint8(cvimg), cv2.COLOR_BGR2RGB)
-    bmp = wx.BitmapFromBuffer(img.shape[1], img.shape[0], img )
+    img = cvimg[:,:,::-1].copy() # change BGR to RGB and make img in a continuous memory segment
+    bmp = wx.BitmapFromBuffer(img.shape[1], img.shape[0], img)
     return bmp
 
 def wxbmp_to_cvimg(wxbmp):
     shape = (wxbmp.Size[1], wxbmp.Size[0],3)
     buf = np.ndarray(shape, dtype=np.uint8)
     wxbmp.CopyToBuffer(buf, wx.BitmapBufferFormat_RGB)
-    cvimg = cv2.cvtColor(buf, cv2.COLOR_RGB2BGR)
+    cvimg = buf[:,:,::-1]
     
     return cvimg
 
@@ -99,11 +98,11 @@ class SW(object):
     def stop(self):
         if self.display:
             now_time = time.clock()
-            #print('[%s] %.3fms'%(self.s,(now_time-self.start_time)*1000))
-    def pause(self):
+            print('[%s] %.3fms'%(self.s,(now_time-self.start_time)*1000))
+    def pause(self, s=''):
         if self.display:
             now_time = time.clock()
-            #print('[%s P] %.3fms'%(self.s,(now_time-self.start_time)*1000))
+            print('[%s.%s] %.3fms'%(self.s, s, (now_time-self.start_time)*1000))
         
 NULLIMG = r'resources\null.bmp'
 def get_null_bitmap():

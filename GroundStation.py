@@ -23,12 +23,12 @@ import communication.MessageProcess as MsgPrcs
 
 import util
 import os
+import sys
 import wx
 import wx.html2
 import time
 
 from Definition import *
-from imageprocess.ObjectTracking import get_adjusted_image
 
 
 MAIN_TASK_FREQ = 20 # 20Hz
@@ -76,7 +76,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         self.enable_comm_relative_components(False)
         
         #---- init video block ----
-        self.cap_dev_num = 1
+        self.cap_dev_num = 0
         self.enable_video_components(False)
         self.video_window = None
         
@@ -327,6 +327,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         if DISPLAY_VIDEO in worklist:
             srcimg = self.camcap.get_frame()
             wxbmp = util.cvimg_to_wxbmp(srcimg)
+            wximg = wx.ImageFromBitmap(wxbmp)
             memvideo = wx.MemoryDC()
             memvideo.SelectObject(wxbmp)
 
@@ -344,18 +345,21 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
             self.dc_video.Blit(0, 0, self.bitmap_video_size[0], self.bitmap_video_size[1], memvideo, 0, 0)
             memvideo.SelectObject(wx.NullBitmap)
             
-            
+        
         if RECORD_VIDEO in worklist:
             self.mov_rec.save_frame(wxbmp)
             
         if DISPLAY_INDEPENDENT_VIDEO in worklist:
-            self.video_window.update_image_with_info(srcimg, self.UAVinfo.get_information_in_InfoEntries())
+            self.video_window.update_image_with_info1(wximg, self.UAVinfo.get_information_in_InfoEntries())
+        
+       
         # 结束图像传输需要先停止track
         if DISPLAY_TRACK_VIDEO in worklist:       
             memtrack = wx.MemoryDC()
             # 显示原始图像
             if self.display_track_state == DISPLAY_TRACK_STATE_RAW:
-                rstimg = self.get_adjusted_image(srcimg)
+                #rstimg = self.get_adjusted_image(srcimg)
+                rstimg = srcimg
                 rstbmp = util.cvimg_to_wxbmp(rstimg)           
             # 正在框选状态
             elif self.display_track_state == DISPLAY_TRACK_STATE_SELECTION:
@@ -401,6 +405,18 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
                         rstbmp = util.cvimg_to_wxbmp(prj_img)
                     else:
                         rstbmp = util.cvimg_to_wxbmp(matchimg)
+                elif track_mode == 'gray-meanshift':
+                    matchimg, center, prj_img = self.objmatch.do_gray_meanshift(srcimg)
+                    if display_process:
+                        rstbmp = util.cvimg_to_wxbmp(prj_img)
+                    else:
+                        rstbmp = util.cvimg_to_wxbmp(matchimg)
+                elif track_mode == 'optical-flow':
+                    matchimg, center, prj_img = self.objmatch.do_optical_flow(srcimg)
+                    if display_process:
+                        rstbmp = util.cvimg_to_wxbmp(prj_img)
+                    else:
+                        rstbmp = util.cvimg_to_wxbmp(matchimg)
                 # 混合匹配模式
                 elif track_mode == 'mix':
                     matchimg, center, _ = self.objmatch.do_mix(srcimg, multimean_arg=self.multimean_arg, edgetpl_arg=self.edge_arg)    
@@ -410,6 +426,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
             memtrack.SetUserScale(float(srcimg.shape[1])/float(self.bitmap_track_size[0]),
                              float(srcimg.shape[0])/float(self.bitmap_track_size[1]))
             self.dc_track.Blit(0, 0, self.bitmap_track_size[0], self.bitmap_track_size[1], memtrack, 0, 0)
+            a = time.clock()
                 
         
         if TRACK_OBJECT in worklist:
@@ -425,7 +442,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
             self.dc_track.Blit(0, 0, self.bitmap_track_size[0], self.bitmap_track_size[1], memtrack, 0, 0)
         
         n = time.clock()
-        #print('[work time]%4.4f [cir time]%4.4f'%((n-a)*1000,(n-self.lasttime)*1000))
+#         print('[work time]%4.4f [cir time]%4.4f'%((n-a)*1000,(n-self.lasttime)*1000))
         self.lasttime = n
     
 #------ Tool Function ------       

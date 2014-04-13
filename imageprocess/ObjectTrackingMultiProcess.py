@@ -15,10 +15,12 @@ from multiprocessing import Process
 from multiprocessing import JoinableQueue
 import os
 import sys
+import math
 
 LINE_WIDTH = 5
 DRAG_COLOR = (255,0,0)
 OBJECT_MATCH_COLOR = (0, 0, 255)
+SELECTPADDING = 10
 HUE_DELTA = 30
 SAT_DELTA = 30
 LIG_DELTA = 30
@@ -50,7 +52,7 @@ def get_dragging_image(src, drag_data, bitmap_size):
     @param drag_data:拖拽数据 
     @param bitmap_size:显示区域的尺寸
     @return: 画框的图像
-    '''
+    ''' 
     img = src.copy()
     width = src.shape[1]
     height = src.shape[0]
@@ -72,7 +74,7 @@ def get_selection_rect(src_size, drag_data, bitmap_size):
     @param bitmap_size:显示区域的尺寸
     @return: 画框的图像
     '''
-    width = src_size[1]
+    width  = src_size[1]
     height = src_size[0]
     bw = bitmap_size[0] # bitmap width
     bh = bitmap_size[1] # bitmap height
@@ -94,7 +96,7 @@ class ObjectMatchMultiProcess(object):
         self.hist_channel = hist_channel
         # ---- preparation for template match ----
         self.object_template =  roi
-        
+         
         # ---- preparation for edge template match ----
         self.edge_tpl = cv2.Canny(roi, CANNY_MIN, CANNY_MAX)
         
@@ -116,7 +118,7 @@ class ObjectMatchMultiProcess(object):
 #         elif (180-HUE_DELTA) < hue < HUE_DELTA:
 #             self.threshold.append(np.array([hue-HUE_DELTA,     sat_lower, lig_lower]))
 #             self.threshold.append(np.array([180,               sat_upper, lig_upper]))
-#             self.threshold.append(np.array([0,                 sat_lower, lig_lower]))
+#             self .threshold.append(np.array([0,                 sat_lower, lig_lower]))
 #             self.threshold.append(np.array([hue+HUE_DELTA-180, sat_upper, lig_upper])) 
 #         else: #正常情况
 #             self.threshold.append(np.array([hue-HUE_DELTA, sat_lower, lig_lower]))
@@ -139,6 +141,23 @@ class ObjectMatchMultiProcess(object):
         # ---- preparation for multi-meanShift ----
         #self.d2_th = (src.shape[1]**2 + src.shape[0]**2) * (MULTI_SPLIT_SCALE**2) 
         self.d2_th = self.radius ** 2
+
+        # ---- preparation for gray-meanShift ----
+        gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+#         mask = cv2.inRange(gray_roi, np.array((0.)), np.array((255.)))
+        self.roi_gray_hist = cv2.calcHist([gray_roi], [0], None, [255], [0,255])
+        cv2.normalize(self.roi_gray_hist, self.roi_gray_hist, 0, 255, cv2.NORM_MINMAX)
+                
+        # ---- preparation for optical flow ----
+        feature_params = dict( maxCorners = 100,
+                       qualityLevel = 0.3,
+                       minDistance = 10,
+                       blockSize = 7 )
+        self.old_gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
+        self.opmask = np.zeros_like(self.old_gray, np.uint8)
+        self.opmask[(lt.y-SELECTPADDING):(rb.y+SELECTPADDING), (lt.x-SELECTPADDING):(rb.x+SELECTPADDING)]=255
+        self.p0 = cv2.goodFeaturesToTrack(self.old_gray, mask = self.opmask, **feature_params)
+        self.ofc = self.center
         
         #---- 测试各种方法是否有效 ----
         self.do_tpl_match(src)
@@ -200,11 +219,51 @@ class ObjectMatchMultiProcess(object):
         #print '%d & %d -> %s'%(len(pts0),len(pts1),str(rst)),
         return rst
     
-    def do_tpl_match(self, src, kargs={}):
+    def do_optical_flow(self, src, **kargs):
+        frame_gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
+        p0 = self.p0
+
+        # calculate optical flow
+        p1, st, err = cv2.calcOpticalFlowPyrLK(self.old_gray, frame_gray, p0, None, 
+                                               winSize  = (15,15),
+                                               maxLevel = 2,
+                                               criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03))
+        
+        # Select good points
+        good_new = p1[st==1]
+        good_old = p0[st==1]
+        rstmsk = np.zeros(good_new.shape[0], dtype=np.bool8)
+        
+        for i,pt in enumerate(good_new):
+            rstmsk[i] = np.bool8(math.sqrt((pt[0]-self.ofc.x)**2+(pt[1]-self.ofc.y)**2)<=(self.radius+SELECTPADDING))
+        
+        tmp = good_new[rstmsk]
+        good_new = tmp
+        tmp = good_old[rstmsk]
+        good_old = tmp
+        
+        tmp = np.average(good_new, axis=0)
+        self.ofc = util.Point(int(tmp[0]),int(tmp[1]))
+        
+        dst = src.copy()
+        try:
+            self.oflines
+        except AttributeError:
+            self.oflines = np.zeros_like(src, dtype=np.uint8)
+        
+        for n,o in zip(good_new, good_old):
+            cv2.circle(dst,tuple(n),5,OBJECT_MATCH_COLOR,-1)# filled circle
+            cv2.line(self.oflines,tuple(n),tuple(o),OBJECT_MATCH_COLOR,2)# filled circle
+        self.old_gray = frame_gray
+        self.p0 = good_new.reshape(-1,1,2)
+        
+        return dst, [self.ofc], cv2.add(self.oflines,src)
+    
+    def do_tpl_match(self, src, **kargs):
 #         sw = util.SW('tpl-match')
         
         methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
-            'cv2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
+            'c v2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
         method = eval(methods[0])
         res = cv2.matchTemplate(src, self.object_template, method)
         min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
@@ -226,10 +285,10 @@ class ObjectMatchMultiProcess(object):
         cv2.putText(rst_res,'%f'%max_val, (0,rst_res.shape[0]), cv2.FONT_HERSHEY_SIMPLEX, 1, OBJECT_MATCH_COLOR)
         cv2.circle(rst_res, center, 3, OBJECT_MATCH_COLOR, LINE_WIDTH)
         
-#         sw.stop()
+#         sw. stop()
         return (rst_img, [util.Point(center)], rst_res)
     
-    def do_edge_match(self, src, kargs={}, test=False):
+    def do_edge_match(self, src, test=False, **kargs):
 #         sw = util.SW('edge-tpl-match')
         
         # ---- 参数处理 -----
@@ -273,7 +332,7 @@ class ObjectMatchMultiProcess(object):
         else:
             return (rst_img, [center], rst_edge)
         
-    def do_multi_edge_match(self, src, kargs={}):
+    def do_multi_edge_match(self, src, **kargs):
 #         sw = util.SW('multi-edge-tpl-match')
         
         # ---- 参数处理 -----
@@ -309,12 +368,12 @@ class ObjectMatchMultiProcess(object):
 #         sw.stop()
         return (None, center, None)
     
-    def do_color_match(self, src, kargs={}):
+    def do_color_match(self, src, **kargs):
 #         sw = util.SW('color-match')
 
 #         hls = cv2.cvtColor(src, cv2.COLOR_BGR2HLS)
 #         mask1 = cv2.inRange(hls, self.threshold[0], self.threshold[1])
-#         mask2 = cv2.inRange(hls, self.threshold[2], self.threshold[3])
+#          mask2 = cv2.inRange(hls, self.threshold[2], self.threshold[3])
 #         mask = cv2.bitwise_or(mask1, mask2)
 #         filted_mask = cv2.medianBlur(mask, int(self.radius/2) + (self.radius/2)%2 - 1)
 #         rtn = cv2.moments(filted_mask)
@@ -334,9 +393,9 @@ class ObjectMatchMultiProcess(object):
         
         return (rst_img, [util.Point(center)], msk_img)
 
-    def do_meanshift(self, src, kargs={}):         
+    def do_meanshift(self, src, **kargs):         
 #         sw = util.SW('meanShift')
-        
+         
         hls = cv2.cvtColor(src, cv2.COLOR_BGR2HLS)
         dst = cv2.calcBackProject([hls], self.hist_channel, self.roi_hist, [0,180], 1)
         
@@ -352,22 +411,37 @@ class ObjectMatchMultiProcess(object):
 #         sw.stop()
         return rst_img, [util.Point(center)], prj_img
     
-    def do_multi_meanshift(self, src, kargs={}):
+    def do_gray_meanshift(self, src,**kargs):
+        sw=util.SW('gray')
+        
+        gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
+        dst = cv2.calcBackProject([gray], [0], self.roi_gray_hist, [0,255], 1)
+    
+        ret, window = cv2.meanShift(dst, self.track_window, self.term_crit)
+        self.track_window = window
+        x,y,w,h = window
+        center = (int(x+w/2), int(y+h/2))
+        rst_img = cv2.cvtColor(gray, cv2.COLOR_GRAY2BGR)
+        cv2.rectangle(rst_img, (x,y), (x+w,y+h), OBJECT_MATCH_COLOR, LINE_WIDTH)
+        prj_img = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
+        cv2.rectangle(prj_img, (x,y), (x+w,y+h), OBJECT_MATCH_COLOR, LINE_WIDTH)
+        
+        sw.stop()
+        return rst_img, [util.Point(center)], prj_img
+    
+    def do_multi_meanshift(self, src, **kargs):
         
         # ---- 参数处理 -----
         assert kargs.has_key('arg'), 'No arg naming "arg"'
         if kargs.get('arg'):
             effect_value_multiplier = kargs['arg']
-        else:
+        else: 
             effect_value_multiplier = 3 
         
 #         sw = util.SW('multi-meanShift')
         
         hls = cv2.cvtColor(src, cv2.COLOR_BGR2HLS)
         dst = cv2.calcBackProject([hls], self.hist_channel, self.roi_hist, [0,180], 1)
-        #dst = cv2.medianBlur(dst, 11)
-        #dst = cv2.medianBlur(dst, int(self.radius/2) + (self.radius/2)%2 - 1)
-        #dst = cv2.inRange(dst, 100, 255)
         win_w = self.track_window_origin[2]
         win_h = self.track_window_origin[3]
         
@@ -407,7 +481,7 @@ class ObjectMatchMultiProcess(object):
 #         sw.stop()
         return rst_img, center_list, prj_img
     
-    def do_mix(self, src, kargs={}):
+    def do_mix(self, src, **kargs):
 #         sw = util.SW('mix')
         
         # ---- 参数处理 -----
@@ -439,15 +513,19 @@ def child_process(lock, fa2ch, ch2fa, objmatch):
             # objmatch.do_***_match(src=args[1], **kargs=args[2])
             with lock:
                 if args[0] == 'do_tpl_match':
-                    rst = objmatch.do_tpl_match(args[1], args[2])
+                    rst = objmatch.do_tpl_match(args[1], **args[2])
                 elif args[0] == 'do_edge_match':
-                    rst = objmatch.do_edge_match(args[1], args[2])
+                    rst = objmatch.do_edge_match(args[1], **args[2])
                 elif args[0] == 'do_meanshift':
-                    rst = objmatch.do_meanshift(args[1], args[2])
+                    rst = objmatch.do_meanshift(args[1], **args[2])
                 elif args[0] == 'do_multi_meanshift':
-                    rst = objmatch.do_multi_meanshift(args[1], args[2])
+                    rst = objmatch.do_multi_meanshift(args[1], **args[2])
+                elif args[0] == 'do_gray_meanshift':
+                    rst = objmatch.do_gray_meanshift(args[1], **args[2])
                 elif args[0] == 'do_mix':
-                    rst = objmatch.do_mix(args[1], args[2])
+                    rst = objmatch.do_mix(args[1], **args[2])
+                elif args[0] == 'do_optical_flow':
+                    rst = objmatch.do_optical_flow(args[1], **args[2])
                 else:
                     assert False, 'invalid match type!'
         except QEmpty:
@@ -485,7 +563,7 @@ class ObjectMatch(object):
     def draw_circles(self, src, center, color=None, radius=20):
         return self.objmatch.draw_circles(src, center, color, radius)
     
-    def do_match(self, methodstr, src, kargs):
+    def do_match(self, methodstr, src, **kargs):
         try:
             self.fa2ch.put((methodstr,src,kargs), block=False)
         except QFull:
@@ -500,19 +578,25 @@ class ObjectMatch(object):
         return self.last_rst
     
     def do_tpl_match(self, src, **kargs):
-        return self.do_match('do_tpl_match', src, kargs)
+        return self.do_match('do_tpl_match', src, **kargs)
     
     def do_edge_match(self, src, **kargs):
-        return self.do_match('do_edge_match', src, kargs)
+        return self.do_match('do_edge_match', src, **kargs)
     
     def do_meanshift(self, src, **kargs):
-        return self.do_match('do_meanshift', src, kargs)
+        return self.do_match('do_meanshift', src, **kargs)
     
     def do_multi_meanshift(self, src, **kargs):
-        return self.do_match('do_multi_meanshift', src, kargs)
+        return self.do_match('do_multi_meanshift', src, **kargs)
+    
+    def do_gray_meanshift(self, src, **kargs):
+        return self.do_match('do_gray_meanshift', src, **kargs)
     
     def do_mix(self, src, **kargs):
-        return self.do_match('do_mix', src, kargs)
+        return self.do_match('do_mix', src, **kargs)
+    
+    def do_optical_flow(self, src, **kargs):
+        return self.do_match('do_optical_flow', src, **kargs)
     
     
         

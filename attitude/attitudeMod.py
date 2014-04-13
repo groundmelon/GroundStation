@@ -56,7 +56,7 @@ class AttitudeDisplay(object):
                                              
         
     def generate_attitude_bitmap(self, pitch, roll, yaw, is_radius = True):
-        if not all((pitch,roll,yaw)):
+        if [item==(None or float('nan')) for item in (pitch, roll, yaw)] is not [True,True,True]:
             pitch = 0
             roll = 0
             yaw = 0

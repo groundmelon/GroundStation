@@ -10,13 +10,13 @@ import numpy as np
 import time
 
 # test two methods
-cam = Device(devnum=1)
+cam = Device(devnum=0)
 cam.displayCaptureFilterProperties()
 cam.displayCapturePinProperties()
 
 a=time.clock()
 im_pil = cam.getImage().convert('RGB') 
-for i in range(1000):
+for i in range(1):
     s = im_pil.tostring()
     cvimg = np.ndarray(shape = (im_pil.size[1],im_pil.size[0],3), dtype = np.uint8, buffer = s)
     cvimg = cvimg[:,:,::-1]#.copy()
@@ -31,14 +31,14 @@ for i in range(1000):
 print('DxShow-direct:%s'%(str((time.clock()-a)/1000.0)))
 del cam
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture('test.mp4')
 a = time.clock()
 for i in range(100):
     _, cvimg = cap.read()
     #s = cvimg.tostring()
     #img = np.ndarray(shape = cvimg.shape, dtype = cvimg.dtype, buffer = s)
-    #cv2.imshow('',cvimg)
-    #cv2.waitKey(100)
+    cv2.imshow('',cvimg)
+    cv2.waitKey(100)
 print('Cv:%s'%(str((time.clock()-a)/100.0)))
 cap.release()
 

@@ -13,7 +13,7 @@ LA = 45.732433
 LO = 126.628802
 
 class InfoItem():
-    def __init__(self, init_val=None):
+    def __init__(self, init_val=float('NAN')):
         self.height = init_val
         self.pitch = init_val
         self.roll = init_val
@@ -189,21 +189,20 @@ class UAVInfomation(object):
     def get_information_in_InfoEntries(self):
         rtnval = []
         info = self.get()
-        
         entry_type = util.InfoEntry.TYPE_WARNING if self.need_warning('height', info['height']) else util.InfoEntry.TYPE_LABEL        
-        rtnval.append(util.InfoEntry(entry_type,'Height', ''.join([str(info['height']),'m'])))
+        rtnval.append(util.InfoEntry(entry_type,'Height', ''.join(['%4.4f'%info['height'],'m'])))
         
         entry_type = util.InfoEntry.TYPE_LABEL       
-        rtnval.append(util.InfoEntry(entry_type,'Pitch', ''.join([str(info['pitch']),'d'])))
+        rtnval.append(util.InfoEntry(entry_type,'Pitch', ''.join(['%4.4f'%(info['pitch']),'d'])))
         
         entry_type = util.InfoEntry.TYPE_LABEL       
-        rtnval.append(util.InfoEntry(entry_type,'Roll', ''.join([str(info['roll']),'d'])))
+        rtnval.append(util.InfoEntry(entry_type,'Roll', ''.join(['%4.4f'%(info['roll']),'d'])))
         
         entry_type = util.InfoEntry.TYPE_LABEL        
-        rtnval.append(util.InfoEntry(entry_type,'Yaw', ''.join([str(info['yaw']),'d'])))
+        rtnval.append(util.InfoEntry(entry_type,'Yaw', ''.join(['%4.4f'%(info['yaw']),'d'])))
         
         entry_type = util.InfoEntry.TYPE_WARNING if self.need_warning('volt', info['volt']) else util.InfoEntry.TYPE_LABEL        
-        rtnval.append(util.InfoEntry(entry_type,'Volt', ''.join([str(info['volt']),'v'])))
+        rtnval.append(util.InfoEntry(entry_type,'Volt', ''.join(['%4.4f'%(info['volt']),'v'])))
         
         return rtnval
     

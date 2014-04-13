@@ -7,12 +7,7 @@ Created on 2014-2-13
 import numpy as np
 import cv2
 import util
-
-# from Queue import Full as QFull
-# from Queue import Empty as QEmpty
-# from multiprocessing import Process
-# from multiprocessing import Queue
-# import os
+from ObjectTrackingMultiProcess import ObjectMatchMultiProcess
 
 LINE_WIDTH = 5
 DRAG_COLOR = (255,0,0)
@@ -82,7 +77,10 @@ def get_selection_rect(src_size, drag_data, bitmap_size):
     return (left_top, right_bottom)
 
 # ---- 目标匹配相关 ----
-class ObjectMatch(object):
+class ObjectMatch(ObjectMatchMultiProcess):
+    pass
+
+class ObjectMatch1(object):
     def __init__(self, rect, src, hist_channel = [0]):
         lt = rect[0]
         rb = rect[1]

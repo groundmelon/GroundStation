@@ -26,8 +26,8 @@ class ImageCapture():
     NoDeviceError = vidcap.error
     def __init__(self, devnum):
         self.cam = Device(devnum)
-#        self.cam.displayCaptureFilterProperties()
-#        self.cam.displayCapturePinProperties()
+#         self.cam.displayCaptureFilterProperties()
+#         self.cam.displayCapturePinProperties()
         cvimg = np.array(self.cam.getImage().convert('RGB'))
         
         self.size = (cvimg.shape[1],cvimg.shape[0])
