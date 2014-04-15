@@ -6,6 +6,7 @@ encoding//communication/SerialReceiverThread.py=utf-8
 encoding//debug/multiprocesstest.py=utf-8
 encoding//imageprocess/ImageCapture.py=utf-8
 encoding//imageprocess/MovieRecord.py=utf-8
+encoding//imageprocess/ObjectTracking.py=utf-8
 encoding//imageprocess/ObjectTrackingMultiProcess.py=utf-8
 encoding//imageprocess/ObjectTrackingSingleProcess.py=utf-8
 encoding//imageprocess/VideoCaptureTest.py=utf-8

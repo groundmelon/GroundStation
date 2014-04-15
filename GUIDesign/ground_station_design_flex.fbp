@@ -4034,7 +4034,7 @@
                                                                 <property name="caption"></property>
                                                                 <property name="caption_visible">1</property>
                                                                 <property name="center_pane">0</property>
-                                                                <property name="choices">&quot;template&quot; &quot;edge-tpl&quot; &quot;meanshift&quot; &quot;multi-meanshift&quot; &quot;gray-meanshift&quot; &quot;mix&quot; &quot;optical-flow&quot;</property>
+                                                                <property name="choices">&quot;meanshift&quot; &quot;gray-meanshift&quot; &quot;optical-flow&quot; &quot;template&quot; &quot;multi-meanshift&quot; &quot;mix&quot; &quot;edge-tpl&quot;</property>
                                                                 <property name="close_button">1</property>
                                                                 <property name="context_help"></property>
                                                                 <property name="context_menu">1</property>

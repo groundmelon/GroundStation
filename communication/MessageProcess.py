@@ -19,7 +19,7 @@ PKGTYPE_REF = 0x06
 PKGTYPE_U0 = 0x07 # U pitch P,I,D roll P,I
 PKGTYPE_U1 = 0x08 # roll D, MOTOR,AutoHeight,SmartDirection,UAVTIME
 PKGTYPE_PT = 0x09 # Pan/Tilt camera control
-PKGTYPE_CTRL = 0x05 # Control information
+PKGTYPE_CTRL = 0x0A # Control information
 PKGTYPE_LOC = 0x0F # invalid
 PKGTYPE_SETPID = 0x55 # invalid
 

@@ -29,6 +29,7 @@ import wx.html2
 import time
 
 from Definition import *
+from imageprocess.ObjectTracking import METHOD
 
 
 MAIN_TASK_FREQ = 20 # 20Hz
@@ -76,7 +77,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         self.enable_comm_relative_components(False)
         
         #---- init video block ----
-        self.cap_dev_num = 0
+        self.cap_dev_num = 1
         self.enable_video_components(False)
         self.video_window = None
         
@@ -113,7 +114,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.main_work, self.timer)
         self.timer.Start(1000.0/MAIN_TASK_FREQ)
-        self.timer.count = 0
+        self.timer.last_time=time.clock()
         
 #         self.timer1 = wx.Timer(self) 
 #         self.Bind(wx.EVT_TIMER, self.main_work1, self.timer1)
@@ -301,13 +302,14 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
     
 #------ Work Function ------        
     def main_work(self, event):
-        self.timer.count += 1
         
         worklist = self.worklist
         a = time.clock()        
         
         # 5 Hz Tasks
-        if self.timer.count % (MAIN_TASK_FREQ / 5) == 0:
+        if (time.clock()-self.timer.last_time) > 1.0/5:
+            self.timer.last_time=time.clock()
+            
             if DISPLAY_XBEE_DATA in worklist:
                 self.update_rcv_area()
             
@@ -317,9 +319,11 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
             if DISPLAY_UAVINFO in self.worklist and USING_JOYSTICK not in self.worklist:
                 self.send_data_by_frame(MsgPrcs.pack_control(0, self.state_smart_direction))
         
+            if DISPLAY_UAVINFO in self.worklist:
+                self.update_GUI_UAVinfo(self.UAVinfo.get())
+        
         # MAIN_TASK_FREQ Hz Tasks
-        if DISPLAY_UAVINFO in self.worklist:
-            self.update_GUI_UAVinfo(self.UAVinfo.get())
+            
         
         if USING_JOYSTICK in self.worklist:
                 self.update_joy_status()
@@ -370,57 +374,67 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
             elif self.display_track_state == DISPLAY_TRACK_STATE_RESULT:
                 track_mode = self.m_choice_track_mode.GetStringSelection()
                 display_process = self.m_menuItem_track_display_process.IsChecked()
-                # 模板匹配模式
                 if track_mode == 'template':
-                    matchimg, center, res = self.objmatch.do_tpl_match(srcimg)
-                    if display_process:
-                        rstbmp = util.cvimg_to_wxbmp(res)
-                    else:
-                        rstbmp = util.cvimg_to_wxbmp(matchimg)
-                # 边缘检测-模板匹配模式
-                elif track_mode == 'edge-tpl':
-                    matchimg, center, edgeimg = self.objmatch.do_edge_match(srcimg, arg=self.edge_arg)
-                    if display_process:
-                        rstbmp = util.cvimg_to_wxbmp(edgeimg)
-                    else:
-                        rstbmp = util.cvimg_to_wxbmp(matchimg)
-                # 纯色匹配模式
-#                 elif track_mode == 'color':
-#                     matchimg, center, mask = self.objmatch.do_color_match(srcimg)
+                    method = METHOD.TEMPLATEMATCH
+                elif track_mode == 'meanshift':
+                    method = METHOD.MEANSHIFT
+                elif track_mode == 'gray-meanshift':
+                    method = METHOD.GRAYMEANSHIFT
+                else:
+                    method = METHOD.OPTICALFLOW
+                
+                matchimg, center, res = self.objmatch.process(method, srcimg)
+                if display_process:
+                    rstbmp = util.cvimg_to_wxbmp(res)
+                else:
+                    rstbmp = util.cvimg_to_wxbmp(matchimg)
+            
+            # TODO:MeanShift-OpticalFlow 卡尔曼
+                
+#                 # 模板匹配模式
+#                 if track_mode == 'template':
+#                     matchimg, center, res = self.objmatch.do_tpl_match(srcimg)
 #                     if display_process:
-#                         rstbmp = util.cvimg_to_wxbmp(mask)
+#                         rstbmp = util.cvimg_to_wxbmp(res)
 #                     else:
 #                         rstbmp = util.cvimg_to_wxbmp(matchimg)
-                # MeanShift匹配模式
-                elif track_mode == 'meanshift':
-                    matchimg, center, prj_img = self.objmatch.do_meanshift(srcimg)
-                    if display_process:
-                        rstbmp = util.cvimg_to_wxbmp(prj_img)
-                    else:
-                        rstbmp = util.cvimg_to_wxbmp(matchimg)
-                # 多目标MeanShift匹配模式
-                elif track_mode == 'multi-meanshift':
-                    matchimg, center, prj_img = self.objmatch.do_multi_meanshift(srcimg, arg=self.multimean_arg)
-                    if display_process:
-                        rstbmp = util.cvimg_to_wxbmp(prj_img)
-                    else:
-                        rstbmp = util.cvimg_to_wxbmp(matchimg)
-                elif track_mode == 'gray-meanshift':
-                    matchimg, center, prj_img = self.objmatch.do_gray_meanshift(srcimg)
-                    if display_process:
-                        rstbmp = util.cvimg_to_wxbmp(prj_img)
-                    else:
-                        rstbmp = util.cvimg_to_wxbmp(matchimg)
-                elif track_mode == 'optical-flow':
-                    matchimg, center, prj_img = self.objmatch.do_optical_flow(srcimg)
-                    if display_process:
-                        rstbmp = util.cvimg_to_wxbmp(prj_img)
-                    else:
-                        rstbmp = util.cvimg_to_wxbmp(matchimg)
-                # 混合匹配模式
-                elif track_mode == 'mix':
-                    matchimg, center, _ = self.objmatch.do_mix(srcimg, multimean_arg=self.multimean_arg, edgetpl_arg=self.edge_arg)    
-                    rstbmp = util.cvimg_to_wxbmp(matchimg)
+#                 # 边缘检测-模板匹配模式
+#                 elif track_mode == 'edge-tpl':
+#                     matchimg, center, edgeimg = self.objmatch.do_edge_match(srcimg, arg=self.edge_arg)
+#                     if display_process:
+#                         rstbmp = util.cvimg_to_wxbmp(edgeimg)
+#                     else:
+#                         rstbmp = util.cvimg_to_wxbmp(matchimg)
+#                 # MeanShift匹配模式
+#                 elif track_mode == 'meanshift':
+#                     matchimg, center, prj_img = self.objmatch.do_meanshift(srcimg)
+#                     if display_process:
+#                         rstbmp = util.cvimg_to_wxbmp(prj_img)
+#                     else:
+#                         rstbmp = util.cvimg_to_wxbmp(matchimg)
+#                 # 多目标MeanShift匹配模式
+#                 elif track_mode == 'multi-meanshift':
+#                     matchimg, center, prj_img = self.objmatch.do_multi_meanshift(srcimg, arg=self.multimean_arg)
+#                     if display_process:
+#                         rstbmp = util.cvimg_to_wxbmp(prj_img)
+#                     else:
+#                         rstbmp = util.cvimg_to_wxbmp(matchimg)
+#                 elif track_mode == 'gray-meanshift':
+#                     matchimg, center, prj_img = self.objmatch.do_gray_meanshift(srcimg)
+#                     if display_process:
+#                         rstbmp = util.cvimg_to_wxbmp(prj_img)
+#                     else:
+#                         rstbmp = util.cvimg_to_wxbmp(matchimg)
+#                 elif track_mode == 'optical-flow':
+#                     matchimg, center, prj_img = self.objmatch.do_optical_flow(srcimg)
+#                     if display_process:
+#                         rstbmp = util.cvimg_to_wxbmp(prj_img)
+#                     else:
+#                         rstbmp = util.cvimg_to_wxbmp(matchimg)
+#                 # 混合匹配模式
+#                 elif track_mode == 'mix':
+#                     matchimg, center, _ = self.objmatch.do_mix(srcimg, multimean_arg=self.multimean_arg, edgetpl_arg=self.edge_arg)    
+#                     rstbmp = util.cvimg_to_wxbmp(matchimg)
             # 更新track bitmap 界面
             memtrack.SelectObject(rstbmp)
             memtrack.SetUserScale(float(srcimg.shape[1])/float(self.bitmap_track_size[0]),

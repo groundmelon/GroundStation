@@ -318,7 +318,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_toggle_track = wx.Button( self.m_panel_track, wx.ID_ANY, u"开始追踪", wx.DefaultPosition, wx.Size( 80,-1 ), 0 )
 		gbSizer4.Add( self.m_button_toggle_track, wx.GBPosition( 1, 2 ), wx.GBSpan( 1, 1 ), wx.ALL, 1 )
 		
-		m_choice_track_modeChoices = [ u"template", u"edge-tpl", u"meanshift", u"multi-meanshift", u"gray-meanshift", u"mix", u"optical-flow" ]
+		m_choice_track_modeChoices = [ u"meanshift", u"gray-meanshift", u"optical-flow", u"template", u"multi-meanshift", u"mix", u"edge-tpl" ]
 		self.m_choice_track_mode = wx.Choice( self.m_panel_track, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), m_choice_track_modeChoices, 0 )
 		self.m_choice_track_mode.SetSelection( 0 )
 		self.m_choice_track_mode.SetMaxSize( wx.Size( 80,-1 ) )

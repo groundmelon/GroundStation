@@ -9,8 +9,9 @@ from GroundStationBase import FrameGroundStationBase
 import wx
 import util
 from Definition import *
-import imageprocess.ObjectTrackingSingleProcess as Objtrack
+# import imageprocess.ObjectTrackingSingleProcess as Objtrack
 # import imageprocess.ObjectTrackingMultiProcess as Objtrack
+import imageprocess.ObjectTracking as Objtrack
 
 from TrackAlgorithm import TrackController
 
@@ -119,7 +120,8 @@ class TrackBlock():
                                            self.drag_info.get_drag_data(),
                                            self.bitmap_track_size)
         try:
-            self.objmatch = Objtrack.ObjectMatch(rect, self.frozen_frame, self.get_hist_channel())
+#             self.objmatch = Objtrack.ObjectMatch(rect, self.frozen_frame, self.get_hist_channel())
+            self.objmatch = Objtrack.ObjectTrack(rect, self.frozen_frame, self.get_hist_channel())
             self.frozen_frame = None
             self.drag_info = None
             self.toggle_drag_selection(False)
