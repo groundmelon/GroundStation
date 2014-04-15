@@ -39,6 +39,7 @@ class VideoDisplayFrame(IndependentImageDisplayBase):
         self.Destroy()
     
     def update_image_with_info(self, cvimg, info):
+        # TODO:DEL Here
         assert isinstance(cvimg, np.ndarray)       
         cvimg_size = (cvimg.shape[1], cvimg.shape[0])     
 #        if self.user_size[0] < cvimg_size[0] or self.user_size[1] < cvimg_size[1]:

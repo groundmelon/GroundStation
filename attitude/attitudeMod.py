@@ -56,7 +56,7 @@ class AttitudeDisplay(object):
                                              
         
     def generate_attitude_bitmap(self, pitch, roll, yaw, is_radius = True):
-        if pitch is float('nan') or roll is float('nan') or yaw is float('nan'):
+        if math.isnan(pitch) or math.isnan(roll) or math.isnan(yaw):
             pitch = 0
             roll = 0
             yaw = 0

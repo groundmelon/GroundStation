@@ -12,8 +12,10 @@ from attitude.attitudeMod import AttitudeDisplay
 LA = 45.732433
 LO = 126.628802
 
+INITVAL = float('NAN')
+
 class InfoItem():
-    def __init__(self, init_val=float('NAN')):
+    def __init__(self, init_val=INITVAL):
         self.height = init_val
         self.pitch = init_val
         self.roll = init_val
@@ -42,7 +44,7 @@ class InfoItem():
         self.lo = LO
     
     def add(self, name, value):
-        if self.__dict__[name] is not None:
+        if self.__dict__[name] is not INITVAL:
             raise self.OverrideException(name)
         else:
             self.__dict__[name] = value
@@ -66,7 +68,7 @@ class UAVInfomation(object):
         self.infobuf = [InfoItem()]
     
     def add_item(self):
-        self.infobuf.append(InfoItem(None))
+        self.infobuf.append(InfoItem(INITVAL))
     
     def update_info(self, roll, pitch, yaw, height, volt):
         while True:
