@@ -7,6 +7,7 @@ Created on 2014-3-13
 import util
 import wx
 import os
+import time
 from attitude.attitudeMod import AttitudeDisplay
 
 LA = 45.732433
@@ -21,6 +22,10 @@ class InfoItem():
         self.roll = init_val
         self.yaw = init_val
         self.volt = init_val
+        self.posx = init_val
+        self.posy = init_val
+        self.rposx = init_val
+        self.rposy = init_val
         self.ref_thrust = init_val
         self.ref_pitch = init_val
         self.ref_yaw = init_val
@@ -45,14 +50,14 @@ class InfoItem():
     
     def add(self, name, value):
         if self.__dict__[name] is not INITVAL:
-            raise self.OverrideException(name)
+            raise self.OverrideError(name)
         else:
             self.__dict__[name] = value
     
     def __repr__(self):
         return str(self.__dict__)
         
-    class OverrideException(Exception):
+    class OverrideError(Exception):
         def __init__(self, label):
             Exception.__init__(self, label)
             self.label = label
@@ -65,27 +70,34 @@ class UAVInfomation(object):
         self.attidisp = AttitudeDisplay()
     
     def clear_buf(self):
+        try:
+            del self.infobuf
+        except AttributeError:#no self.infobuf
+            pass
         self.infobuf = [InfoItem()]
     
     def add_item(self):
         self.infobuf.append(InfoItem(INITVAL))
     
-    def update_info(self, roll, pitch, yaw, height, volt):
+    def add_elements(self, keys, data):
+        ''' add elements into an item, with data[0],data[1],...,data[4] '''
         while True:
             try:
-                self.infobuf[-1].add('roll', roll)
-                self.infobuf[-1].add('pitch', pitch)
-                self.infobuf[-1].add('yaw', yaw)
-                self.infobuf[-1].add('height', height/100.0)
-                self.infobuf[-1].add('volt', volt)
-                break
-            except InfoItem.OverrideException, e:
-                self.add_item()
-            except IndexError, e:
+                for index,key in enumerate(keys):
+                    self.infobuf[-1].add(key, data[index])
+                break;
+            except (InfoItem.OverrideError,IndexError), e:
                 self.add_item()
         return
     
+    def update_info(self, data):
+        self.add_elements(['roll','pitch','yaw','height','volt'], data)
+    
+    def update_pos(self, data):
+        self.add_elements(['posx','posy','rposx','rposy'], data)
+    
     def update_status(self, data):
+        ''' data is not data[0][1][2][3][4], cannot use add_elements '''
         while True:
             try:    
                 self.infobuf[-1].add('st_ct', data[0])
@@ -94,89 +106,57 @@ class UAVInfomation(object):
                 self.infobuf[-1].add('st_sd', data[3])
                 self.infobuf[-1].add('uavtime', data[-1])
                 break
-            except InfoItem.OverrideException:
+            except InfoItem.OverrideError:
                 self.add_item()
             except IndexError:
                 self.add_item()
         return
     
-    def update_ref(self, ref_roll, ref_pitch, ref_yaw, ref_thrust, ref_height):
-        while True:
-            try:
-                self.infobuf[-1].add('ref_roll', ref_roll)
-                self.infobuf[-1].add('ref_pitch', ref_pitch)
-                self.infobuf[-1].add('ref_yaw', ref_yaw)
-                self.infobuf[-1].add('ref_thrust', ref_thrust)
-                self.infobuf[-1].add('ref_height', ref_height/100.0)
-                break
-            except InfoItem.OverrideException, e:
-                self.add_item()
-            except IndexError, e:
-                self.add_item()
-        return
-        
+    def update_ref(self, data):
+        self.add_elements(['ref_roll','ref_pitch','ref_yaw','ref_thrust','ref_height'], data)
+        self.infobuf[-1].height = self.infobuf[-1].height/100.0
     
-    def update_u0(self, RUp, RUi, RUd, PUp, PUi,):
-        while True:
-            try:
-                self.infobuf[-1].add('RUp', RUp)
-                self.infobuf[-1].add('RUi', RUi)
-                self.infobuf[-1].add('RUd', RUd)
-                self.infobuf[-1].add('PUp', PUp)
-                self.infobuf[-1].add('PUi', PUi)
-                break
-            except InfoItem.OverrideException, e:
-                self.add_item()
-            except IndexError, e:
-                self.add_item()
-        return
+    def update_u0(self, data):
+        self.add_elements(['RUp','RUi','RUd','PUp','PUi'], data)
          
-    def update_u1(self, PUd, a, b, c, uavtime):
-        while True:
-            try:
-                self.infobuf[-1].add('PUd', PUd)
-                self.infobuf[-1].add('YUp', a)
-                self.infobuf[-1].add('YUi', b)
-                self.infobuf[-1].add('YUd', c)
-#                 self.infobuf[-1].add('st_mt', a)
-#                 self.infobuf[-1].add('st_ah', b)
-#                 self.infobuf[-1].add('st_sd', c)
-#                 self.infobuf[-1].add('uavtime', uavtime)
-                break
-            except InfoItem.OverrideException, e:
-                self.add_item()
-            except IndexError, e:
-                self.add_item()
-        return
+    def update_u1(self, data):
+        self.add_elements(['PUd','YUp','YUi','YUd'], data)
         
     def get_by_index(self, index):
-        data = self.infobuf[index]
-        return {'height': data.height,
-                'pitch': data.pitch,
-                'roll': data.roll,
-                'yaw': data.yaw,
-                'volt': data.volt,
-                'la': data.la,
-                'lo': data.lo,
-                'ref_pitch': data.ref_pitch,
-                'ref_roll': data.ref_roll,
-                'ref_yaw': data.ref_yaw,
-                'ref_thrust': data.ref_thrust,
-                'ref_height': data.ref_height,
-                'uavtime': data.uavtime,
-                'st_mt': data.st_mt,
-                'st_ah': data.st_ah,
-                'st_sd': data.st_sd,
-                'st_ct': data.st_ct
-                }
+        try:
+            data = self.infobuf[index]
+        except IndexError:
+            data = self.infobuf[-1]
+        return data
+#         return {'height': data.height,
+#                 'pitch': data.pitch,
+#                 'roll': data.roll,
+#                 'yaw': data.yaw,
+#                 'volt': data.volt,
+#                 'posx': data.posx,
+#                 'posy': data.posy,
+#                 'rposx': data.rposx,
+#                 'rposy': data.rposy,
+#                 'la': data.la,
+#                 'lo': data.lo,
+#                 'ref_pitch': data.ref_pitch,
+#                 'ref_roll': data.ref_roll,
+#                 'ref_yaw': data.ref_yaw,
+#                 'ref_thrust': data.ref_thrust,
+#                 'ref_height': data.ref_height,
+#                 'uavtime': data.uavtime,
+#                 'st_mt': data.st_mt,
+#                 'st_ah': data.st_ah,
+#                 'st_sd': data.st_sd,
+#                 'st_ct': data.st_ct
+#                 }
     def get(self, index=-1):
         return self.get_by_index(index)
     
-    def get_attitude_img(self):
-        info = self.get()
-        return self.attidisp.generate_attitude_bitmap(info['pitch'], 
-                                                      info['roll'], 
-                                                      info['yaw'], 
+    def get_attitude_img(self, pitch, roll, yaw):
+        return self.attidisp.generate_attitude_bitmap(pitch, 
+                                                      roll, 
+                                                      yaw, 
                                                       is_radius= False)
     
     def need_warning(self, key, value):
@@ -191,78 +171,100 @@ class UAVInfomation(object):
     def get_information_in_InfoEntries(self):
         rtnval = []
         info = self.get()
-        entry_type = util.InfoEntry.TYPE_WARNING if self.need_warning('height', info['height']) else util.InfoEntry.TYPE_LABEL        
-        rtnval.append(util.InfoEntry(entry_type,'Height', ''.join(['%4.4f'%info['height'],'m'])))
+        entry_type = util.InfoEntry.TYPE_WARNING if self.need_warning('height', info.height) else util.InfoEntry.TYPE_LABEL        
+        rtnval.append(util.InfoEntry(entry_type,'Height', ''.join(['%4.4f'%info.height,'m'])))
         
         entry_type = util.InfoEntry.TYPE_LABEL       
-        rtnval.append(util.InfoEntry(entry_type,'Pitch', ''.join(['%4.4f'%(info['pitch']),'d'])))
+        rtnval.append(util.InfoEntry(entry_type,'Pitch', ''.join(['%4.4f'%(info.pitch),'d'])))
         
         entry_type = util.InfoEntry.TYPE_LABEL       
-        rtnval.append(util.InfoEntry(entry_type,'Roll', ''.join(['%4.4f'%(info['roll']),'d'])))
+        rtnval.append(util.InfoEntry(entry_type,'Roll', ''.join(['%4.4f'%(info.roll),'d'])))
         
         entry_type = util.InfoEntry.TYPE_LABEL        
-        rtnval.append(util.InfoEntry(entry_type,'Yaw', ''.join(['%4.4f'%(info['yaw']),'d'])))
+        rtnval.append(util.InfoEntry(entry_type,'Yaw', ''.join(['%4.4f'%(info.yaw),'d'])))
         
-        entry_type = util.InfoEntry.TYPE_WARNING if self.need_warning('volt', info['volt']) else util.InfoEntry.TYPE_LABEL        
-        rtnval.append(util.InfoEntry(entry_type,'Volt', ''.join(['%4.4f'%(info['volt']),'v'])))
+        entry_type = util.InfoEntry.TYPE_WARNING if self.need_warning('volt', info.volt) else util.InfoEntry.TYPE_LABEL        
+        rtnval.append(util.InfoEntry(entry_type,'Volt', ''.join(['%4.4f'%(info.volt),'v'])))
+        
+        entry_type = util.InfoEntry.TYPE_LABEL
+        rtnval.append(util.InfoEntry(entry_type,'Pos', ''.join(['(%5.2f,%5.2f)'%(info.posx,info.posy)])))
         
         return rtnval
     
     def save_to_file(self, window, pidpara = None):
-        dialog = wx.FileDialog(None, u"保存UAV信息到...", '',u"", u"文本文件 (*.txt)|*.txt", wx.SAVE)
+        filename=u'Rec '+time.strftime('%m-%d %H.%M')
+        dialog = wx.FileDialog(None, u"保存UAV信息到...", '',filename, u"文本文件 (*.txt)|*.txt", wx.SAVE)
         if dialog.ShowModal() == wx.ID_OK:
             filepath = dialog.GetPath()
         else:
             filepath = None
         dialog.Destroy()
         if filepath:
-            try:
-                with open(filepath,'w') as f:
-                    if pidpara:
-                        assert len(pidpara) == 16, 'pidpara length error'
-                        f.write('XP\tXI\tXD\tXSP\tYP\tYI\tYD\tYSP\tZP\tZI\tZD\tZSP\tHP\tHI\tHD\tHSP\n')
-                        f.write('%s\n'%('\t'.join(['%f'%x for x in pidpara])))
-                    f.write('No.1height\t2pitch\t3roll\t4yaw\t5volt\t6Rpitch\t7Rroll\t8Ryaw\t9Rthr\t10Rheight\t11la\t12lo')
-                    f.write('\t13PUp\t14PUi\t15PUd\t16RUp\t17RUi\t18RUd\t19YUp\t20YUi\t21YUd\t22UAVTime\n')
-                    for i in range(len(self.infobuf)):
-                        lst = []
-                        data = self.infobuf[i]
-                        lst.append('%s\t'%str(data.height))
-                        lst.append('%s\t'%str(data.pitch))
-                        lst.append('%s\t'%str(data.roll))
-                        lst.append('%s\t'%str(data.yaw))
-                        lst.append('%s\t'%str(data.volt))
-                        lst.append('%s\t'%str(data.ref_pitch))
-                        lst.append('%s\t'%str(data.ref_roll))
-                        lst.append('%s\t'%str(data.ref_yaw))
-                        lst.append('%s\t'%str(data.ref_thrust))
-                        lst.append('%s\t'%str(data.ref_height))
-                        lst.append('%s\t'%str(data.la))
-                        lst.append('%s\t'%str(data.lo))
-                        lst.append('%s\t'%str(data.PUp))
-                        lst.append('%s\t'%str(data.PUi))
-                        lst.append('%s\t'%str(data.PUd))
-                        lst.append('%s\t'%str(data.RUp))
-                        lst.append('%s\t'%str(data.RUi))
-                        lst.append('%s\t'%str(data.RUd))
-                        lst.append('%s\t'%str(data.YUp))
-                        lst.append('%s\t'%str(data.YUi))
-                        lst.append('%s\t'%str(data.YUd))
-                        lst.append('%s\t'%str(data.uavtime))
-                        lst.append('\n')
-                        f.write((''.join(lst)).replace('None', '0.0'))
-                    f.close()
-                window.sbar.update(u'UAV信息已经保存。')
-            except Exception,e:
-                wx.MessageBox(u'UAV信息保存失败。\n%s'%(str(e)), u"保存失败",wx.OK | wx.ICON_ERROR)
-                window.sbar.update(u'UAV信息保存发生错误')    
+            with open(filepath,'w') as f:
+                if pidpara:
+                    assert len(pidpara) == 20, 'pidpara length error'
+                    f.write('XP\tXI\tXD\tXSP\tYP\tYI\tYD\tYSP\tZP\tZI\tZD\tZSP\tHP\tHI\tHD\tHSP\tPP\tPI\tPD\tPSP\n')
+                    f.write('%s\n'%('\t'.join(['%f'%x for x in pidpara])))
+                    
+                items = ['height','pitch','roll','yaw','volt','Rpitch','Rroll','Ryaw',
+                         'Rthr','Rheight','posx','posy','Rposx','Rposy','la','lo','PUp','PUi','PUd','RUp','RUi','RUd',
+                         'YUp','YUi','YUd','UAVTIME']
+                s='No.%s\n'%('\t'.join([ '%d%s'%(index+1,item) for index,item in enumerate(items)]))
+                f.write(s)
+                
+                for i in range(len(self.infobuf)):
+                    data = self.infobuf[i]
+                    lst = []
+                    data = self.infobuf[i]
+                    lst.append('%s\t'%str(data.height))
+                    lst.append('%s\t'%str(data.pitch))
+                    lst.append('%s\t'%str(data.roll))
+                    lst.append('%s\t'%str(data.yaw))
+                    lst.append('%s\t'%str(data.volt))
+                    lst.append('%s\t'%str(data.ref_pitch))
+                    lst.append('%s\t'%str(data.ref_roll))
+                    lst.append('%s\t'%str(data.ref_yaw))
+                    lst.append('%s\t'%str(data.ref_thrust))
+                    lst.append('%s\t'%str(data.ref_height))
+                    lst.append('%s\t'%str(data.posx))
+                    lst.append('%s\t'%str(data.posy))
+                    lst.append('%s\t'%str(data.rposx))
+                    lst.append('%s\t'%str(data.rposy))
+                    lst.append('%s\t'%str(data.la))
+                    lst.append('%s\t'%str(data.lo))
+                    lst.append('%s\t'%str(data.PUp))
+                    lst.append('%s\t'%str(data.PUi))
+                    lst.append('%s\t'%str(data.PUd))
+                    lst.append('%s\t'%str(data.RUp))
+                    lst.append('%s\t'%str(data.RUi))
+                    lst.append('%s\t'%str(data.RUd))
+                    lst.append('%s\t'%str(data.YUp))
+                    lst.append('%s\t'%str(data.YUi))
+                    lst.append('%s\t'%str(data.YUd))
+                    lst.append('%s\t'%str(data.uavtime))
+                    lst.append('\n')
+                    f.write(''.join(lst))
+                f.close()
+            window.sbar.update(u'UAV信息已经保存。')
+            return True #saved
+        else:# cancel
+            return False
+#             except Exception,e:
+#                 wx.MessageBox(u'UAV信息保存失败。\n%s'%(str(e)), u"保存失败",wx.OK | wx.ICON_ERROR)
+#                 window.sbar.update(u'UAV信息保存发生错误')    
     
     def _test_save_to_file(self, filepath='test.txt', pidpara=None):
         with open(filepath,'w') as f:
             if pidpara:
-                assert len(pidpara) == 16, 'pidpara length error'
-                f.write('XP\tXI\tXD\tXSP\tYP\tYI\tYD\tYSP\tZP\tZI\tZD\tZSP\tHP\tHI\tHD\tHSP\n')
+                assert len(pidpara) == 20, 'pidpara length error'
+                f.write('XP\tXI\tXD\tXSP\tYP\tYI\tYD\tYSP\tZP\tZI\tZD\tZSP\tHP\tHI\tHD\tHSP\tPP\tPI\tPD\tPSP\n')
                 f.write('%s\n'%('\t'.join(['%f'%x for x in pidpara])))
+            
+            items = ['height','pitch','roll','yaw','volt','Rpitch','Rroll','Ryaw',
+                     'Rthr','Rheight','posx','posy','Rposx','Rposy','la','lo','PUp','PUi','PUd','RUp','RUi','RUd',
+                     'YUp','YUi','YUd','UAVTIME']
+            s='No.%s\n'%('\t'.join([ '%d%s'%(index+1,item) for item,index in enumerate(items)]))
+            
             f.write('No.1height\t2pitch\t3roll\t4yaw\t5volt\t6Rpitch\t7Rroll\t8Ryaw\t9Rthr\t10Rheight\t11la\t12lo')
             f.write('\t13PUp\t14PUi\t15PUd\t16RUp\t17RUi\t18RUd\t19YUp\t20YUi\t21YUd\t22UAVTime\n')
             for i in range(len(self.infobuf)):
@@ -279,6 +281,10 @@ class UAVInfomation(object):
                 lst.append('%s\t'%str(data.ref_yaw))
                 lst.append('%s\t'%str(data.ref_thrust))
                 lst.append('%s\t'%str(data.ref_height))
+                lst.append('%s\t'%str(data.posx))
+                lst.append('%s\t'%str(data.posy))
+                lst.append('%s\t'%str(data.rposx))
+                lst.append('%s\t'%str(data.rposy))
                 lst.append('%s\t'%str(data.la))
                 lst.append('%s\t'%str(data.lo))
                 lst.append('%s\t'%str(data.PUp))

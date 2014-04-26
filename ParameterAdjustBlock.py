@@ -8,31 +8,30 @@ from GroundStationBase import FrameGroundStationBase
 import communication.MessageProcess as MsgPrcs
 import os
 
+PARA_LOOK_DIV_REAL=1000.0
 PARA_FILE_PATH = os.getcwd() + r'\resources\para.dat'
 
 class ParameterAdjustBlock():
     def init_para_block(self):
-        para = [0.0, 0.0, 0.0, 0.0, 
-                0.0, 0.0, 0.0, 0.0, 
-                0.0, 0.0, 0.0, 0.0,
-                0.0, 0.0, 0.0, 0.0]
+        para = self.read_para_from_file()
         self.write_para_to_table(para)
-        self.rcv_pid = {'XP':0.0, 'XI':0.0, 'XD':0.0, 'XSP':0.0,
-                        'YP':0.0, 'YI':0.0, 'YD':0.0, 'YSP':0.0,
-                        'ZP':0.0, 'ZI':0.0, 'ZD':0.0, 'ZSP':0.0,
-                        'HP':0.0, 'HI':0.0, 'HD':0.0, 'HSP':0.0,
+        self.rcv_pid = {'XP':float('nan'), 'XI':float('nan'), 'XD':float('nan'), 'XSP':float('nan'),
+                        'YP':float('nan'), 'YI':float('nan'), 'YD':float('nan'), 'YSP':float('nan'),
+                        'ZP':float('nan'), 'ZI':float('nan'), 'ZD':float('nan'), 'ZSP':float('nan'),
+                        'HP':float('nan'), 'HI':float('nan'), 'HD':float('nan'), 'HSP':float('nan'),
+                        'PP':float('nan'), 'PI':float('nan'), 'PD':float('nan'), 'PSP':float('nan'),
                         }
     
     def write_para_to_table(self, para):
         assert len(para) == self.m_grid_para_adj.GetNumberRows(), 'indices of para error.'
         for index in range(self.m_grid_para_adj.GetNumberRows()):
             assert isinstance(para[index], float)
-            self.m_grid_para_adj.SetCellValue(index,0,str(para[index]*1000))
+            self.m_grid_para_adj.SetCellValue(index,0,str(para[index]*PARA_LOOK_DIV_REAL))
     
     def get_para_from_table(self):
         para = []
         for index in range(self.m_grid_para_adj.GetNumberRows()):
-            para.append(float(self.m_grid_para_adj.GetCellValue(index,0))/1000.0)
+            para.append(float(self.m_grid_para_adj.GetCellValue(index,0))/PARA_LOOK_DIV_REAL)
         return para
     
     def save_para(self):
@@ -41,15 +40,19 @@ class ParameterAdjustBlock():
                 f.write('%s\n'%str(data))
         self.sbar.update(u'参数已成功保存')
     
-    def load_para(self):
+    def read_para_from_file(self):
         para = []
         with open(PARA_FILE_PATH,'r') as f:
             for line in f.readlines():
                 para.append(float(line))
+        return para
+    
+    def load_para(self):
+        para = self.read_para_from_file()
         self.write_para_to_table(para)
         self.sbar.update(u'参数已成功读取')
     
-    def send_para(self, msk = (True, True, True, True)):
+    def send_para(self, msk = (True, True, True, True, True)):
         para = self.get_para_from_table()
         rtn = 0
         if msk[0]:
@@ -59,7 +62,9 @@ class ParameterAdjustBlock():
         if msk[2]:
             rtn = self.send_data_by_frame(MsgPrcs.pack_adj_pid_para(para[8:12], 'Z'))
         if msk[3]:    
-            rtn = self.send_data_by_frame(MsgPrcs.pack_adj_pid_para(para[12:], 'H'))
+            rtn = self.send_data_by_frame(MsgPrcs.pack_adj_pid_para(para[12:16], 'H'))
+        if msk[4]:
+            rtn = self.send_data_by_frame(MsgPrcs.pack_adj_pid_para(para[16:20], 'P'))
         
         self.sbar.update(u'参数已经发送(%d)'%rtn)
     
@@ -69,7 +74,7 @@ class ParameterAdjustBlock():
         self.sbar.update(u'参数已经固定(%d)'%rtn)
     
     def update_rcv_pid(self, axis, para):
-        if axis in ['X','Y','Z','H']:
+        if axis in ['X','Y','Z','H','P']:
             self.rcv_pid['%sP'%axis] = para[0]
             self.rcv_pid['%sI'%axis] = para[1]
             self.rcv_pid['%sD'%axis] = para[2]
@@ -78,11 +83,13 @@ class ParameterAdjustBlock():
         
     def show_rcv_pid(self):
         title = u'机上PID参数\n\n'
-        info = ''.join(['%s = %7.3f/K\n'%(t.rjust(3,' '), self.rcv_pid[t]*1000)
+        info = ''.join(['%s = %6.2f/K\n'%(t.rjust(3,' '), self.rcv_pid[t]*PARA_LOOK_DIV_REAL)
                         for t in ['XP','XI','XD','XSP',
                                   'YP','YI','YD','YSP',
                                   'ZP','ZI','ZD','ZSP',
-                                  'HP','HI','HD','HSP']
+                                  'HP','HI','HD','HSP',
+                                  'PP','PI','PD','PSP',
+                                  ]
                         ])
         self.m_staticText_showpid.SetLabel(''.join([title, info]))
         

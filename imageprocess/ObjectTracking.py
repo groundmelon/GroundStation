@@ -13,15 +13,11 @@ Created on 2014-2-13
 import numpy as np
 import cv2
 import util
-
-from Queue import Full as QFull
-from Queue import Empty as QEmpty
-import multiprocessing
-from multiprocessing import Process
-from multiprocessing import JoinableQueue
-import os
-import sys
 import math
+
+class SW(util.SW):
+    def __init__(self, s, display=False):
+        util.SW.__init__(self, s, False)
 
 LINE_WIDTH = 5
 DRAG_COLOR = (255,0,0)
@@ -103,7 +99,7 @@ class TemplateMatch(object):
         self.object_template = roi
     
     def process(self, src, **kwargs):
-        sw = util.SW('tpl-match')
+        sw = SW('tpl-match')
         
         methods = ['cv2.TM_CCOEFF', 'cv2.TM_CCOEFF_NORMED', 'cv2.TM_CCORR',
             'c v2.TM_CCORR_NORMED', 'cv2.TM_SQDIFF', 'cv2.TM_SQDIFF_NORMED']
@@ -143,7 +139,7 @@ class MeanShift(object):
         self.track_window = window
         
     def process(self, src, **kwargs):         
-        sw = util.SW('meanShift')
+        sw = SW('meanShift')
      
         hls = cv2.cvtColor(src, cv2.COLOR_BGR2HLS)
         dst = cv2.calcBackProject([hls], self.hist_channel, self.roi_hist, [0,180], 1)
@@ -171,7 +167,7 @@ class GrayMeanShift(object):
         self.track_window = window
     
     def process(self, src,**kwargs):
-        sw=util.SW('gray')
+        sw=SW('gray')
         
         gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
         dst = cv2.calcBackProject([gray], [0], self.roi_gray_hist, [0,255], 1)
@@ -229,7 +225,7 @@ class OpticalFlow(object):
         self.nump0 = self.p0.shape[0]
     
     def process(self, src, **kwargs):
-        sw = util.SW('Optical Flow')
+        sw = SW('Optical Flow')
         
         frame_gray = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
         p0 = self.p0

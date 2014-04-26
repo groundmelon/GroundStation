@@ -47,12 +47,6 @@ class FrameGroundStationBase ( wx.Frame ):
 		gSizer2.Add( self.m_button_toggle_video, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		self.m_button_update_uavinfo = wx.Button( self.m_panel2, wx.ID_ANY, u"更新UAV状态", wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.m_menu_update_uavinfo = wx.Menu()
-		self.m_menuItem_clear_uav_info = wx.MenuItem( self.m_menu_update_uavinfo, wx.ID_ANY, u"清除UAV信息缓存", wx.EmptyString, wx.ITEM_NORMAL )
-		self.m_menu_update_uavinfo.AppendItem( self.m_menuItem_clear_uav_info )
-		
-		self.m_button_update_uavinfo.Bind( wx.EVT_RIGHT_DOWN, self.m_button_update_uavinfoOnContextMenu ) 
-		
 		gSizer2.Add( self.m_button_update_uavinfo, 0, wx.ALL, 5 )
 		
 		self.m_button_save_uav_info = wx.Button( self.m_panel2, wx.ID_ANY, u"保存UAV状态", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -77,7 +71,13 @@ class FrameGroundStationBase ( wx.Frame ):
 		bSizer7 = wx.BoxSizer( wx.VERTICAL )
 		
 		self.m_bitmap_uavinfo = wx.StaticBitmap( self.m_panel9, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
-		self.m_bitmap_uavinfo.SetMinSize( wx.Size( -1,110 ) )
+		self.m_bitmap_uavinfo.SetMinSize( wx.Size( -1,120 ) )
+		
+		self.m_menu_update_uavinfo = wx.Menu()
+		self.m_menuItem_clear_uav_info = wx.MenuItem( self.m_menu_update_uavinfo, wx.ID_ANY, u"清除UAV信息缓存", wx.EmptyString, wx.ITEM_NORMAL )
+		self.m_menu_update_uavinfo.AppendItem( self.m_menuItem_clear_uav_info )
+		
+		self.m_bitmap_uavinfo.Bind( wx.EVT_RIGHT_DOWN, self.m_bitmap_uavinfoOnContextMenu ) 
 		
 		bSizer7.Add( self.m_bitmap_uavinfo, 1, wx.ALL|wx.EXPAND, 5 )
 		
@@ -153,7 +153,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_grid_para_adj = wx.grid.Grid( self.m_panel_para_adj, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), 0 )
 		
 		# Grid
-		self.m_grid_para_adj.CreateGrid( 16, 1 )
+		self.m_grid_para_adj.CreateGrid( 20, 1 )
 		self.m_grid_para_adj.EnableEditing( True )
 		self.m_grid_para_adj.EnableGridLines( True )
 		self.m_grid_para_adj.EnableDragGridSize( False )
@@ -187,6 +187,10 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_grid_para_adj.SetRowLabelValue( 13, u"HI" )
 		self.m_grid_para_adj.SetRowLabelValue( 14, u"HD" )
 		self.m_grid_para_adj.SetRowLabelValue( 15, u"HSP" )
+		self.m_grid_para_adj.SetRowLabelValue( 16, u"PP" )
+		self.m_grid_para_adj.SetRowLabelValue( 17, u"PI" )
+		self.m_grid_para_adj.SetRowLabelValue( 18, u"PD" )
+		self.m_grid_para_adj.SetRowLabelValue( 19, u"PSP" )
 		self.m_grid_para_adj.SetRowLabelAlignment( wx.ALIGN_CENTRE, wx.ALIGN_CENTRE )
 		
 		# Label Appearance
@@ -217,7 +221,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_staticText20.Wrap( -1 )
 		bSizer6.Add( self.m_staticText20, 0, wx.ALL, 5 )
 		
-		gSizer4 = wx.GridSizer( 2, 2, 0, 0 )
+		gSizer4 = wx.GridSizer( 2, 3, 0, 0 )
 		
 		self.m_checkBox_para_x = wx.CheckBox( self.m_panel_para_adj, wx.ID_ANY, u"X", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.m_checkBox_para_x.SetValue(True) 
@@ -235,6 +239,10 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_checkBox_para_h.SetValue(True) 
 		gSizer4.Add( self.m_checkBox_para_h, 0, wx.ALL, 5 )
 		
+		self.m_checkBox_para_p = wx.CheckBox( self.m_panel_para_adj, wx.ID_ANY, u"P", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.m_checkBox_para_p.SetValue(True) 
+		gSizer4.Add( self.m_checkBox_para_p, 0, wx.ALL, 5 )
+		
 		
 		bSizer6.Add( gSizer4, 1, wx.EXPAND, 5 )
 		
@@ -246,7 +254,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		
 		self.m_staticText_showpid = wx.StaticText( self.m_panel_para_adj, wx.ID_ANY, u"机上PID参数", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
 		self.m_staticText_showpid.Wrap( -1 )
-		self.m_staticText_showpid.SetFont( wx.Font( 9, 75, 90, 90, False, "Consolas" ) )
+		self.m_staticText_showpid.SetFont( wx.Font( 8, 75, 90, 90, False, "Consolas" ) )
 		self.m_staticText_showpid.SetMinSize( wx.Size( 120,-1 ) )
 		
 		gbSizer11.Add( self.m_staticText_showpid, wx.GBPosition( 0, 2 ), wx.GBSpan( 1, 2 ), wx.ALIGN_CENTER_HORIZONTAL|wx.ALL|wx.EXPAND, 5 )
@@ -261,7 +269,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_para_adj.SetSizer( gbSizer11 )
 		self.m_panel_para_adj.Layout()
 		gbSizer11.Fit( self.m_panel_para_adj )
-		self.m_notebook1.AddPage( self.m_panel_para_adj, u"调参", False )
+		self.m_notebook1.AddPage( self.m_panel_para_adj, u"调参", True )
 		self.m_panel_track = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), wx.TAB_TRAVERSAL )
 		self.m_panel_track.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
 		self.m_panel_track.Enable( False )
@@ -342,7 +350,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_track.SetSizer( gbSizer3 )
 		self.m_panel_track.Layout()
 		gbSizer3.Fit( self.m_panel_track )
-		self.m_notebook1.AddPage( self.m_panel_track, u"目标跟踪", True )
+		self.m_notebook1.AddPage( self.m_panel_track, u"目标跟踪", False )
 		self.m_panel_route = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.m_panel_route.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
 		
@@ -488,8 +496,8 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_toggle_xbee.Bind( wx.EVT_BUTTON, self.on_toggle_xbee )
 		self.m_button_toggle_video.Bind( wx.EVT_BUTTON, self.on_toggle_video )
 		self.m_button_update_uavinfo.Bind( wx.EVT_BUTTON, self.on_update_uavinfo )
-		self.Bind( wx.EVT_MENU, self.on_clear_uav_info, id = self.m_menuItem_clear_uav_info.GetId() )
 		self.m_button_save_uav_info.Bind( wx.EVT_BUTTON, self.on_save_uav_info )
+		self.Bind( wx.EVT_MENU, self.on_clear_uav_info, id = self.m_menuItem_clear_uav_info.GetId() )
 		self.m_choice_recv_style.Bind( wx.EVT_CHOICE, self.on_recv_style_choice )
 		self.m_button_recv_clear.Bind( wx.EVT_BUTTON, self.on_clear_receive )
 		self.m_textCtrl_comm_send.Bind( wx.EVT_CHAR, self.on_send_area_char )
@@ -542,10 +550,10 @@ class FrameGroundStationBase ( wx.Frame ):
 	def on_update_uavinfo( self, event ):
 		event.Skip()
 	
-	def on_clear_uav_info( self, event ):
+	def on_save_uav_info( self, event ):
 		event.Skip()
 	
-	def on_save_uav_info( self, event ):
+	def on_clear_uav_info( self, event ):
 		event.Skip()
 	
 	def on_recv_style_choice( self, event ):
@@ -641,11 +649,11 @@ class FrameGroundStationBase ( wx.Frame ):
 	def on_about( self, event ):
 		event.Skip()
 	
-	def m_button_update_uavinfoOnContextMenu( self, event ):
-		self.m_button_update_uavinfo.PopupMenu( self.m_menu_update_uavinfo, event.GetPosition() )
-		
 	def m_button_save_uav_infoOnContextMenu( self, event ):
 		self.m_button_save_uav_info.PopupMenu( self.m_menu_save_uav_info, event.GetPosition() )
+		
+	def m_bitmap_uavinfoOnContextMenu( self, event ):
+		self.m_bitmap_uavinfo.PopupMenu( self.m_menu_update_uavinfo, event.GetPosition() )
 		
 	def m_bitmap_trackOnContextMenu( self, event ):
 		self.m_bitmap_track.PopupMenu( self.m_menu_bitmap_track, event.GetPosition() )

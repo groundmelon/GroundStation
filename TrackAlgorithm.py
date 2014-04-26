@@ -16,12 +16,13 @@ class PID():
         self.Kp = p
         self.Ki = i
         self.Kd = d
-X = PID(1,0,0)
-Y = PID(1,0,0)
+X = PID(4.4,13,0)
+Y = PID(4.4,13,0)
 Z = PID(1,0,0)
 
 class TrackController():
-    def __init__(self, image_size):
+    def __init__(self, image_size, sample_time):
+        self.ts = sample_time
         self.pts = []
         self.w = image_size[0]
         self.h = image_size[1]
@@ -71,21 +72,26 @@ class TrackController():
             self.pts.pop(0)
     
     def get_u(self):
-        dx = self.w * 0.5 - self.pts[-1].x
-        dy = self.h * 0.5 - self.pts[-1].y
+        dy = self.w * 0.5 - self.pts[-1].x
+        dx = self.h * 0.5 - self.pts[-1].y
+        # x-y in camera is not x-y-z in UAV
+        
         ex, ey = self.pixel_to_real(dx, dy, self.dis)
-        ez = 180.0/math.pi * math.atan2(float(ex), (self.h/float(math.tan(PT_PITCH_in_rad))))
+        ez = 180.0/math.pi * math.atan2(float(ey), (self.height/float(math.tan(PT_PITCH_in_rad))))
         
         if len(self.pts)>=2:
-            ex0, ey0 = self.pixel_to_real(self.w * 0.5 - self.pts[-2].x, 
-                                     self.h * 0.5 - self.pts[-2].y, 
-                                     self.dis)
-            ez0 = math.atan2(float(0 - ex0), (self.h/float(math.tan(PT_PITCH_in_rad))))
-            u = (X.Kp * ex + X.Kd * (ex-ex0), Y.Kp * ey + Y.Kd * (ey-ey0), Z.Kp * ez + Z.Kd * (ez-ez0))
+            ey0, ex0 = self.pixel_to_real(self.w * 0.5 - self.pts[-2].x, 
+                                          self.h * 0.5 - self.pts[-2].y, 
+                                          self.dis)
+            ez0 = math.atan2(float(ey0), (self.height/float(math.tan(PT_PITCH_in_rad))))
+            du = (X.Kp * (ex-ex0) + X.Ki * (ex), 
+                  0,                            #Y.Kp * (ey-ey0) + Y.Ki * (ey), 
+                  Z.Kp * (ez-ez0) + Z.Ki * (ez)
+                  )
         else:
-            u = (X.Kp * ex, Y.Kp * ey, Z.Kp * ez)
-        print('u<R=%.4f, P=%.4f, Yaw=%.4f>'%(u[0],u[1],u[2]))
-        return u
+            du = (X.Kp * ex, 0, Z.Kp * ez)
+        print('du<X=%.2f,Y=%.2f,Z=%.2f>'%du)
+        return du
     
     def pixel_to_real(self, w, h, distance):
         real_w = 1.6115 * distance * w / self.w

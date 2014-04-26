@@ -12,14 +12,16 @@ RCVHEAD = 0xFF
 RCVEND = 0xAA
 
 # ---- Send Msg Type ID ----
-PKGTYPE_PID = {'X':0x01, 'Y':0x02, 'Z':0x03, 'H':0x04}
-PKGTYPE_UNUSED = 0x00
-PKGTYPE_INFO = 0x05
+PKGTYPE_PID = {'X':0x01, 'Y':0x02, 'Z':0x03, 'H':0x04, 'P':0x05}
+PKGTYPE_INVALID = 0x00
+
 PKGTYPE_REF = 0x06
 PKGTYPE_U0 = 0x07 # U pitch P,I,D roll P,I
 PKGTYPE_U1 = 0x08 # roll D, MOTOR,AutoHeight,SmartDirection,UAVTIME
 PKGTYPE_PT = 0x09 # Pan/Tilt camera control
 PKGTYPE_CTRL = 0x0A # Control information
+PKGTYPE_ATTI = 0x0B # Attitude information
+PKGTYPE_POS = 0x0C # Position information
 PKGTYPE_LOC = 0x0F # invalid
 PKGTYPE_SETPID = 0x55 # invalid
 
@@ -42,10 +44,10 @@ def pack_adj_pid_para(para, axis):
     body = ''.join([body, '\x00'*4])
     return pack(typ, body)
 
-def pack_get_info():
-    typ = packbyte(PKGTYPE_INFO)
-    body = '\x00'*4*5
-    return pack(typ, body)
+# def pack_get_info():
+#     typ = packbyte(PKGTYPE_INFO)
+#     body = '\x00'*4*5
+#     return pack(typ, body)
 
 def pack_control(ctrltype=0, smart_direction=0, p=0, r=0, y=0, t=0):
     typ = packbyte(PKGTYPE_CTRL)

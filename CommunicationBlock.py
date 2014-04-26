@@ -67,9 +67,9 @@ class CommBlock():
                 data = MsgPrcs.unpack_5f(buf)
                 self.update_rcv_pid(k, data[:4])
                 return True
-        if msgtype == MsgPrcs.PKGTYPE_INFO:
+        if msgtype == MsgPrcs.PKGTYPE_ATTI:
             data = MsgPrcs.unpack_5f(buf)
-            self.UAVinfo.update_info(data[0], data[1], data[2], data[3], data[4])
+            self.UAVinfo.update_info(data)
         
         elif msgtype == MsgPrcs.PKGTYPE_LOC:
             data = MsgPrcs.unpack_5f(buf)
@@ -78,19 +78,23 @@ class CommBlock():
         
         elif msgtype == MsgPrcs.PKGTYPE_REF:
             data = MsgPrcs.unpack_5f(buf)
-            self.UAVinfo.update_ref(data[0], data[1], data[2], data[3], data[4])
+            self.UAVinfo.update_ref(data)
         
         elif msgtype == MsgPrcs.PKGTYPE_CTRL:
             data = MsgPrcs.unpack_ctrl(buf)
             self.UAVinfo.update_status(data)
         
+        elif msgtype == MsgPrcs.PKGTYPE_POS:
+            data = MsgPrcs.unpack_5f(buf)
+            self.UAVinfo.update_pos(data)
+        
         elif msgtype == MsgPrcs.PKGTYPE_U0:
             data = MsgPrcs.unpack_5f(buf)
-            self.UAVinfo.update_u0(data[0], data[1], data[2], data[3], data[4])
+            self.UAVinfo.update_u0(data)
         
         elif msgtype == MsgPrcs.PKGTYPE_U1:
             data = MsgPrcs.unpack_5f(buf)
-            self.UAVinfo.update_u1(data[0], data[1], data[2], data[3], data[4])
+            self.UAVinfo.update_u1(data)
             
     def enable_comm_relative_components(self, switch):
         #self.m_panel_comm.Enable(switch)

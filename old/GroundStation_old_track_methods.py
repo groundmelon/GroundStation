@@ -27,11 +27,12 @@ import sys
 import wx
 import wx.html2
 import time
-import math
 
 from Definition import *
 from imageprocess.ObjectTracking import METHOD
 
+
+MAIN_TASK_FREQ = 20 # 20Hz
 
 class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
                     ButtonBlock, MenuBlock, CommBlock, ParameterAdjustBlock,
@@ -76,7 +77,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         self.enable_comm_relative_components(False)
         
         #---- init video block ----
-        self.cap_dev_num = DEFAULT_CAP_DEV_NUM
+        self.cap_dev_num = 1
         self.enable_video_components(False)
         self.video_window = None
         
@@ -112,7 +113,7 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         #self.Bind(wx.EVT_IDLE, self.main_work)
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.main_work, self.timer)
-        self.timer.Start(1000.0/TASK_HIGH_FREQ)
+        self.timer.Start(1000.0/MAIN_TASK_FREQ)
         self.timer.last_time=time.clock()
         
 #         self.timer1 = wx.Timer(self) 
@@ -164,8 +165,8 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
             self.show_uavinfo(event.GetEventObject())
     
     def on_save_uav_info(self, event):
-        saved = self.UAVinfo.save_to_file(self, pidpara = self.get_para_from_table())
-        if self.m_menuItem_clear_uav_info_after_save.IsChecked() and saved:
+        self.UAVinfo.save_to_file(self, pidpara = self.get_para_from_table())
+        if self.m_menuItem_clear_uav_info_after_save.IsChecked():
             self.UAVinfo.clear_buf()
         self.update_GUI_UAVinfo(self.UAVinfo.get())
     
@@ -306,7 +307,26 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         worklist = self.worklist
         a = time.clock()        
         
+        # 5 Hz Tasks
+        if (time.clock()-self.timer.last_time) > 1.0/5:
+            self.timer.last_time=time.clock()
+            
+            if DISPLAY_XBEE_DATA in worklist:
+                self.update_rcv_area()
+            
+            if USING_JOYSTICK in self.worklist:
+                self.do_joy_control()
+            
+            # 发送MID=0x09时自动返回，不需重复发送。
+            if DISPLAY_UAVINFO in self.worklist and USING_JOYSTICK not in self.worklist:
+                self.send_data_by_frame(MsgPrcs.pack_control(0, self.state_smart_direction))
+        
+            if DISPLAY_UAVINFO in self.worklist:
+                self.update_GUI_UAVinfo(self.UAVinfo.get())
+        
         # MAIN_TASK_FREQ Hz Tasks
+            
+        
         if USING_JOYSTICK in self.worklist:
                 self.update_joy_status()
         
@@ -373,41 +393,69 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
             
             # TODO:MeanShift-OpticalFlow 卡尔曼
                 
+#                 # 模板匹配模式
+#                 if track_mode == 'template':
+#                     matchimg, center, res = self.objmatch.do_tpl_match(srcimg)
+#                     if display_process:
+#                         rstbmp = util.cvimg_to_wxbmp(res)
+#                     else:
+#                         rstbmp = util.cvimg_to_wxbmp(matchimg)
+#                 # 边缘检测-模板匹配模式
+#                 elif track_mode == 'edge-tpl':
+#                     matchimg, center, edgeimg = self.objmatch.do_edge_match(srcimg, arg=self.edge_arg)
+#                     if display_process:
+#                         rstbmp = util.cvimg_to_wxbmp(edgeimg)
+#                     else:
+#                         rstbmp = util.cvimg_to_wxbmp(matchimg)
+#                 # MeanShift匹配模式
+#                 elif track_mode == 'meanshift':
+#                     matchimg, center, prj_img = self.objmatch.do_meanshift(srcimg)
+#                     if display_process:
+#                         rstbmp = util.cvimg_to_wxbmp(prj_img)
+#                     else:
+#                         rstbmp = util.cvimg_to_wxbmp(matchimg)
+#                 # 多目标MeanShift匹配模式
+#                 elif track_mode == 'multi-meanshift':
+#                     matchimg, center, prj_img = self.objmatch.do_multi_meanshift(srcimg, arg=self.multimean_arg)
+#                     if display_process:
+#                         rstbmp = util.cvimg_to_wxbmp(prj_img)
+#                     else:
+#                         rstbmp = util.cvimg_to_wxbmp(matchimg)
+#                 elif track_mode == 'gray-meanshift':
+#                     matchimg, center, prj_img = self.objmatch.do_gray_meanshift(srcimg)
+#                     if display_process:
+#                         rstbmp = util.cvimg_to_wxbmp(prj_img)
+#                     else:
+#                         rstbmp = util.cvimg_to_wxbmp(matchimg)
+#                 elif track_mode == 'optical-flow':
+#                     matchimg, center, prj_img = self.objmatch.do_optical_flow(srcimg)
+#                     if display_process:
+#                         rstbmp = util.cvimg_to_wxbmp(prj_img)
+#                     else:
+#                         rstbmp = util.cvimg_to_wxbmp(matchimg)
+#                 # 混合匹配模式
+#                 elif track_mode == 'mix':
+#                     matchimg, center, _ = self.objmatch.do_mix(srcimg, multimean_arg=self.multimean_arg, edgetpl_arg=self.edge_arg)    
+#                     rstbmp = util.cvimg_to_wxbmp(matchimg)
             # 更新track bitmap 界面
             memtrack.SelectObject(rstbmp)
             memtrack.SetUserScale(float(srcimg.shape[1])/float(self.bitmap_track_size[0]),
                              float(srcimg.shape[0])/float(self.bitmap_track_size[1]))
             self.dc_track.Blit(0, 0, self.bitmap_track_size[0], self.bitmap_track_size[1], memtrack, 0, 0)
             a = time.clock()
-        
-        # 5 Hz Tasks
-        if (time.clock()-self.timer.last_time) > 1.0/TASK_LOW_FREQ:
-            self.timer.last_time=time.clock()
-            
-            if DISPLAY_XBEE_DATA in worklist:
-                self.update_rcv_area()
-            
-            if USING_JOYSTICK in self.worklist:
-                self.do_joy_control()
-            # 发送MID=0x09时自动返回，不需重复发送。
-            elif DISPLAY_UAVINFO in self.worklist:
-                self.send_data_by_frame(MsgPrcs.pack_control(0, self.state_smart_direction))
-            
-            if DISPLAY_UAVINFO in self.worklist:
-                self.update_GUI_UAVinfo(self.UAVinfo.get(-2))
-        
-            if TRACK_OBJECT in worklist:
-                self.trackctrl.add_pt(center)
-                h=self.UAVinfo.get().height
-                self.trackctrl.update_h(3 if math.isnan(h) else h)
-                du = self.trackctrl.get_u()
                 
-                rstimg = self.objmatch.draw_circles(matchimg, self.trackctrl.pts[-1], color='GREEN', radius=10)
-                rstbmp = util.cvimg_to_wxbmp(rstimg)
-                memtrack.SelectObject(rstbmp)
-                memtrack.SetUserScale(float(srcimg.shape[1])/float(self.bitmap_track_size[0]),
-                                 float(srcimg.shape[0])/float(self.bitmap_track_size[1]))
-                self.dc_track.Blit(0, 0, self.bitmap_track_size[0], self.bitmap_track_size[1], memtrack, 0, 0)
+        
+        if TRACK_OBJECT in worklist:
+            self.trackctrl.add_pt(center)
+            self.trackctrl.update_h(self.UAVinfo.get()['height'])
+            self.trackctrl.get_u()
+            
+            rstimg = self.objmatch.draw_circles(matchimg, self.trackctrl.pts[-1], color='GREEN', radius=10)
+            rstbmp = util.cvimg_to_wxbmp(rstimg)
+            memtrack.SelectObject(rstbmp)
+            memtrack.SetUserScale(float(srcimg.shape[1])/float(self.bitmap_track_size[0]),
+                             float(srcimg.shape[0])/float(self.bitmap_track_size[1]))
+            self.dc_track.Blit(0, 0, self.bitmap_track_size[0], self.bitmap_track_size[1], memtrack, 0, 0)
         
         n = time.clock()
 #         print('[work time]%4.4f [cir time]%4.4f'%((n-a)*1000,(n-self.lasttime)*1000))
@@ -416,11 +464,15 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
 #------ Tool Function ------       
     def update_GUI_UAVinfo(self, info):
         # update text info
+        for k,v in info.iteritems():
+            if v is None:
+                info[k] = float('nan')
+
         mem = wx.MemoryDC()
         mem.SetFont(util.WXFONT)
         
         csz = mem.GetTextExtent(' ')
-        sz = (45*csz[0], 10*csz[1])
+        sz = (45*csz[0], 9*csz[1])
         
         self.m_bitmap_uavinfo.SetSize(sz)
         self.m_bitmap_uavinfo.CenterOnParent()
@@ -429,14 +481,14 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         pos = (0,5)
         padding = csz[0]*4
         
-        def write(s, color=None):
+        def write(s, color):
             if color is None:
                 color = wx.BLUE
             mem.SetTextForeground(color)
             mem.DrawText(s, pos[0], pos[1])
             return (pos[0] + mem.GetTextExtent(s)[0] + padding, pos[1])
         
-        def writeln(s, color=None):
+        def writeln(s, color):
             rtn =  write(s, color)
             return (0, rtn[1]+csz[1])
             
@@ -450,37 +502,36 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
             else:
                 return wx.Colour(160,160,160)
         
-        pos = writeln('--UAVInfo Display--    UAVTime :%9.3Fs'%info.uavtime)
+        pos = writeln('--UAVInfo Display--    UAVTime :%9.3Fs'%info['uavtime'], None)
         pos = writeln('', None)
-        pos = writeln(' pitch  =%9.3Fd    Rpitch  =%9.3Fd'%(info.pitch, info.ref_pitch))
-        pos = writeln(' roll   =%9.3Fd    Rroll   =%9.3Fd'%(info.roll, info.ref_roll))
-        pos = writeln(' yaw    =%9.3Fd    Ryaw    =%9.3Fd'%(info.yaw, info.ref_yaw))
-        pos = write(' height =%9.3Fm'%info.height,
-                    wx.RED if self.UAVinfo.need_warning('height', info.height) else None)
-        pos = writeln('Rheight =%9.3Fm\n'%(info.ref_height))
-        pos = write(' volt   =%9.3FV'%info.volt,
-                    wx.RED if self.UAVinfo.need_warning('volt', info.volt) else None)
-        pos = writeln('Rthrust =%9.3F'%(info.ref_thrust))
-        pos = writeln(' Pos(%5.2f,%5.2f)  Rpos(%5.2f,%5.2f)'%(info.posx,info.posy,info.rposx,info.rposy))
-        pos = write(' JOY', get_st_color(info.st_ct))
-        pos = write('MOTOR', get_st_color(info.st_mt))
-        pos = write('AutoHeight', get_st_color(info.st_ah))
-        pos = write('Smart Dir.', get_st_color(info.st_sd))
+        pos = writeln(' pitch  =%9.3Fd    Rpitch  =%9.3Fd'%(info['pitch'], info['ref_pitch']), None)
+        pos = writeln(' roll   =%9.3Fd    Rroll   =%9.3Fd'%(info['roll'], info['ref_roll']), None)
+        pos = writeln(' yaw    =%9.3Fd    Ryaw    =%9.3Fd'%(info['yaw'], info['ref_yaw']), None)
+        pos = write(' height =%9.3Fm'%info['height'],
+                    wx.RED if self.UAVinfo.need_warning('height', info['height']) else None)
+        pos = writeln('Rheight =%9.3Fm\n'%(info['ref_height']), None)
+        pos = write(' volt   =%9.3FV'%info['volt'],
+                    wx.RED if self.UAVinfo.need_warning('volt', info['volt']) else None)
+        pos = writeln('Rthrust =%9.3F'%(info['ref_thrust']), None)
+        pos = write(' JOY', get_st_color(info['st_ct']))
+        pos = write('MOTOR', get_st_color(info['st_mt']))
+        pos = write('AutoHeight', get_st_color(info['st_ah']))
+        pos = write('Smart Dir.', get_st_color(info['st_sd']))
 
         self.dc_uavinfo.Blit(0, 0, sz[0],sz[1], mem, 0, 0)
         
         # update bitmap_atti
-        attiimg = self.UAVinfo.get_attitude_img(info.pitch, info.roll, info.yaw)
+        attiimg = self.UAVinfo.get_attitude_img()
         self.dc_attitude.DrawBitmap(util.cvimg_to_wxbmp(attiimg), 0, 0)        
     
     def update_GE(self, info):
-        la = info.la
-        lo = info.lo
+        la = info['la']
+        lo = info['lo']
         if self.GE_uninited:
-            js = util.JSCODESINIT%(la,lo, info.height*1.2)
+            js = util.JSCODESINIT%(la,lo, info['height']*1.2)
             self.GE_uninited = False
         else:
-            js = util.JSCODES%(la,lo, info.height*1.2)
+            js = util.JSCODES%(la,lo, info['height']*1.2)
         self.browser_ge.RunScript(js)
     
     def get_hist_channel(self):

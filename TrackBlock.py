@@ -5,7 +5,6 @@ Created on 2014-1-3
 @author: GroundMelon
 @note: 处理跟踪相关处理
 '''
-from GroundStationBase import FrameGroundStationBase
 import wx
 import util
 from Definition import *
@@ -64,7 +63,7 @@ class TrackBlock():
         self.add_work(TRACK_OBJECT)
         util.toggle_button(comp, u'开始', u'结束')
         self.m_button_select_object.Enable(False)
-        self.trackctrl = TrackController(self.camcap.get_frame_size())
+        self.trackctrl = TrackController(self.camcap.get_frame_size(),1.0/TASK_LOW_FREQ)
         
     def set_track_arg(self, s):
         sel = self.m_choice_track_arg.GetStringSelection()
