@@ -108,35 +108,6 @@ NULLIMG = r'resources\null.bmp'
 def get_null_bitmap():
     return wx.BitmapFromImage(wx.Image(NULLIMG))
 
-class Point1(object):
-    def __init__(self, *arg):
-        arglen = len(arg)
-        if arglen == 0:
-            self.x = 0
-            self.y = 0
-        elif arglen == 1:
-            assert isinstance(arg[0], tuple), "arg is not tuple"
-            assert isinstance(arg[0][0], (int,float)), "arg tuple[0] is not int or float"
-            assert isinstance(arg[0][1], (int,float)), "arg tuple[1] is not int or float"
-            self.x = arg[0][0]
-            self.y = arg[0][1]
-        elif arglen == 2:
-            assert isinstance(arg[0], (int,float)), "arg x is not int or float"
-            assert isinstance(arg[1], (int,float)), "arg y is not int or float"
-            self.x = arg[0]
-            self.y = arg[1]
-        else:
-            assert False,"Invalid args"
-         
-        self.tup = (self.x, self.y) # tuple represent
-    
-    def __repr__(self):
-        return '<pt(%.2f,%.2f)>'%(self.x, self.y)
-    
-    def __iter__(self):
-        yield self.x
-        yield self.y
-
 class Point(tuple):
     def __new__(cls, *arg):
         arglen = len(arg)
