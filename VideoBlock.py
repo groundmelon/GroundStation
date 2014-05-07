@@ -9,8 +9,9 @@ import util
 from Definition import *
 from BigVideoDisplay import VideoDisplayFrame
 from imageprocess.MovieRecord import Record
+from GroundStationBase import FrameGroundStationBase
 
-class VideoBlock():
+class VideoBlock(FrameGroundStationBase,object):
     def show_independent_video(self):
         if self.video_window is None:
             self.video_window = VideoDisplayFrame(self)

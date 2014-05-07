@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*- 
 '''
+通信功能区
 Created on 2014-2-18
 
 @author: GroundMelon
@@ -9,33 +10,53 @@ import wx
 import util
 import communication.MessageProcess as MsgPrcs
 import PickleFileIO
+from GroundStationBase import FrameGroundStationBase
 
-class CommBlock():
+class CommBlock(FrameGroundStationBase,object):
+    '''
+    通信功能区
+    
+    包含一些与GUI相关的，与通信相关的函数
+    '''
     def send_data_by_GUI(self):
+        '''
+        在GUI端触发了数据发送功能的执行函数，从Text Area里获得发送数据
+        '''
         gui_data = self.m_textCtrl_comm_send.GetValue().encode('ascii','ignore')
         self.history.add(gui_data)
         
+        # text area中的内容是hex/ascii格式分别处理
         if self.m_choice_send_style.GetStringSelection() == 'HEX':          
+            # 按空格分离，str->int->char，把hexstring转为byte-string
             rtn = self.send_data_by_frame(''.join([chr(int(x,16)) for x in gui_data.split()]))
         elif self.m_choice_send_style.GetStringSelection() == 'ASCII':
+            # 直接发送
             rtn = self.send_data_by_frame(gui_data)
         else:
             assert False, u'Send type is not ASCII nor HEX!'
             return
         if self.m_checkBox_sent_clear.IsChecked():
+            # 发送后清空
             self.m_textCtrl_comm_send.SetValue('')
         self.sbar.update(u'本次发送%d字节'%rtn)
     
     def send_data_by_frame(self, data):
+        '''
+        直接由frame发送数据，比如控制指令，不需读取text area 的值
+        @param data: 待发送数据，string
+        @return: 发送的字节数
+        '''
         return self.comm.send_string(data)
         
     def get_backdata(self):
+        '''
+        从通信模块获取传回的数据
+        @return: 数据有效，返回值参考L{GroundStation.communication.MessageProcess.unpack_type}，数据无效为(None,None)
+        '''
         buf = self.comm.get_rcvbuf()
-        '''
-                        更新位姿高度电压： FF 04 00 00 80 3F 00 00 00 40 00 00 40 40 00 40 1C 46 00 00 A0 40 AA
-                        更新经纬坐标：        FF 0F 10 EE 36 42 BC 41 FD 42 00 00 00 00 00 00 00 00 00 00 00 00 AA
-        '''
+
         if len(buf)>=23:
+            tmp=buf[-23::]
             return MsgPrcs.unpack_type(''.join(buf[-23::]))
         else:
             return (None, None)
@@ -117,26 +138,45 @@ class CommBlock():
         filepath = r'communication\xbee.gss'
         try:
             pfio = PickleFileIO.PickleFileIO(filepath)
-            self.comm_options = pfio.load()
+            comm_options = pfio.load()
             self.sbar.update(u'默认通信设置"%s"已经应用。'%filepath)
         except (EOFError,IOError),e:
             self.m_statusBar.SetStatusText(u'未发现默认设置')
+            comm_options = {}
+        return comm_options
     
 class InputHistory(object):
+    '''
+    输入区域历史记录管理器
+    '''
     def __init__(self,window):
+        '''
+        初始化函数
+        @param window:窗口
+        '''
         self.window = window
-        self.history=[]
-        self.cursor = -1
+        self.clear()
     
     def clear(self):
+        '''
+        清除记录
+        '''
         self.history=[]
         self.cursor = -1
         
     def add(self,s):
+        '''
+        添加记录
+        '''
         self.history.append(s)
         self.cursor = len(self.history)    
     
     def getByRel(self,rel):
+        '''
+        按相对位置获取记录
+        @param rel: 相对位置
+        @return: 记录内容，string
+        '''
         ret = ""
         try:
             
@@ -154,6 +194,11 @@ class InputHistory(object):
         return ret
     
     def getByAbs(self,cur):
+        '''
+        按绝对位置获取记录
+        @param cur: 绝对位置
+        @return: 记录内容，string
+        '''
         try:
             if cur == -1:
                 raise IndexError

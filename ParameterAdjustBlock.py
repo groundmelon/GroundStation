@@ -11,7 +11,7 @@ import os
 PARA_LOOK_DIV_REAL=1000.0
 PARA_FILE_PATH = os.getcwd() + r'\resources\para.dat'
 
-class ParameterAdjustBlock():
+class ParameterAdjustBlock(FrameGroundStationBase, object):
     def init_para_block(self):
         para = self.read_para_from_file()
         self.write_para_to_table(para)
@@ -69,7 +69,12 @@ class ParameterAdjustBlock():
         self.sbar.update(u'参数已经发送(%d)'%rtn)
     
     def set_down_para(self):
-        data = MsgPrcs.pack_set_pid_para()
+        data = MsgPrcs.pack_set_pid()
+        rtn = self.send_data_by_frame(data)
+        self.sbar.update(u'参数已经固定(%d)'%rtn)
+    
+    def get_pid(self):
+        data = MsgPrcs.pack_get_pid()
         rtn = self.send_data_by_frame(data)
         self.sbar.update(u'参数已经固定(%d)'%rtn)
     
@@ -92,4 +97,5 @@ class ParameterAdjustBlock():
                                   ]
                         ])
         self.m_staticText_showpid.SetLabel(''.join([title, info]))
+        self.sbar.update(u"PID参数已经更新",0)
         

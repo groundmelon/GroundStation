@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*- 
 
 '''
+串口设置窗口
+
 Created on 2013-12-4
 
 @author: Administrator
@@ -11,7 +13,16 @@ from communication.XBeeComm import XBee
 import serial.tools.list_ports as lstprt
 
 class SerialSetting(frame_serial_setting):
+    '''
+    串口设置窗口类
+    '''
     def __init__(self,parent, option_arg = None):
+        '''
+        初始化
+        @param parent: 父窗口
+        @param option_arg: 可选参数，表示串口设置的dict 
+        '''
+        
         frame_serial_setting.__init__(self,parent)
         self.comm = parent.comm
         serial_info = self.comm.get_supported_info()
@@ -31,8 +42,8 @@ class SerialSetting(frame_serial_setting):
                       'bytesize':   8,
                       'parity'  :   'None',
                       'stopbit' :   1,
-                      'RtsCts':False,#hard flow control
-                      'XonXoff':False,#software flow control
+                      'RtsCts'  :   False,#hard flow control
+                      'XonXoff' :   False,#software flow control
                       }
         else:
             option = option_arg

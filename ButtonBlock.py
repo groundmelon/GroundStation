@@ -8,14 +8,14 @@ Created on 2014-1-6
 import wx
 import serial
 from imageprocess.ImageCapture import ImageCapture
-#from GroundStationBase import FrameGroundStationBase
+from GroundStationBase import FrameGroundStationBase
 from SerialSettingDialog import SerialSetting
 from VideoSettingDialog import VideoSetting
 import util
 from util import DBGException
 from Definition import *
 
-class ButtonBlock():
+class ButtonBlock(FrameGroundStationBase,object):
     def open_xbee(self, comp):
         try:
             self.comm.open(self.comm_options)

@@ -3,7 +3,7 @@
 Created on 2014-1-3
 
 @author: GroundMelon
-@note: 处理跟踪相关处理
+@note: 跟踪相关处理
 '''
 import wx
 import util
@@ -11,6 +11,7 @@ from Definition import *
 # import imageprocess.ObjectTrackingSingleProcess as Objtrack
 # import imageprocess.ObjectTrackingMultiProcess as Objtrack
 import imageprocess.ObjectTracking as Objtrack
+from GroundStationBase import FrameGroundStationBase
 
 from TrackAlgorithm import TrackController
 
@@ -27,7 +28,7 @@ class DragInfomation(object):
         def get_drag_data(self):
             return{'start':self.start, 'end':  self.cur}
 
-class TrackBlock():
+class TrackBlock(FrameGroundStationBase, object):
     def enable_track_components(self, switch):
         self.m_panel_track.Enable(switch)
         for each in self.m_panel_track.GetChildren():

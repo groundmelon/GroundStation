@@ -257,6 +257,12 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_staticText_showpid.SetFont( wx.Font( 8, 75, 90, 90, False, "Consolas" ) )
 		self.m_staticText_showpid.SetMinSize( wx.Size( 120,-1 ) )
 		
+		self.m_menu7 = wx.Menu()
+		self.m_menuItem_update_pid = wx.MenuItem( self.m_menu7, wx.ID_ANY, u"更新PID", wx.EmptyString, wx.ITEM_NORMAL )
+		self.m_menu7.AppendItem( self.m_menuItem_update_pid )
+		
+		self.m_staticText_showpid.Bind( wx.EVT_RIGHT_DOWN, self.m_staticText_showpidOnContextMenu ) 
+		
 		gbSizer11.Add( self.m_staticText_showpid, wx.GBPosition( 0, 2 ), wx.GBSpan( 1, 2 ), wx.ALIGN_CENTER_HORIZONTAL|wx.ALL|wx.EXPAND, 5 )
 		
 		
@@ -508,6 +514,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_set_down_para.Bind( wx.EVT_BUTTON, self.on_set_down_para )
 		self.m_button_save_para.Bind( wx.EVT_BUTTON, self.on_save_para )
 		self.m_button_load_para.Bind( wx.EVT_BUTTON, self.on_load_para )
+		self.Bind( wx.EVT_MENU, self.on_update_pid, id = self.m_menuItem_update_pid.GetId() )
 		self.m_bitmap_track.Bind( wx.EVT_ENTER_WINDOW, self.on_enter_bitmap_track )
 		self.m_bitmap_track.Bind( wx.EVT_LEAVE_WINDOW, self.on_leave_bitmap_track )
 		self.m_radioBox_image_adj.Bind( wx.EVT_RADIOBOX, self.on_radiobox_adjust )
@@ -586,6 +593,9 @@ class FrameGroundStationBase ( wx.Frame ):
 	def on_load_para( self, event ):
 		event.Skip()
 	
+	def on_update_pid( self, event ):
+		event.Skip()
+	
 	def on_enter_bitmap_track( self, event ):
 		event.Skip()
 	
@@ -654,6 +664,9 @@ class FrameGroundStationBase ( wx.Frame ):
 		
 	def m_bitmap_uavinfoOnContextMenu( self, event ):
 		self.m_bitmap_uavinfo.PopupMenu( self.m_menu_update_uavinfo, event.GetPosition() )
+		
+	def m_staticText_showpidOnContextMenu( self, event ):
+		self.m_staticText_showpid.PopupMenu( self.m_menu7, event.GetPosition() )
 		
 	def m_bitmap_trackOnContextMenu( self, event ):
 		self.m_bitmap_track.PopupMenu( self.m_menu_bitmap_track, event.GetPosition() )

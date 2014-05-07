@@ -4,13 +4,14 @@ Created on 2014-4-1
 
 @author: GroundMelon
 '''
+from GroundStationBase import FrameGroundStationBase
 import communication.MessageProcess as MsgPrcs
 from JoyController import JoyCtrl
 import util
 from Definition import USING_JOYSTICK
 import wx
 
-class UAVCtrlBlock():
+class UAVCtrlBlock(FrameGroundStationBase, object):
     def init_uav_control(self):
         self.state_smart_direction = False
     

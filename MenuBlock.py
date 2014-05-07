@@ -5,13 +5,15 @@ Created on 2013-12-4
 @author: Administrator
 '''
 import wx
+from GroundStationBase import FrameGroundStationBase
+from Definition import VERSIONSTRING
 import PickleFileIO
 import os
 import cv2
 
-class MenuBlock():
+class MenuBlock(FrameGroundStationBase,object):
     def about(self):
-        wx.MessageBox(u'GroundStation V1.0\nGroundMelon@gmail.com\nPowered by wxPython %s and OpenCV %s'%(wx.VERSION_STRING, cv2.__version__), u"关于",wx.OK | wx.ICON_INFORMATION)
+        wx.MessageBox(u'GroundStation %s\nGroundMelon@gmail.com\nPowered by wxPython %s and OpenCV %s'%(VERSIONSTRING, wx.VERSION_STRING, cv2.__version__), u"关于",wx.OK | wx.ICON_INFORMATION)
         
     def save_comm_option(self,options):
         dialog = wx.FileDialog(None, u"保存设置到...", os.getcwd(),

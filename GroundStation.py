@@ -33,7 +33,7 @@ from Definition import *
 from imageprocess.ObjectTracking import METHOD
 
 
-class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
+class GroundStation(WorkBlock ,TrackBlock, VideoBlock,
                     ButtonBlock, MenuBlock, CommBlock, ParameterAdjustBlock,
                     UAVCtrlBlock
                     ):
@@ -44,19 +44,21 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
         self.SetIcon(wx.Icon(r'resources/gs.ico', wx.BITMAP_TYPE_ICO))              
         
         #---- init status bar system ----
-        self.sbar = StatusBarSystem(self.m_statusBar)
+        self.sbar = StatusBarSystem(self.m_statusBar)# 状态栏管理系统
         
         #---- add Google Earth Components ----  
         sizer_ge = self.m_panel_route.GetSizer()
-        self.browser_ge = wx.html2.WebView.New(self.m_panel_route, size=(330,330))
+        self.browser_ge = wx.html2.WebView.New(self.m_panel_route, size=(330,330))# Google Earth WebView Object'''
         sizer_ge.Add(self.browser_ge, 1, wx.ALIGN_CENTER, 0)
         self.browser_ge.LoadURL(r'file:///%s/resources/ge.html'%os.getcwd().replace('\\','/'))
-        self.GE_uninited = True
+        self.GE_uninited = True # GoogleEarth的显示未初始化
                 
         #---- set record labels ----
+        # 设置文件选择器按钮的Label
         self.m_filePicker_output.GetPickerCtrl().SetLabel(u'设置视频参数')
         
         #---- add component attributes ----
+        # 对起切换作用的Buttons加上is_running属性方便操作
         for comp in [self.m_button_toggle_track, 
                      self.m_button_toggle_track_video,
                      self.m_button_toggle_video,
@@ -69,10 +71,9 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
             comp.__setattr__('is_running', False)
 
         #---- init comm block ----
-        self.comm = XBee(self)
-        self.comm_options = {}
-        self.load_default_comm_options()
-        self.history = InputHistory(self)
+        self.comm = XBee(self) # 通信模块
+        self.comm_options = self.load_default_comm_options() # 读取默认通信设置
+        self.history = InputHistory(self)# 串口发送区历史记录
         self.enable_comm_relative_components(False)
         
         #---- init video block ----
@@ -265,6 +266,9 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
     
     def on_set_down_para(self, event):
         self.set_down_para()
+    
+    def on_update_pid(self, event):
+        self.get_pid()
 
 #------ Communication Binding Function ------   
     def on_send_area_enter(self, event):
@@ -371,6 +375,9 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
                 else:
                     rstbmp = util.cvimg_to_wxbmp(matchimg)
             
+                if TRACK_OBJECT in worklist:
+                    self.trackctrl.add_pt(center)
+            
             # TODO:MeanShift-OpticalFlow 卡尔曼
                 
             # 更新track bitmap 界面
@@ -397,7 +404,6 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
                 self.update_GUI_UAVinfo(self.UAVinfo.get(-2))
         
             if TRACK_OBJECT in worklist:
-                self.trackctrl.add_pt(center)
                 h=self.UAVinfo.get().height
                 self.trackctrl.update_h(3 if math.isnan(h) else h)
                 du = self.trackctrl.get_u()

@@ -39,10 +39,10 @@ def init_font():
 class InfoEntry(object):
     TYPE_LABEL = 1
     TYPE_WARNING = 0
-    def __init__(self, type, *arg):
+    def __init__(self, typ, *arg):
         arglen = len(arg)
         assert arglen > 0, 'arg length must > 0.'
-        self.type = type
+        self.type = typ
         if arglen == 1:
             assert isinstance(arg[0], str), 'arg[0] must be string.'
             self.label = arg[0]
@@ -108,7 +108,7 @@ NULLIMG = r'resources\null.bmp'
 def get_null_bitmap():
     return wx.BitmapFromImage(wx.Image(NULLIMG))
 
-class Point(object):
+class Point1(object):
     def __init__(self, *arg):
         arglen = len(arg)
         if arglen == 0:
@@ -127,10 +127,50 @@ class Point(object):
             self.y = arg[1]
         else:
             assert False,"Invalid args"
-        
+         
         self.tup = (self.x, self.y) # tuple represent
+    
     def __repr__(self):
         return '<pt(%.2f,%.2f)>'%(self.x, self.y)
+    
+    def __iter__(self):
+        yield self.x
+        yield self.y
+
+class Point(tuple):
+    def __new__(cls, *arg):
+        arglen = len(arg)
+        if arglen == 0:
+            x = 0
+            y = 0
+        elif arglen == 1:
+            assert isinstance(arg[0], tuple), "arg is not tuple"
+            assert isinstance(arg[0][0], (int,float)), "arg tuple[0] is not int or float"
+            assert isinstance(arg[0][1], (int,float)), "arg tuple[1] is not int or float"
+            x = arg[0][0]
+            y = arg[0][1]
+        elif arglen == 2:
+            assert isinstance(arg[0], (int,float)), "arg x is not int or float"
+            assert isinstance(arg[1], (int,float)), "arg y is not int or float"
+            x = arg[0]
+            y = arg[1]
+        else:
+            assert False,"Invalid args"
+        return tuple.__new__(cls, (x,y))
+             
+    def __repr__(self):
+        return '<pt(%.2f,%.2f)>'%(self[0], self[1])
+    
+    def __getattribute__(self, *args, **kwargs):
+        if args[0]=='x':
+            return self[0]
+        elif args[0]=='y':
+            return self[1]
+        elif args[0]=='tup':
+            return tuple(self)
+        else:
+            return tuple.__getattribute__(self, *args, **kwargs)
+    
 
 JSCODES = '''
             // Get the current view.
@@ -209,6 +249,7 @@ JSCODESINIT = '''
         '''
 
 if __name__ == '__main__':
-    print(Point(1,2))
-    print(Point((3,4)))
+    p = Point1(1.0,2.0)
+    print(p,p.x,p.y,p.tup,p[0],p[1])
+    
             

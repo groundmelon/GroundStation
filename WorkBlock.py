@@ -7,7 +7,7 @@ Created on 2014-2-12
 from GroundStationBase import FrameGroundStationBase
 from Definition import *
 
-class WorkBlock():
+class WorkBlock(FrameGroundStationBase, object):
     def init_worklist(self):
         #self.worklist = [DISPLAY_ATTITUDE]
         self.worklist = []
