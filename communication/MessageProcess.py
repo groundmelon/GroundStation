@@ -106,7 +106,18 @@ def pack_pt(p, r):
     body = ''.join([struct.pack('<ff', p, r),'\x00'*4*3])
     return pack(typ, body)
 
-    
+def pack_ref(x,y,z,h):
+    '''
+    地面站给定命令打包
+    @param x: x轴给定
+    @param y: y轴给定
+    @param z: z轴给定
+    @param h: 高度给定
+    '''
+    typ = packbyte(PKGTYPE_REF)
+    body = ''.join([struct.pack('<ffff',x,y,z,h), '\x00'*4])
+    return pack(typ,body)
+
 def unpack_type(buf):
     '''
    解包，验证包头包尾，解出包类型

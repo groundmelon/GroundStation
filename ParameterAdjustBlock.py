@@ -85,16 +85,25 @@ class ParameterAdjustBlock(FrameGroundStationBase, object):
             self.rcv_pid['%sD'%axis] = para[2]
             self.rcv_pid['%sSP'%axis] = para[3]
         self.show_rcv_pid()
+    
+    def get_showing_para(self):
+        return [self.rcv_pid[t] for t in ('XP','XI','XD','XSP',
+                                          'YP','YI','YD','YSP',
+                                          'ZP','ZI','ZD','ZSP',
+                                          'HP','HI','HD','HSP',
+                                          'PP','PI','PD','PSP',
+                                          )]
         
     def show_rcv_pid(self):
         title = u'机上PID参数\n\n'
-        info = ''.join(['%s = %6.2f/K\n'%(t.rjust(3,' '), self.rcv_pid[t]*PARA_LOOK_DIV_REAL)
-                        for t in ['XP','XI','XD','XSP',
+        #print 'PID %s'%str(self.rcv_pid)
+        info = ''.join(['%s = %6.2f/K\n'%(t.rjust(3,' '), self.rcv_pid[t]*PARA_LOOK_DIV_REAL)\
+                        for t in ('XP','XI','XD','XSP',
                                   'YP','YI','YD','YSP',
                                   'ZP','ZI','ZD','ZSP',
                                   'HP','HI','HD','HSP',
                                   'PP','PI','PD','PSP',
-                                  ]
+                                  )
                         ])
         self.m_staticText_showpid.SetLabel(''.join([title, info]))
         self.sbar.update(u"PID参数已经更新",0)

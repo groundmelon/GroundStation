@@ -10,6 +10,7 @@ import util
 import wx
 import os
 import time
+import math
 from attitude.attitudeMod import AttitudeDisplay
 
 LA = 45.732433
@@ -41,16 +42,17 @@ class InfoItem():
         self.PUi = init_val # Pitch Ui
         self.PUd = init_val # Pitch Ud
         self.RUp = init_val # Roll Up
-        self.RUi = init_val
-        self.RUd = init_val
-        self.YUp = init_val
-        self.YUi = init_val
-        self.YUd = init_val
+        self.RUi = init_val # Roll Ui
+        self.RUd = init_val # Roll Up
+        self.YUp = init_val # Yaw Up
+        self.YUi = init_val # Yaw Ui
+        self.YUd = init_val # Yaw Ud
         self.st_ct = init_val # control type
         self.st_mt = init_val # motor state
         self.st_ah = init_val # auto height state
         self.st_sd = init_val # smart direction state
-        self.uavtime = init_val
+        self.uavtime = init_val # time
+        self.cur = init_val # current
         self.la = LA
         self.lo = LO
     
@@ -117,6 +119,7 @@ class UAVInfomation(object):
         更新无人机姿态、高度、电压等信息
         '''
         self.add_elements(['roll','pitch','yaw','height','volt'], data)
+        self.infobuf[-1].height = self.infobuf[-1].height/100.0
     
     def update_pos(self, data):
         '''
@@ -148,7 +151,7 @@ class UAVInfomation(object):
         更新给定信息
         '''
         self.add_elements(['ref_roll','ref_pitch','ref_yaw','ref_thrust','ref_height'], data)
-        self.infobuf[-1].height = self.infobuf[-1].height/100.0
+        self.infobuf[-1].ref_height = self.infobuf[-1].ref_height/100.0
     
     def update_u0(self, data):
         '''
@@ -160,7 +163,10 @@ class UAVInfomation(object):
         '''
         更新控制量信息之1
         '''
-        self.add_elements(['PUd','YUp','YUi','YUd'], data)
+        self.add_elements(['PUd','YUp','YUi','YUd','cur'], data)
+        self.infobuf[-1].volt = self.infobuf[-1].volt + self.infobuf[-1].cur*0.069
+        if self.infobuf[-1].volt>12.6:
+            self.infobuf[-1].volt=12.61
         
     def get_by_index(self, index):
         '''
@@ -202,7 +208,7 @@ class UAVInfomation(object):
         '''
         if 'height' == key and value < 1:
             return True
-        elif 'volt' == key and value < 11.3:
+        elif 'volt' == key and value < 11.05:
             return True
         else:
             return False
@@ -256,11 +262,11 @@ class UAVInfomation(object):
                     # print titles
                     f.write('XP\tXI\tXD\tXSP\tYP\tYI\tYD\tYSP\tZP\tZI\tZD\tZSP\tHP\tHI\tHD\tHSP\tPP\tPI\tPD\tPSP\n')
                     # print numbers
-                    f.write('%s\n'%('\t'.join(['%f'%x for x in pidpara])))
+                    f.write('%s\n'%('\t'.join(['0.0' if math.isnan(x) else '%f'%x  for x in pidpara])))
                     
                 items = ['height','pitch','roll','yaw','volt','Rpitch','Rroll','Ryaw',
                          'Rthr','Rheight','posx','posy','Rposx','Rposy','Sheight','la','lo','PUp',
-                         'PUi','PUd','RUp','RUi','RUd','YUp','YUi','YUd','UAVTIME']
+                         'PUi','PUd','RUp','RUi','RUd','YUp','YUi','YUd','UAVTIME','cur']
                 # print titles
                 s='No.%s\n'%('\t'.join([ '%d%s'%(index+1,item) for index,item in enumerate(items)]))
                 f.write(s)
@@ -296,6 +302,7 @@ class UAVInfomation(object):
                     lst.append('%s\t'%str(data.YUi))
                     lst.append('%s\t'%str(data.YUd))
                     lst.append('%s\t'%str(data.uavtime))
+                    lst.append('%s\t'%str(data.cur))
                     lst.append('\n')
                     f.write(''.join(lst))
                 

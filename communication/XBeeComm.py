@@ -118,14 +118,15 @@ class XBee(object):
         @return: 新内容的副本
         '''
         temp = list(self.newbuf)
-        self.newbuf = list()# 清空new_buf
+        self.newbuf = []# 清空new_buf
         return temp
     
     def clear_rcvbuf(self):
         '''
         清除接收缓冲区
         '''
-        self.rcvbuf = list()
+        self.rcvbuf = []
+        self.newbuf = []
 
 if __name__ == '__main__':
     xbee=XBee()

@@ -20,6 +20,7 @@ from StatusBarSystem import StatusBarSystem
 
 from communication.XBeeComm import XBee
 import communication.MessageProcess as MsgPrcs
+from imageprocess.ObjectTracking import img_filter
 
 import util
 import os
@@ -138,7 +139,7 @@ class GroundStation(WorkBlock ,TrackBlock, VideoBlock,
         self.load_default_comm_options()
         self.display_comm_option(self.comm_options)
     
- #------ Button binding function ------   
+#------ Button binding function ------   
     
     def on_xbee_option(self, event):
         self.show_xbee_option()
@@ -165,7 +166,7 @@ class GroundStation(WorkBlock ,TrackBlock, VideoBlock,
             self.show_uavinfo(event.GetEventObject())
     
     def on_save_uav_info(self, event):
-        saved = self.UAVinfo.save_to_file(self, pidpara = self.get_para_from_table())
+        saved = self.UAVinfo.save_to_file(self, pidpara = self.get_showing_para())
         if self.m_menuItem_clear_uav_info_after_save.IsChecked() and saved:
             self.UAVinfo.clear_buf()
         self.update_GUI_UAVinfo(self.UAVinfo.get())
@@ -316,6 +317,12 @@ class GroundStation(WorkBlock ,TrackBlock, VideoBlock,
         
         if DISPLAY_VIDEO in worklist:
             srcimg = self.camcap.get_frame()
+            if len(self.cambuf)==0:
+                self.cambuf.append(srcimg)
+                self.cambuf.append(srcimg)
+#                 self.cambuf.append(srcimg)
+#                 print('cambuf length:%d'%len(self.cambuf))
+
             wxbmp = util.cvimg_to_wxbmp(srcimg)
             wximg = wx.ImageFromBitmap(wxbmp)
             memvideo = wx.MemoryDC()
@@ -340,12 +347,24 @@ class GroundStation(WorkBlock ,TrackBlock, VideoBlock,
             self.mov_rec.save_frame(wxbmp)
             
         if DISPLAY_INDEPENDENT_VIDEO in worklist:
-            self.video_window.update_image_with_info1(wximg, self.UAVinfo.get_information_in_InfoEntries())
+            self.video_window.update_image(wximg, self.UAVinfo.get_information_in_InfoEntries())
         
        
         # 结束图像传输需要先停止track
         if DISPLAY_TRACK_VIDEO in worklist:       
             memtrack = wx.MemoryDC()
+            #图像滤波
+            
+            self.cambuf.append(srcimg)
+            self.cambuf.pop(0)
+            a=time.clock()
+            srcimg = img_filter(self.cambuf)
+#             print '%.6f'%((time.clock()-a)*1000)
+
+#             self.cambuf.append(srcimg)
+#             self.cambuf.pop(0)
+            
+            
             # 显示原始图像
             if self.display_track_state == DISPLAY_TRACK_STATE_RAW:
                 #rstimg = self.get_adjusted_image(srcimg)
@@ -372,11 +391,14 @@ class GroundStation(WorkBlock ,TrackBlock, VideoBlock,
                 matchimg, center, res = self.objmatch.process(method, srcimg)
                 if display_process:
                     rstbmp = util.cvimg_to_wxbmp(res)
+                    tmpimg = res
                 else:
                     rstbmp = util.cvimg_to_wxbmp(matchimg)
+                    tmpimg = matchimg
             
                 if TRACK_OBJECT in worklist:
                     self.trackctrl.add_pt(center)
+                
             
             # TODO:MeanShift-OpticalFlow 卡尔曼
                 
@@ -388,8 +410,9 @@ class GroundStation(WorkBlock ,TrackBlock, VideoBlock,
             a = time.clock()
         
         # 5 Hz Tasks
-        if (time.clock()-self.timer.last_time) > 1.0/TASK_LOW_FREQ:
+        if (time.clock()-self.timer.last_time) > (1.0/TASK_LOW_FREQ):
             self.timer.last_time=time.clock()
+            
             
             if DISPLAY_XBEE_DATA in worklist:
                 self.update_rcv_area()
@@ -404,22 +427,33 @@ class GroundStation(WorkBlock ,TrackBlock, VideoBlock,
                 self.update_GUI_UAVinfo(self.UAVinfo.get(-2))
         
             if TRACK_OBJECT in worklist:
-                h=self.UAVinfo.get().height
-                self.trackctrl.update_h(3 if math.isnan(h) else h)
-                du = self.trackctrl.get_u()
+                now_height = self.UAVinfo.get().height
+                self.trackctrl.update_h(3 if math.isnan(now_height) else now_height)
+                flowspeedx=self.UAVinfo.get(-2).rposx
+                flowspeedy=self.UAVinfo.get(-2).rposy
+                du = self.trackctrl.get_u(flowspeedx,flowspeedy)
                 
-                rstimg = self.objmatch.draw_circles(matchimg, self.trackctrl.pts[-1], color='GREEN', radius=10)
+                rstimg = self.objmatch.draw_circles(tmpimg, self.trackctrl.pts[-1], color='GREEN', radius=10)
                 rstbmp = util.cvimg_to_wxbmp(rstimg)
                 memtrack.SelectObject(rstbmp)
                 memtrack.SetUserScale(float(srcimg.shape[1])/float(self.bitmap_track_size[0]),
                                  float(srcimg.shape[0])/float(self.bitmap_track_size[1]))
                 self.dc_track.Blit(0, 0, self.bitmap_track_size[0], self.bitmap_track_size[1], memtrack, 0, 0)
+                
+                self.send_ref(du)
         
         n = time.clock()
 #         print('[work time]%4.4f [cir time]%4.4f'%((n-a)*1000,(n-self.lasttime)*1000))
         self.lasttime = n
     
 #------ Tool Function ------       
+    def send_ref(self,u):
+        x,y,z = u
+        h=0
+        rtn = self.send_data_by_frame(MsgPrcs.pack_ref(x,y,z,h))
+#         self.sbar.update(u'给定<%.4f,%.4f,%.4f,%.4f>已发送(%d)'%(x,y,z,h,rtn))
+        self.sbar.update(u'给定<r=%.4f,p=%.4f,y=%.4f>已发送(%d)'%(x,y,z,rtn))
+    
     def update_GUI_UAVinfo(self, info):
         # update text info
         mem = wx.MemoryDC()

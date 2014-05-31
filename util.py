@@ -108,8 +108,8 @@ NULLIMG = r'resources\null.bmp'
 def get_null_bitmap():
     return wx.BitmapFromImage(wx.Image(NULLIMG))
 
-class Point(tuple):
-    def __new__(cls, *arg):
+class Point(object):
+    def __init__(self, *arg):
         arglen = len(arg)
         if arglen == 0:
             x = 0
@@ -127,20 +127,59 @@ class Point(tuple):
             y = arg[1]
         else:
             assert False,"Invalid args"
-        return tuple.__new__(cls, (x,y))
+        self.x = x
+        self.y = y
              
     def __repr__(self):
-        return '<pt(%.2f,%.2f)>'%(self[0], self[1])
+        return '<pt(%.2f,%.2f)>'%(self.x, self.y)
     
     def __getattribute__(self, *args, **kwargs):
-        if args[0]=='x':
-            return self[0]
-        elif args[0]=='y':
-            return self[1]
-        elif args[0]=='tup':
-            return tuple(self)
+        if args[0]=='tup':
+            return tuple((self.x, self.y))
         else:
-            return tuple.__getattribute__(self, *args, **kwargs)
+            return object.__getattribute__(self, *args, **kwargs)
+    
+    def __getitem__(self, key):
+        if key==0:
+            return self.x
+        elif key==1:
+            return self.y
+        else:
+            raise IndexError
+    
+    def __setitem__(self, key, value):
+        if key==0:
+            self.x = value
+            return self.x
+        elif key==1:
+            self.y = value
+            return self.y
+        else:
+            raise IndexError
+    
+    def __iter__(self):
+        yield self.x
+        yield self.y
+    
+#     def __getattribute__(self, *args, **kwargs):
+#         if args[0]=='x':
+#             return self[0]
+#         elif args[0]=='y':
+#             return self[1]
+#         elif args[0]=='tup':
+#             return tuple(self)
+#         else:
+#             return list.__getattribute__(self, *args, **kwargs)
+#     
+#     def __setattr__(self, *args, **kwargs):
+#         if args[0]=='x':
+#             self[0]=args[1]
+#             return self[0]
+#         elif args[0]=='y':
+#             self[1]=args[1]
+#             return self[1]
+#         else:
+#             return list.__getattribute__(self, *args, **kwargs)
     
 
 JSCODES = '''
@@ -220,7 +259,10 @@ JSCODESINIT = '''
         '''
 
 if __name__ == '__main__':
-    p = Point1(1.0,2.0)
-    print(p,p.x,p.y,p.tup,p[0],p[1])
+    p = Point(1.0,2.0)
+    print(p,p.x,p.y,p.tup.__repr__(),p[0],p[1])
+    p.x=4.0
+    p[1]=3.0
+    print p
     
             

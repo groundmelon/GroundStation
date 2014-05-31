@@ -61,10 +61,14 @@ class TrackBlock(FrameGroundStationBase, object):
         self.m_button_select_object.Enable(True)
     
     def start_track(self, comp):
-        self.add_work(TRACK_OBJECT)
-        util.toggle_button(comp, u'开始', u'结束')
-        self.m_button_select_object.Enable(False)
-        self.trackctrl = TrackController(self.camcap.get_frame_size(),1.0/TASK_LOW_FREQ)
+        if self.m_button_toggle_xbee.is_running:
+            self.add_work(TRACK_OBJECT)
+            util.toggle_button(comp, u'开始', u'结束')
+            self.m_button_select_object.Enable(False)
+            self.trackctrl = TrackController(self.camcap.get_frame_size(),1.0/TASK_LOW_FREQ)
+        else:
+            wx.MessageBox(u"请先打开XBee再进行跟踪。", u"无效操作",wx.OK | wx.ICON_INFORMATION)
+            
         
     def set_track_arg(self, s):
         sel = self.m_choice_track_arg.GetStringSelection()

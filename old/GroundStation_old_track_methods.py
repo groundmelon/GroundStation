@@ -391,7 +391,6 @@ class GroundStation(FrameGroundStationBase, WorkBlock ,TrackBlock, VideoBlock,
                 else:
                     rstbmp = util.cvimg_to_wxbmp(matchimg)
             
-            # TODO:MeanShift-OpticalFlow 卡尔曼
                 
 #                 # 模板匹配模式
 #                 if track_mode == 'template':

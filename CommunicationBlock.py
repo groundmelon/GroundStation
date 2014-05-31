@@ -61,9 +61,11 @@ class CommBlock(FrameGroundStationBase,object):
         else:
             return (None, None)
     
-    
-    
     def update_rcv_area(self, refresh = False):
+        '''
+        更新数据接收区函数
+        @param refresh: 是否需要刷新
+        '''
         if refresh:
             data = self.comm.get_rcvbuf()
             func = 'ChangeValue'
@@ -77,17 +79,23 @@ class CommBlock(FrameGroundStationBase,object):
                 s = ''.join([x if x<'\xF0' else ' ' for x in data])
             else:
                 assert False, u'Send type is not ASCII nor HEX!'
-                return
+                s = ''
         else:
             s = ''
-        eval("self.m_textCtrl_comm_receive.%s"%func)(s)
+        eval("self.m_textCtrl_comm_receive.%s"%func)(s) # 使用ChangeValue/AppendText
     
     def process_backdata(self, msgtype, buf):
-        for (k,v) in MsgPrcs.PKGTYPE_PID.iteritems():
+        '''
+        处理回传数据
+        @param msgtype: 消息类型
+        @param buf: 消息数据
+        '''
+        for (k,v) in MsgPrcs.PKGTYPE_PID.iteritems():# PID消息
             if v == msgtype:
                 data = MsgPrcs.unpack_5f(buf)
                 self.update_rcv_pid(k, data[:4])
-                return True
+                return
+
         if msgtype == MsgPrcs.PKGTYPE_ATTI:
             data = MsgPrcs.unpack_5f(buf)
             self.UAVinfo.update_info(data)
@@ -118,23 +126,26 @@ class CommBlock(FrameGroundStationBase,object):
             self.UAVinfo.update_u1(data)
             
     def enable_comm_relative_components(self, switch):
-        #self.m_panel_comm.Enable(switch)
+        '''
+        通信相关控件使能失能
+        @param switch: True or False
+        '''
         for each in self.m_panel_comm.GetChildren():
             if each != self.m_textCtrl_comm_receive:
                 each.Enable(switch)
         
-        #self.m_panel_para_adj.Enable(switch)
         for each in self.m_panel_para_adj.GetChildren():
             each.Enable(switch)
         
         self.m_button_update_uavinfo.Enable(switch)
         
-        #self.m_panel_uavctrl.Enable(switch)
         for each in self.m_panel_uavctrl.GetChildren():
             each.Enable(switch)
     
     def load_default_comm_options(self):
-        # load default settings
+        '''
+        读取默认通信配置
+        '''
         filepath = r'communication\xbee.gss'
         try:
             pfio = PickleFileIO.PickleFileIO(filepath)

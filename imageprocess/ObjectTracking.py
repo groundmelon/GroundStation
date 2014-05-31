@@ -4,25 +4,27 @@ Created on 2014-4-13
 
 @author: GroundMelon
 '''
-# -*- coding: utf-8 -*- 
-'''
-Created on 2014-2-13
-
-@author: GroundMelon
-'''
 import numpy as np
 import cv2
 import util
 import math
 
 class SW(util.SW):
+    '''
+    STOP WATCH,计算算法时间
+    '''
     def __init__(self, s, display=False):
+        '''
+        初始化
+        @param display: False,不显示; True,显示; 统一管理本模块中的时间是否显示
+        '''
         util.SW.__init__(self, s, False)
 
 LINE_WIDTH = 5
 DRAG_COLOR = (255,0,0)
 OBJECT_MATCH_COLOR = (0, 0, 255)
 SELECTPADDING = 10
+SELECTPADDINGSCALE = 10.0/100
 # HUE_DELTA = 30
 # SAT_DELTA = 30
 # LIG_DELTA = 30
@@ -34,6 +36,9 @@ CANNY_MIN = 100
 CANNY_MAX = 200
 
 class METHOD():
+    '''
+    一些常量定义
+    '''
     TEMPLATEMATCH=0
     MEANSHIFT=1
     GRAYMEANSHIFT=2
@@ -56,6 +61,8 @@ def get_adjusted_image(src, image_adjust_value):
 
 def get_dragging_image(src, drag_data, bitmap_size):
     ''' 
+    在框选过程中在原图像中画出选择框
+     
     @param src: 源图像
     @param drag_data:拖拽数据 
     @param bitmap_size:显示区域的尺寸
@@ -67,16 +74,17 @@ def get_dragging_image(src, drag_data, bitmap_size):
     bw = bitmap_size[0] # bitmap width
     bh = bitmap_size[1] # bitmap height
     
-    start = util.Point(drag_data['start'].x * width / bw, drag_data['start'].y * height / bh)
-    end = util.Point(drag_data['end'].x * width / bw, drag_data['end'].y * height / bh)
+    start = (drag_data['start'].x * width / bw, drag_data['start'].y * height / bh)
+    end = (drag_data['end'].x * width / bw, drag_data['end'].y * height / bh)
     #left_top = util.Point(min(start.x, end.x), min(start.y, end.y))
     #right_down = util.Point(max(start.x, end.x), min(start.y, end.y))
-    cv2.rectangle(img, start.tup, end.tup, DRAG_COLOR, LINE_WIDTH)
+    cv2.rectangle(img, start, end, DRAG_COLOR, LINE_WIDTH)
     return img
 
 def get_selection_rect(src_size, drag_data, bitmap_size):
-    ''' 
-            获取框选区域在源图像上的左上角和右下角
+    '''
+    获取框选区域在源图像上的左上角和右下角
+            
     @param src_size: 源图像的尺寸
     @param drag_data:拖拽数据 
     @param bitmap_size:显示区域的尺寸
@@ -128,35 +136,57 @@ class TemplateMatch(object):
         return (rst_img, [util.Point(center)], rst_res)
 
 class MeanShift(object):
+    '''
+    MeanShift追踪类
+    '''
     def __init__(self, src, roi, window, hist_channel=[0]):
         self.hist_channel = hist_channel
+        # BGR to HLS ，region of interest
         hls_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2HLS)
-        mask = cv2.inRange(hls_roi, np.array((0., 0., 0.)), np.array((180.,255.,255.)))
-        self.roi_hist = cv2.calcHist([hls_roi], self.hist_channel, mask, [180], [0,180])
+#         mask = cv2.inRange(hls_roi, np.array((0., 0., 0.)), np.array((180.,255.,255.)))
+#         self.roi_hist = cv2.calcHist([hls_roi], self.hist_channel, mask, [180], [0,180])
+        # 获得ROI直方图
+        self.roi_hist = cv2.calcHist([hls_roi], self.hist_channel, None, [180], [0,180])
+        # 直方图均衡化
         cv2.normalize(self.roi_hist, self.roi_hist, 0, 255, cv2.NORM_MINMAX)
-        
+        # 迭代准则
         self.term_crit = (cv2.TERM_CRITERIA_EPS|cv2.TERM_CRITERIA_COUNT, 10, 1)
-        self.track_window = window
+        # 跟踪窗口
+        x,y,w,h = window
+        self.track_window = (int(x-w*SELECTPADDINGSCALE),
+                             int(y-h*SELECTPADDINGSCALE), 
+                             int(w*(1+2*SELECTPADDINGSCALE)),
+                             int(h*(1+2*SELECTPADDINGSCALE))
+                             )
         
     def process(self, src, **kwargs):         
         sw = SW('meanShift')
-     
-        hls = cv2.cvtColor(src, cv2.COLOR_BGR2HLS)
-        dst = cv2.calcBackProject([hls], self.hist_channel, self.roi_hist, [0,180], 1)
         
+        # 获得直方图
+        hls = cv2.cvtColor(src, cv2.COLOR_BGR2HLS)
+        # 获得直方图反向投影
+        dst = cv2.calcBackProject([hls], self.hist_channel, self.roi_hist, [0,180], 1)
+        # 应用MeanShift
         ret, window = cv2.meanShift(dst, self.track_window, self.term_crit)
+        # 更新跟踪窗口
         self.track_window = window
         x,y,w,h = window
+        # 计算中点
         center = (int(x+w/2), int(y+h/2))
+        # 绘制跟踪结果
         rst_img = src.copy()
         cv2.rectangle(rst_img, (x,y), (x+w,y+h), OBJECT_MATCH_COLOR, LINE_WIDTH)
+        # 绘制中间过程（反向投影图）
         prj_img = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
         cv2.rectangle(prj_img, (x,y), (x+w,y+h), OBJECT_MATCH_COLOR, LINE_WIDTH)
         
         sw.stop()
         return rst_img, [util.Point(center)], prj_img
 
-class GrayMeanShift(object):    
+class GrayMeanShift(object):
+    '''
+    灰度MeanShift追踪类
+    '''    
     def __init__(self, src, roi, window):
         gray_roi = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
 #         mask = cv2.inRange(gray_roi, np.array((0.)), np.array((255.)))
@@ -164,7 +194,13 @@ class GrayMeanShift(object):
         cv2.normalize(self.roi_gray_hist, self.roi_gray_hist, 0, 255, cv2.NORM_MINMAX)
         
         self.term_crit = (cv2.TERM_CRITERIA_EPS|cv2.TERM_CRITERIA_COUNT, 10, 1)
-        self.track_window = window
+        
+        x,y,w,h = window
+        self.track_window = (int(x-w*SELECTPADDINGSCALE),
+                             int(y-h*SELECTPADDINGSCALE), 
+                             int(w*(1+2*SELECTPADDINGSCALE)),
+                             int(h*(1+2*SELECTPADDINGSCALE))
+                             )
     
     def process(self, src,**kwargs):
         sw=SW('gray')
@@ -184,8 +220,14 @@ class GrayMeanShift(object):
         sw.stop()
         return rst_img, [util.Point(center)], prj_img
 
-class OpticalFlow(object):    
+class OpticalFlow(object):
+    '''
+    光流追踪类
+    '''    
     class ObjectMissError(Exception):
+        '''
+        目标丢失错误
+        '''
         pass
     def __init__(self, src, window):
         self.window = window
@@ -308,14 +350,24 @@ class ObjectTrack(object):
         else:
             color = (0, 255,0)
         dst = src.copy()
-        if isinstance(center, list) or isinstance(center, tuple):
+        if isinstance(center, util.Point):
+            cv2.circle(dst, center.tup, radius, color, LINE_WIDTH)
+        elif isinstance(center, list) or isinstance(center, tuple):
             for c in center:
                 assert isinstance(c, util.Point), 'points in center must be util.Point'
                 cv2.circle(dst, c.tup, radius, color, LINE_WIDTH)
         else:
-            assert isinstance(center, util.Point), 'center must be util.Point'
-            cv2.circle(dst, center.tup, radius, color, LINE_WIDTH)
+            assert False, 'Invalid Type'
         
         return dst
+    
+def img_filter(srcimgs):
+    rst = np.zeros_like(srcimgs[0], dtype=np.uint8)
+    length = len(srcimgs)
+    for img in srcimgs:
+        rst = rst + img/length
+    
+    return rst
+            
     
     
