@@ -28,10 +28,10 @@ class InfoItem():
         self.roll = init_val
         self.yaw = init_val
         self.volt = init_val
-        self.posx = init_val
-        self.posy = init_val
-        self.rposx = init_val
-        self.rposy = init_val
+        self.spdx = init_val
+        self.spdy = init_val
+        self.rspdx = init_val
+        self.rspdy = init_val
         self.sheight = init_val
         self.ref_thrust = init_val
         self.ref_pitch = init_val
@@ -121,11 +121,11 @@ class UAVInfomation(object):
         self.add_elements(['roll','pitch','yaw','height','volt'], data)
         self.infobuf[-1].height = self.infobuf[-1].height/100.0
     
-    def update_pos(self, data):
+    def update_spd(self, data):
         '''
         更新无人机位置、位置给定
         '''
-        self.add_elements(['posx','posy','rposx','rposy','sheight'], data)
+        self.add_elements(['spdx','spdy','rspdx','rspdy','sheight'], data)
     
     def update_status(self, data):
         ''' 
@@ -237,7 +237,7 @@ class UAVInfomation(object):
         rtnval.append(util.InfoEntry(entry_type,'Volt', ''.join(['%4.4f'%(info.volt),'v'])))
         
         entry_type = util.InfoEntry.TYPE_LABEL
-        rtnval.append(util.InfoEntry(entry_type,'Pos', ''.join(['(%5.2f,%5.2f)'%(info.posx,info.posy)])))
+        rtnval.append(util.InfoEntry(entry_type,'spd', ''.join(['(%5.2f,%5.2f)'%(info.spdx,info.spdy)])))
         
         return rtnval
     
@@ -265,7 +265,7 @@ class UAVInfomation(object):
                     f.write('%s\n'%('\t'.join(['0.0' if math.isnan(x) else '%f'%x  for x in pidpara])))
                     
                 items = ['height','pitch','roll','yaw','volt','Rpitch','Rroll','Ryaw',
-                         'Rthr','Rheight','posx','posy','Rposx','Rposy','Sheight','la','lo','PUp',
+                         'Rthr','Rheight','spdx','spdy','Rspdx','Rspdy','Sheight','la','lo','PUp',
                          'PUi','PUd','RUp','RUi','RUd','YUp','YUi','YUd','UAVTIME','cur']
                 # print titles
                 s='No.%s\n'%('\t'.join([ '%d%s'%(index+1,item) for index,item in enumerate(items)]))
@@ -285,10 +285,10 @@ class UAVInfomation(object):
                     lst.append('%s\t'%str(data.ref_yaw))
                     lst.append('%s\t'%str(data.ref_thrust))
                     lst.append('%s\t'%str(data.ref_height))
-                    lst.append('%s\t'%str(data.posx))
-                    lst.append('%s\t'%str(data.posy))
-                    lst.append('%s\t'%str(data.rposx))
-                    lst.append('%s\t'%str(data.rposy))
+                    lst.append('%s\t'%str(data.spdx))
+                    lst.append('%s\t'%str(data.spdy))
+                    lst.append('%s\t'%str(data.rspdx))
+                    lst.append('%s\t'%str(data.rspdy))
                     lst.append('%s\t'%str(data.sheight))
                     lst.append('%s\t'%str(data.la))
                     lst.append('%s\t'%str(data.lo))

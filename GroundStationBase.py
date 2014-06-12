@@ -144,7 +144,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_comm.SetSizer( gbSizer6 )
 		self.m_panel_comm.Layout()
 		gbSizer6.Fit( self.m_panel_comm )
-		self.m_notebook1.AddPage( self.m_panel_comm, u"通信数据查看", False )
+		self.m_notebook1.AddPage( self.m_panel_comm, u"通信数据查看", True )
 		self.m_panel_para_adj = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		gbSizer11 = wx.GridBagSizer( 0, 0 )
 		gbSizer11.SetFlexibleDirection( wx.BOTH )
@@ -275,7 +275,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_para_adj.SetSizer( gbSizer11 )
 		self.m_panel_para_adj.Layout()
 		gbSizer11.Fit( self.m_panel_para_adj )
-		self.m_notebook1.AddPage( self.m_panel_para_adj, u"调参", True )
+		self.m_notebook1.AddPage( self.m_panel_para_adj, u"调参", False )
 		self.m_panel_track = wx.Panel( self.m_notebook1, wx.ID_ANY, wx.DefaultPosition, wx.Size( -1,-1 ), wx.TAB_TRAVERSAL )
 		self.m_panel_track.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
 		self.m_panel_track.Enable( False )
@@ -407,7 +407,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_image.SetSizer( gbSizer5 )
 		self.m_panel_image.Layout()
 		gbSizer5.Fit( self.m_panel_image )
-		self.m_notebook2.AddPage( self.m_panel_image, u"实时图像", True )
+		self.m_notebook2.AddPage( self.m_panel_image, u"实时图像", False )
 		self.m_panel_uavctrl = wx.Panel( self.m_notebook2, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		gbSizer7 = wx.GridBagSizer( 0, 0 )
 		gbSizer7.SetFlexibleDirection( wx.BOTH )
@@ -417,7 +417,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_staticText12.Wrap( -1 )
 		gbSizer7.Add( self.m_staticText12, wx.GBPosition( 0, 0 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER|wx.ALL, 5 )
 		
-		self.m_spinCtrl_PT_pitch = wx.SpinCtrl( self.m_panel_uavctrl, wx.ID_ANY, u"-90", wx.DefaultPosition, wx.Size( 60,-1 ), wx.SP_ARROW_KEYS, -135, 90, -93 )
+		self.m_spinCtrl_PT_pitch = wx.SpinCtrl( self.m_panel_uavctrl, wx.ID_ANY, u"-90", wx.DefaultPosition, wx.Size( 60,-1 ), wx.SP_ARROW_KEYS|wx.TE_PROCESS_ENTER, -135, 90, -93 )
 		gbSizer7.Add( self.m_spinCtrl_PT_pitch, wx.GBPosition( 0, 1 ), wx.GBSpan( 1, 1 ), wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		self.m_staticText13 = wx.StaticText( self.m_panel_uavctrl, wx.ID_ANY, u"云台横滚", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -446,7 +446,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_panel_uavctrl.SetSizer( gbSizer7 )
 		self.m_panel_uavctrl.Layout()
 		gbSizer7.Fit( self.m_panel_uavctrl )
-		self.m_notebook2.AddPage( self.m_panel_uavctrl, u"UAV控制", False )
+		self.m_notebook2.AddPage( self.m_panel_uavctrl, u"UAV控制", True )
 		
 		gbSizer1.Add( self.m_notebook2, wx.GBPosition( 1, 2 ), wx.GBSpan( 1, 2 ), wx.ALIGN_LEFT|wx.ALIGN_TOP|wx.EXPAND, 0 )
 		
@@ -528,6 +528,7 @@ class FrameGroundStationBase ( wx.Frame ):
 		self.m_button_video_window_show.Bind( wx.EVT_BUTTON, self.on_video_window_show )
 		self.m_button_record.Bind( wx.EVT_BUTTON, self.on_record )
 		self.m_filePicker_output.Bind( wx.EVT_FILEPICKER_CHANGED, self.on_record_file_changed )
+		self.m_spinCtrl_PT_pitch.Bind( wx.EVT_CHAR, self.on_pt_pitch_char )
 		self.m_button_PT_send.Bind( wx.EVT_BUTTON, self.on_PT_send )
 		self.m_checkBox_smart_direction.Bind( wx.EVT_CHECKBOX, self.on_toggle_smart_direction )
 		self.m_button_toggle_joystick.Bind( wx.EVT_BUTTON, self.on_toggle_joystick )
@@ -633,6 +634,9 @@ class FrameGroundStationBase ( wx.Frame ):
 		event.Skip()
 	
 	def on_record_file_changed( self, event ):
+		event.Skip()
+	
+	def on_pt_pitch_char( self, event ):
 		event.Skip()
 	
 	def on_PT_send( self, event ):

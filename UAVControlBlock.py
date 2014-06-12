@@ -8,16 +8,19 @@ from GroundStationBase import FrameGroundStationBase
 import communication.MessageProcess as MsgPrcs
 from JoyController import JoyCtrl
 import util
-from Definition import USING_JOYSTICK
+from Definition import USING_JOYSTICK,CAMERA_PT_PITCH
 import wx
 
 class UAVCtrlBlock(FrameGroundStationBase, object):
     def init_uav_control(self):
         self.state_smart_direction = False
+        self.camera_pt_pitch = CAMERA_PT_PITCH
+        self.m_spinCtrl_PT_pitch.SetValue(self.camera_pt_pitch)
     
     def send_pt_reference(self):
         pitch = float(self.m_spinCtrl_PT_pitch.GetValue())
         roll = float(self.m_spinCtrl_PT_roll.GetValue())
+        self.camera_pt_pitch = pitch
         return self.send_data_by_frame(MsgPrcs.pack_pt(p=pitch, r=roll))
     
     def open_joystick(self, comp):

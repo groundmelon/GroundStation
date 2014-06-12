@@ -8,7 +8,7 @@ import util
 import math
 
 BUFFERSIZE = 100
-PADDING_SCALE = 0.20
+PADDING_SCALE = 0.10
 PT_PITCH_in_rad = 45.0/180 * math.pi
 
 def get_alpha(n):
@@ -22,6 +22,15 @@ def thlimit(x,a,b):
         return b
     else:
         return x
+
+def sign(x):
+    if x > 0:
+        rtn = 1
+    elif x == 0:
+        rtn = 0
+    else:
+        rtn = -1
+    return rtn
 
 class PID():
     def __init__(self, p, i, d):
@@ -67,8 +76,8 @@ class TrackController():
     
     def add_pt(self, center):
         assert isinstance(center, (list, tuple))
-        c = center[0] # 历史遗留问题，目前center内只有1个点，故按照该点处理
         if len(self.pts) < 2:
+            c = center[0] # 历史遗留问题，目前center内只有1个点，故按照该点处理
             assert isinstance(c, util.Point)
             self.pts.append(Pt(c))
             return
@@ -91,16 +100,18 @@ class TrackController():
         
         if len(self.pts)>BUFFERSIZE:
             self.pts.pop(0)
-    def get_u(self,flowspeedx,flowspeedy,nt):
-        
+    def get_u(self,nt,pt_pitch):
+        global PT_PITCH_in_rad
+        PT_PITCH_in_rad = -pt_pitch/180.0 * math.pi
+        print PT_PITCH_in_rad
         # --- 前几个点，做一些初始化工作 ---
         if len(self.pts)<=2:
             self.last_time = nt
             return (0,0,0)
         
         # --- 更新时间间隔 ---
-        dt = nt-self.last_time
-        self.last_time=nt
+#         dt = nt-self.last_time
+#         self.last_time = nt
         
         # --- 没有新的有效点出现，返回0控制量 ---
         if self.pts[-1].used:
@@ -134,7 +145,7 @@ class TrackController():
         # --- PITCH轴控制方法 ---
 #         u_pitch = Y.Kp * (ex-ex0) + Y.Ki * (ex) + Y.Kd * ((ex-ex0)-(ex0-ex00)),# 增量式PID 
 #         u_pitch = Y.Kp * ex # 绝对式P控制
-        u_pitch = abs(ex)**1.5 # 变增益P控制
+        u_pitch = abs(ex)**1 * 2 * sign(ex)  # 变增益P控制
         
         # --- YAW轴控制方法 ---
         u_yaw = Z.Kp * (ez-ez0) + Z.Ki * (ez) # 增量式PID   

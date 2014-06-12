@@ -199,6 +199,14 @@ class GroundStation(WorkBlock ,TrackBlock, VideoBlock,
         rtn = self.send_pt_reference()
         self.sbar.update(u'云台控制信息已经发送(%d)'%rtn)
     
+    def on_pt_pitch_char(self, event):
+        keycode = event.GetKeyCode()
+        if keycode == wx.WXK_RETURN:
+            rtn = self.send_pt_reference()
+            self.sbar.update(u'云台控制信息已经发送(%d)'%rtn)
+        else:
+            WorkBlock.on_pt_pitch_char(self, event)
+    
     def on_toggle_joystick(self, event):
         if event.GetEventObject().is_running:
             self.close_joystick(event.GetEventObject())
@@ -429,9 +437,8 @@ class GroundStation(WorkBlock ,TrackBlock, VideoBlock,
             if TRACK_OBJECT in worklist:
                 now_height = self.UAVinfo.get().height
                 self.trackctrl.update_h(3 if math.isnan(now_height) else now_height)
-                flowspeedx=self.UAVinfo.get(-2).rposx
-                flowspeedy=self.UAVinfo.get(-2).rposy
-                du = self.trackctrl.get_u(flowspeedx,flowspeedy)
+                nt = self.UAVinfo.get(-2).uavtime
+                du = self.trackctrl.get_u(nt, self.camera_pt_pitch)
                 
                 rstimg = self.objmatch.draw_circles(tmpimg, self.trackctrl.pts[-1], color='GREEN', radius=10)
                 rstbmp = util.cvimg_to_wxbmp(rstimg)
@@ -451,7 +458,6 @@ class GroundStation(WorkBlock ,TrackBlock, VideoBlock,
         x,y,z = u
         h=0
         rtn = self.send_data_by_frame(MsgPrcs.pack_ref(x,y,z,h))
-#         self.sbar.update(u'给定<%.4f,%.4f,%.4f,%.4f>已发送(%d)'%(x,y,z,h,rtn))
         self.sbar.update(u'给定<r=%.4f,p=%.4f,y=%.4f>已发送(%d)'%(x,y,z,rtn))
     
     def update_GUI_UAVinfo(self, info):
@@ -501,7 +507,7 @@ class GroundStation(WorkBlock ,TrackBlock, VideoBlock,
         pos = write(' volt   =%9.3FV'%info.volt,
                     wx.RED if self.UAVinfo.need_warning('volt', info.volt) else None)
         pos = writeln('Rthrust =%9.3F'%(info.ref_thrust))
-        pos = writeln(' Pos(%5.2f,%5.2f)  Rpos(%5.2f,%5.2f)'%(info.posx,info.posy,info.rposx,info.rposy))
+        pos = writeln(' Spd(%5.2f,%5.2f)  RSpd(%5.2f,%5.2f)'%(info.spdx,info.spdy,info.rspdx,info.rspdy))
         pos = write(' JOY', get_st_color(info.st_ct))
         pos = write('MOTOR', get_st_color(info.st_mt))
         pos = write('AutoHeight', get_st_color(info.st_ah))

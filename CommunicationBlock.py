@@ -113,9 +113,9 @@ class CommBlock(FrameGroundStationBase,object):
             data = MsgPrcs.unpack_ctrl(buf)
             self.UAVinfo.update_status(data)
         
-        elif msgtype == MsgPrcs.PKGTYPE_POS:
+        elif msgtype == MsgPrcs.PKGTYPE_SPD:
             data = MsgPrcs.unpack_5f(buf)
-            self.UAVinfo.update_pos(data)
+            self.UAVinfo.update_spd(data)
         
         elif msgtype == MsgPrcs.PKGTYPE_U0:
             data = MsgPrcs.unpack_5f(buf)

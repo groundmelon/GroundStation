@@ -153,13 +153,62 @@ class MeanShift(object):
         self.term_crit = (cv2.TERM_CRITERIA_EPS|cv2.TERM_CRITERIA_COUNT, 10, 1)
         # 跟踪窗口
         x,y,w,h = window
-        self.track_window = (int(x-w*SELECTPADDINGSCALE),
-                             int(y-h*SELECTPADDINGSCALE), 
-                             int(w*(1+2*SELECTPADDINGSCALE)),
-                             int(h*(1+2*SELECTPADDINGSCALE))
-                             )
+        self.track_window = window
+#         self.track_window = (int(x-w*SELECTPADDINGSCALE),
+#                              int(y-h*SELECTPADDINGSCALE), 
+#                              int(w*(1+2*SELECTPADDINGSCALE)),
+#                              int(h*(1+2*SELECTPADDINGSCALE))
+#                              )
+    
+    @staticmethod
+    def resize_window(window,scale):
+        x,y,w,h = window
+        cx = x+w/2
+        cy = y+h/2
+        return (int(cx-w*scale/2),
+                int(cy-h*scale/2),
+                int(w*scale),
+                int(h*scale)
+                )
+        
         
     def process(self, src, **kwargs):         
+        sw = SW('meanShift')
+        
+        # 获得直方图
+        hls = cv2.cvtColor(src, cv2.COLOR_BGR2HLS)
+        # 获得直方图反向投影
+        dst = cv2.calcBackProject([hls], self.hist_channel, self.roi_hist, [0,180], 1)
+        # 应用MeanShift
+        # window 放大到占屏幕1/4面积的大小,计算长宽比例k
+        k = ((src.shape[0]*src.shape[1]/2.0) / (self.track_window[2]*self.track_window[3]))**0.5
+        assert k>1
+        scale_list = [1+i*(k-1)/4 for i in range(5)]
+        window = self.track_window
+        rst_img = src.copy()
+        for scale in scale_list[::-1]:
+            window = self.resize_window(self.track_window, scale)
+            _, window = cv2.meanShift(dst, window, self.term_crit)
+            x,y,w,h = window
+            cv2.rectangle(rst_img, (x,y), (x+w,y+h), OBJECT_MATCH_COLOR, LINE_WIDTH)
+            scale = scale - (k-1)/4.0
+        # 更新跟踪窗口
+        self.track_window = window
+        x,y,w,h = window
+        # 计算中点
+        center = (int(x+w/2), int(y+h/2))
+        # 绘制跟踪结果
+#         rst_img = src.copy()
+#         cv2.rectangle(rst_img, (x,y), (x+w,y+h), OBJECT_MATCH_COLOR, LINE_WIDTH)
+        # 绘制中间过程（反向投影图）
+        prj_img = cv2.cvtColor(dst, cv2.COLOR_GRAY2BGR)
+        # 画红框
+        # cv2.rectangle(prj_img, (x,y), (x+w,y+h), OBJECT_MATCH_COLOR, LINE_WIDTH)
+        
+        sw.stop()
+        return rst_img, [util.Point(center)], prj_img
+    
+    def process1(self, src, **kwargs):         
         sw = SW('meanShift')
         
         # 获得直方图
@@ -303,8 +352,8 @@ class OpticalFlow(object):
             self.oflines = np.zeros_like(src, dtype=np.uint8)
         
         for n,o in zip(good_new, good_old):
-            cv2.circle(dst,tuple(n),7,OBJECT_MATCH_COLOR,-1)# filled circle
-            cv2.line(self.oflines,tuple(n),tuple(o),OBJECT_MATCH_COLOR,7)# filled circle
+            cv2.circle(dst,tuple(n),3,OBJECT_MATCH_COLOR,-1)# filled circle
+            cv2.line(self.oflines,tuple(n),tuple(o),OBJECT_MATCH_COLOR,3)# line
         self.old_gray = frame_gray
         self.p0 = good_new.reshape(-1,1,2)
         
